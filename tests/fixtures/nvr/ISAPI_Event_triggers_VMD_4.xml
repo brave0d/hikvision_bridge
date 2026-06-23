@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<EventTrigger >
+<id>VMD-4</id>
+<eventType>VMD</eventType>
+<dynVideoInputChannelID>4</dynVideoInputChannelID>
+<EventTriggerNotificationList>
+<EventTriggerNotification>
+<id>record-4</id>
+<notificationMethod>record</notificationMethod>
+<dynVideoInputID>4</dynVideoInputID>
+</EventTriggerNotification>
+<EventTriggerNotification>
+<id>center</id>
+<notificationMethod>center</notificationMethod>
+</EventTriggerNotification>
+</EventTriggerNotificationList>
+</EventTrigger>

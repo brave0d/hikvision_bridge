@@ -1,0 +1,47 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "line_crossing": { "default": "mdi:vector-line" },
+      "intrusion": { "default": "mdi:vector-square" },
+      "region_entrance": { "default": "mdi:location-enter" },
+      "region_exiting": { "default": "mdi:location-exit" },
+      "target_human": { "default": "mdi:walk" },
+      "target_vehicle": { "default": "mdi:car" },
+      "alarm_input": { "default": "mdi:electric-switch" },
+      "event_link": { "default": "mdi:lan-connect" },
+      "cloud_online": { "default": "mdi:cloud-check-outline" },
+      "cloud_stream_encryption": { "default": "mdi:lock-alert-outline" }
+    },
+    "switch": {
+      "motion_detection": { "default": "mdi:motion-sensor" },
+      "line_crossing_detection": { "default": "mdi:vector-line" },
+      "intrusion_detection": { "default": "mdi:vector-square" },
+      "region_entrance_detection": { "default": "mdi:location-enter" },
+      "region_exiting_detection": { "default": "mdi:location-exit" },
+      "tamper_detection": { "default": "mdi:shield-alert-outline" },
+      "scene_change_detection": { "default": "mdi:image-filter-center-focus-weak" },
+      "alarm_output": { "default": "mdi:alarm-light-outline" }
+    },
+    "sensor": {
+      "storage_status": { "default": "mdi:harddisk" },
+      "storage_free": { "default": "mdi:harddisk" },
+      "storage_capacity": { "default": "mdi:harddisk" },
+      "event_latency": { "default": "mdi:timer-outline" }
+    },
+    "button": {
+      "rescan": { "default": "mdi:magnify-scan" },
+      "cloud_unlock": { "default": "mdi:door-open" }
+    },
+    "event": {
+      "detection": { "default": "mdi:cctv" },
+      "cloud_connection": { "default": "mdi:cloud-sync-outline" }
+    }
+  },
+  "services": {
+    "add_center_links": { "service": "mdi:link-variant-plus" },
+    "isapi_request": { "service": "mdi:api" },
+    "ptz_move": { "service": "mdi:pan" },
+    "ptz_preset": { "service": "mdi:map-marker-radius-outline" },
+    "set_notification_host": { "service": "mdi:webhook" }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "domain": "hikvision_bridge",
+  "name": "Hikvision Bridge",
+  "codeowners": ["@yannik2480"],
+  "config_flow": true,
+  "dependencies": ["webhook"],
+  "documentation": "https://github.com/yannik2480/hikvision_bridge",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/yannik2480/hikvision_bridge/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

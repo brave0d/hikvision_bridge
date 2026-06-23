@@ -1,0 +1,82 @@
+{
+ "/ISAPI/ContentMgmt/Storage": {
+  "file": "ISAPI_ContentMgmt_Storage.xml",
+  "status": 200
+ },
+ "/ISAPI/Event/channels/capabilities": {
+  "file": "ISAPI_Event_channels_capabilities.xml",
+  "status": 200
+ },
+ "/ISAPI/Event/notification/httpHosts": {
+  "file": "ISAPI_Event_notification_httpHosts.xml",
+  "status": 200
+ },
+ "/ISAPI/Event/triggers": {
+  "file": "ISAPI_Event_triggers.xml",
+  "status": 200
+ },
+ "/ISAPI/Image/channels/1/supplementLight": {
+  "file": "ISAPI_Image_channels_1_supplementLight.xml",
+  "status": 200
+ },
+ "/ISAPI/Security/adminAccesses": {
+  "file": "ISAPI_Security_adminAccesses.xml",
+  "status": 200
+ },
+ "/ISAPI/Security/userCheck": {
+  "file": "ISAPI_Security_userCheck.xml",
+  "status": 200
+ },
+ "/ISAPI/Smart/FieldDetection/1": {
+  "file": "ISAPI_Smart_FieldDetection_1.xml",
+  "status": 200
+ },
+ "/ISAPI/Smart/LineDetection/1": {
+  "file": "ISAPI_Smart_LineDetection_1.xml",
+  "status": 200
+ },
+ "/ISAPI/Smart/capabilities": {
+  "file": "ISAPI_Smart_capabilities.xml",
+  "status": 200
+ },
+ "/ISAPI/Smart/regionEntrance/1": {
+  "file": "ISAPI_Smart_regionEntrance_1.xml",
+  "status": 200
+ },
+ "/ISAPI/Smart/regionExiting/1": {
+  "file": "ISAPI_Smart_regionExiting_1.xml",
+  "status": 200
+ },
+ "/ISAPI/Streaming/channels/101": {
+  "file": "ISAPI_Streaming_channels_101.xml",
+  "status": 200
+ },
+ "/ISAPI/System/IO/inputs": {
+  "file": "ISAPI_System_IO_inputs.xml",
+  "status": 200
+ },
+ "/ISAPI/System/IO/outputs": {
+  "file": "ISAPI_System_IO_outputs.xml",
+  "status": 200
+ },
+ "/ISAPI/System/Network/EZVIZ": {
+  "file": "ISAPI_System_Network_EZVIZ.xml",
+  "status": 200
+ },
+ "/ISAPI/System/Network/interfaces": {
+  "file": "ISAPI_System_Network_interfaces.xml",
+  "status": 200
+ },
+ "/ISAPI/System/Video/inputs/channels/1/motionDetection": {
+  "file": "ISAPI_System_Video_inputs_channels_1_motionDetection.xml",
+  "status": 200
+ },
+ "/ISAPI/System/capabilities": {
+  "file": "ISAPI_System_capabilities.xml",
+  "status": 200
+ },
+ "/ISAPI/System/deviceInfo": {
+  "file": "ISAPI_System_deviceInfo.xml",
+  "status": 200
+ }
+}

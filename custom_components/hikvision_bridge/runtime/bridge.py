@@ -1,0 +1,322 @@
+"""Runtime object of one device entry (stored in ``entry.runtime_data``)."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
+
+from ..const import (
+    AUDIT_INTERVAL,
+    CONF_CAMERA_SERIAL,
+    CONF_CHANNEL_ID,
+    CONF_EVENT_SOURCE,
+    CONF_SCHEME,
+    CONF_VERIFY_TLS,
+    DEFAULT_HOLD_SECONDS,
+    DOMAIN,
+    EVENT_PATH_STREAM,
+    EVENT_PATH_WEBHOOK,
+    EVENT_SOURCE_CAMERA,
+    OPT_EVENT_PATH,
+    OPT_HOLD_SECONDS,
+    SCHEME_HTTPS,
+    SUBENTRY_CHANNEL_LINK,
+)
+from ..model import audit
+from ..model.discover import read_identity_only
+from ..model.inventory import DeviceProfile
+from ..wire.faults import BadCredentials, BridgeFault, LockedOut
+from ..wire.feed import AlarmFeed
+from ..wire.link import Endpoint, IsapiLink
+from ..wire.scrub import scrubbed_logger
+from . import identity
+from .refresh import StatusRefresher
+from .router import EventRouter, Origin
+
+_LOGGER = scrubbed_logger(__name__)
+MAIN_FEED = "main"
+
+
+def build_link(hass: HomeAssistant, data: dict) -> IsapiLink:
+    scheme = data.get(CONF_SCHEME, "http")
+    verify = bool(data.get(CONF_VERIFY_TLS, True)) if scheme == SCHEME_HTTPS else True
+    session = async_get_clientsession(hass, verify_ssl=verify)
+    return IsapiLink(
+        session,
+        Endpoint(data[CONF_HOST], int(data[CONF_PORT]), scheme),
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+    )
+
+
+@dataclass(slots=True)
+class ChannelRoute:
+    """A direct connection to the camera behind a recorder channel."""
+
+    subentry_id: str
+    channel_id: str
+    link: IsapiLink
+    remote_channel: str = "1"
+    events_from_camera: bool = False
+    healthy: bool = True
+
+
+@dataclass(slots=True)
+class DeviceBridge:
+    hass: HomeAssistant
+    entry: ConfigEntry
+    link: IsapiLink
+    profile: DeviceProfile
+    refresher: StatusRefresher = field(init=False)
+    router: EventRouter = field(init=False)
+    routes: dict[str, ChannelRoute] = field(default_factory=dict)
+    feeds: dict[str, AlarmFeed] = field(default_factory=dict)
+    report: audit.AuditReport | None = None
+    device_ids: dict[str | None, str] = field(default_factory=dict)
+    _unsubs: list[CALLBACK_TYPE] = field(default_factory=list)
+    _last_audit: datetime | None = None
+
+    def __post_init__(self) -> None:
+        self.refresher = StatusRefresher(self.hass, self.entry, self)
+        hold = float(self.entry.options.get(OPT_HOLD_SECONDS, DEFAULT_HOLD_SECONDS))
+        self.router = EventRouter(self.hass, self, hold)
+
+    # ------------------------------------------------------------- routing
+
+    def route(self, channel_id: str) -> tuple[IsapiLink, str]:
+        """Which link and channel id to use for configuration of an entry channel."""
+        direct = self.routes.get(channel_id)
+        if direct is not None and direct.healthy:
+            return direct.link, direct.remote_channel
+        return self.link, channel_id
+
+    def is_main_link_fault(self, channel_id: str) -> bool:
+        direct = self.routes.get(channel_id)
+        return direct is None or not direct.healthy
+
+    def ha_device_id(self, channel_id: str | None) -> str | None:
+        if channel_id is not None and channel_id in self.device_ids:
+            return self.device_ids[channel_id]
+        return self.device_ids.get(None)
+
+    # ----------------------------------------------------------- lifecycle
+
+    async def async_prepare_routes(self) -> None:
+        for subentry in self.entry.subentries.values():
+            if subentry.subentry_type != SUBENTRY_CHANNEL_LINK:
+                continue
+            data = dict(subentry.data)
+            channel_id = data[CONF_CHANNEL_ID]
+            route = ChannelRoute(
+                subentry_id=subentry.subentry_id,
+                channel_id=channel_id,
+                link=build_link(self.hass, data),
+                events_from_camera=data.get(CONF_EVENT_SOURCE) == EVENT_SOURCE_CAMERA,
+            )
+            self.routes[channel_id] = route
+            try:
+                found = await read_identity_only(route.link)
+            except BridgeFault as err:
+                self.report_channel_fault(channel_id, err)
+                continue
+            expected = data.get(CONF_CAMERA_SERIAL)
+            if expected and found.serial and found.serial != expected:
+                route.healthy = False
+                self._issue(
+                    f"channel_mismatch_{channel_id}",
+                    "channel_link_mismatch",
+                    {"channel": self._channel_name(channel_id)},
+                )
+            else:
+                ir.async_delete_issue(
+                    self.hass, DOMAIN, self._issue_id(f"channel_auth_{channel_id}")
+                )
+
+    @callback
+    def register_devices(self) -> None:
+        registry = dr.async_get(self.hass)
+        main = registry.async_get_or_create(
+            config_entry_id=self.entry.entry_id,
+            **identity.main_device_info(self.profile, self.link.endpoint.base),
+        )
+        self.device_ids[None] = main.id
+        if not identity.uses_channel_devices(self.profile):
+            for channel_id in self.profile.channels:
+                self.device_ids[channel_id] = main.id
+            return
+        for channel in self.profile.channels.values():
+            device = registry.async_get_or_create(
+                config_entry_id=self.entry.entry_id,
+                **identity.channel_device_info(self.profile, channel, main.id),
+            )
+            self.device_ids[channel.channel_id] = device.id
+
+    def start_feeds(self) -> None:
+        path = self.entry.options.get(OPT_EVENT_PATH, EVENT_PATH_STREAM)
+        if path == EVENT_PATH_WEBHOOK:
+            return
+        camera_channels = frozenset(
+            cid for cid, route in self.routes.items() if route.events_from_camera and route.healthy
+        )
+        main = AlarmFeed(
+            self.link,
+            self.router.make_handler(Origin(MAIN_FEED, exclusive_channels=camera_channels)),
+            lambda up, fault: self.router.feed_state(MAIN_FEED, up, fault),
+        )
+        self.feeds[MAIN_FEED] = main
+        for channel_id in camera_channels:
+            route = self.routes[channel_id]
+            name = f"channel_{channel_id}"
+            self.feeds[name] = AlarmFeed(
+                route.link,
+                self.router.make_handler(
+                    Origin(name, channel_map={route.remote_channel: channel_id})
+                ),
+                lambda up, fault, n=name: self.router.feed_state(n, up, fault),
+            )
+        for feed in self.feeds.values():
+            feed.start(
+                lambda coro, name: self.entry.async_create_background_task(self.hass, coro, name)
+            )
+
+    def schedule_audit(self) -> None:
+        self.entry.async_create_background_task(self.hass, self.async_run_audit(), "audit")
+        self._unsubs.append(async_track_time_interval(self.hass, self._audit_tick, AUDIT_INTERVAL))
+
+    @callback
+    def _audit_tick(self, _now: datetime) -> None:
+        self.entry.async_create_background_task(self.hass, self.async_run_audit(), "audit")
+
+    async def async_run_audit(self) -> None:
+        main_feed = self.feeds.get(MAIN_FEED)
+        skew = (
+            main_feed.clock_offset.total_seconds()
+            if main_feed and main_feed.stats.heartbeats
+            else None
+        )
+        try:
+            report = await audit.run_audit(
+                self.link,
+                self.profile,
+                insecure_basic=self.link.auth_scheme == "basic"
+                and self.link.endpoint.scheme == "http",
+                clock_skew_seconds=skew,
+            )
+        except BridgeFault as err:
+            _LOGGER.debug("Audit skipped: %s", type(err).__name__)
+            return
+        self.report = report
+        self._publish_audit(report)
+
+    @callback
+    def _publish_audit(self, report: audit.AuditReport) -> None:
+        wanted: set[str] = set()
+        for item in report.items:
+            issue_key = f"audit_{item.key}"
+            placeholders = {
+                "device": self.entry.title,
+                "channel": self._channel_name(item.channel_id) if item.channel_id else "",
+                "kind": item.kind.value if item.kind else "",
+                "detail": item.detail or "",
+            }
+            fixable = item.finding == audit.Finding.CENTER_LINK_MISSING
+            self._issue(
+                issue_key,
+                item.finding.value,
+                placeholders,
+                fixable=fixable,
+                data={"trigger_id": item.trigger_id} if item.trigger_id else None,
+                severity=ir.IssueSeverity.ERROR
+                if item.finding == audit.Finding.DEFAULT_PASSWORD
+                else ir.IssueSeverity.WARNING,
+            )
+            wanted.add(self._issue_id(issue_key))
+        prefix = self._issue_id("audit_")
+        registry = ir.async_get(self.hass)
+        for domain, issue_id in list(registry.issues):
+            if domain == DOMAIN and issue_id.startswith(prefix) and issue_id not in wanted:
+                ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+
+    async def async_shutdown(self) -> None:
+        for unsub in self._unsubs:
+            unsub()
+        self._unsubs.clear()
+        for feed in self.feeds.values():
+            await feed.stop()
+        self.feeds.clear()
+        self.router.shutdown()
+
+    # --------------------------------------------------------- reporting
+
+    def _issue_id(self, key: str) -> str:
+        return f"{self.entry.entry_id}_{key}"
+
+    def _channel_name(self, channel_id: str | None) -> str:
+        if channel_id is None:
+            return ""
+        channel = self.profile.channels.get(channel_id)
+        return channel.name if channel else channel_id
+
+    def _issue(
+        self,
+        key: str,
+        translation_key: str,
+        placeholders: dict[str, str],
+        *,
+        fixable: bool = False,
+        data: dict | None = None,
+        severity: ir.IssueSeverity = ir.IssueSeverity.WARNING,
+    ) -> None:
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            self._issue_id(key),
+            is_fixable=fixable,
+            is_persistent=False,
+            severity=severity,
+            translation_key=translation_key,
+            translation_placeholders={"device": self.entry.title, **placeholders},
+            data={"entry_id": self.entry.entry_id, **(data or {})},
+        )
+
+    @callback
+    def report_lockout(self, err: LockedOut) -> None:
+        minutes = str(round((err.retry_after or 1800) / 60))
+        self._issue("locked", "locked_out", {"minutes": minutes}, severity=ir.IssueSeverity.ERROR)
+
+    @callback
+    def report_channel_fault(self, channel_id: str, err: BaseException) -> None:
+        route = self.routes.get(channel_id)
+        if route is None:
+            return
+        route.healthy = False
+        if isinstance(err, (BadCredentials, LockedOut)):
+            self._issue(
+                f"channel_auth_{channel_id}",
+                "channel_link_auth",
+                {"channel": self._channel_name(channel_id)},
+                severity=ir.IssueSeverity.ERROR,
+            )
+        else:
+            _LOGGER.info(
+                "Direct link of channel %s unavailable (%s); using the recorder instead",
+                channel_id,
+                type(err).__name__,
+            )
+
+    @callback
+    def report_feed_fault(self, name: str, fault: BridgeFault) -> None:
+        if isinstance(fault, LockedOut):
+            self.report_lockout(fault)
+        elif isinstance(fault, BadCredentials):
+            if name == MAIN_FEED:
+                self.entry.async_start_reauth(self.hass)
+            else:
+                self.report_channel_fault(name.removeprefix("channel_"), fault)

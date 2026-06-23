@@ -1,0 +1,154 @@
+{
+ "/ISAPI/ContentMgmt/InputProxy/channels": {
+  "file": "ISAPI_ContentMgmt_InputProxy_channels.xml",
+  "status": 200
+ },
+ "/ISAPI/ContentMgmt/InputProxy/channels/1/capabilities": {
+  "file": "ISAPI_ContentMgmt_InputProxy_channels_1_capabilities.xml",
+  "status": 200
+ },
+ "/ISAPI/ContentMgmt/InputProxy/channels/1/portMapping": {
+  "file": "ISAPI_ContentMgmt_InputProxy_channels_1_portMapping.xml",
+  "status": 403
+ },
+ "/ISAPI/ContentMgmt/InputProxy/channels/1/video/motionDetection": {
+  "file": "ISAPI_ContentMgmt_InputProxy_channels_1_video_motionDetection.xml",
+  "status": 200
+ },
+ "/ISAPI/ContentMgmt/InputProxy/channels/status": {
+  "file": "ISAPI_ContentMgmt_InputProxy_channels_status.xml",
+  "status": 200
+ },
+ "/ISAPI/ContentMgmt/Storage": {
+  "file": "ISAPI_ContentMgmt_Storage.xml",
+  "status": 200
+ },
+ "/ISAPI/ContentMgmt/storage/hdd": {
+  "file": "ISAPI_ContentMgmt_storage_hdd.xml",
+  "status": 403
+ },
+ "/ISAPI/Event/capabilities": {
+  "file": "ISAPI_Event_capabilities.xml",
+  "status": 200
+ },
+ "/ISAPI/Event/channels/capabilities": {
+  "file": "ISAPI_Event_channels_capabilities.xml",
+  "status": 200
+ },
+ "/ISAPI/Event/notification/httpHosts": {
+  "file": "ISAPI_Event_notification_httpHosts.xml",
+  "status": 200
+ },
+ "/ISAPI/Event/notification/httpHosts/capabilities": {
+  "file": "ISAPI_Event_notification_httpHosts_capabilities.xml",
+  "status": 503
+ },
+ "/ISAPI/Event/triggers": {
+  "file": "ISAPI_Event_triggers.xml",
+  "status": 200
+ },
+ "/ISAPI/Event/triggers/VMD-4": {
+  "file": "ISAPI_Event_triggers_VMD_4.xml",
+  "status": 200
+ },
+ "/ISAPI/Event/triggers/fielddetection-1": {
+  "file": "ISAPI_Event_triggers_fielddetection_1.xml",
+  "status": 200
+ },
+ "/ISAPI/Security/adminAccesses": {
+  "file": "ISAPI_Security_adminAccesses.xml",
+  "status": 200
+ },
+ "/ISAPI/Security/encryption/capabilities": {
+  "file": "ISAPI_Security_encryption_capabilities.xml",
+  "status": 403
+ },
+ "/ISAPI/Security/userCheck": {
+  "file": "ISAPI_Security_userCheck.xml",
+  "status": 200
+ },
+ "/ISAPI/Smart/FieldDetection/1": {
+  "file": "ISAPI_Smart_FieldDetection_1.xml",
+  "status": 200
+ },
+ "/ISAPI/Smart/LineDetection/1": {
+  "file": "ISAPI_Smart_LineDetection_1.xml",
+  "status": 200
+ },
+ "/ISAPI/Smart/capabilities": {
+  "file": "ISAPI_Smart_capabilities.xml",
+  "status": 200
+ },
+ "/ISAPI/Smart/regionEntrance/1": {
+  "file": "ISAPI_Smart_regionEntrance_1.xml",
+  "status": 200
+ },
+ "/ISAPI/Streaming/channels": {
+  "file": "ISAPI_Streaming_channels.xml",
+  "status": 200
+ },
+ "/ISAPI/Streaming/channels/102": {
+  "file": "ISAPI_Streaming_channels_102.xml",
+  "status": 200
+ },
+ "/ISAPI/System/Holiday": {
+  "file": "ISAPI_System_Holiday.xml",
+  "status": 403
+ },
+ "/ISAPI/System/IO/inputs": {
+  "file": "ISAPI_System_IO_inputs.xml",
+  "status": 200
+ },
+ "/ISAPI/System/IO/outputs": {
+  "file": "ISAPI_System_IO_outputs.xml",
+  "status": 200
+ },
+ "/ISAPI/System/Network/Bond": {
+  "file": "ISAPI_System_Network_Bond.xml",
+  "status": 403
+ },
+ "/ISAPI/System/Network/EZVIZ": {
+  "file": "ISAPI_System_Network_EZVIZ.xml",
+  "status": 200
+ },
+ "/ISAPI/System/Network/POE": {
+  "file": "ISAPI_System_Network_POE.xml",
+  "status": 400
+ },
+ "/ISAPI/System/Network/PPPoE": {
+  "file": "ISAPI_System_Network_PPPoE.xml",
+  "status": 200
+ },
+ "/ISAPI/System/Network/VirtualHost": {
+  "file": "ISAPI_System_Network_VirtualHost.xml",
+  "status": 403
+ },
+ "/ISAPI/System/Network/interfaces": {
+  "file": "ISAPI_System_Network_interfaces.xml",
+  "status": 200
+ },
+ "/ISAPI/System/Video/inputs/channels": {
+  "file": "ISAPI_System_Video_inputs_channels.xml",
+  "status": 403
+ },
+ "/ISAPI/System/Video/inputs/channels/1/motionDetection": {
+  "file": "ISAPI_System_Video_inputs_channels_1_motionDetection.xml",
+  "status": 200
+ },
+ "/ISAPI/System/Video/inputs/channels/4/motionDetection": {
+  "file": "ISAPI_System_Video_inputs_channels_4_motionDetection.xml",
+  "status": 200
+ },
+ "/ISAPI/System/capabilities": {
+  "file": "ISAPI_System_capabilities.xml",
+  "status": 200
+ },
+ "/ISAPI/System/deviceInfo": {
+  "file": "ISAPI_System_deviceInfo.xml",
+  "status": 200
+ },
+ "/ISAPI/System/workingstatus?format=json": {
+  "file": "ISAPI_System_workingstatus_format_json.json",
+  "status": 200
+ }
+}

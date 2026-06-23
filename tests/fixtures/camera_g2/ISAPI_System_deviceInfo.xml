@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<DeviceInfo version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<deviceName>Back Fence</deviceName>
+
+<deviceID>TESTDEVICEID</deviceID>
+
+<deviceDescription>IPCamera</deviceDescription>
+
+<deviceLocation>hangzhou</deviceLocation>
+
+<systemContact>Hikvision.China</systemContact>
+
+<model>DS-0000CAM-G2A</model>
+
+<serialNumber>TESTSERIAL301</serialNumber>
+
+<macAddress>02:00:00:00:03:01</macAddress>
+
+<firmwareVersion>V1.0.0</firmwareVersion>
+
+<firmwareReleasedDate>build 260101</firmwareReleasedDate>
+
+<encoderVersion>V1.0</encoderVersion>
+
+<encoderReleasedDate>build 260101</encoderReleasedDate>
+
+<bootVersion>V1.0.0</bootVersion>
+
+<bootReleasedDate>260101</bootReleasedDate>
+
+<hardwareVersion>0x0</hardwareVersion>
+
+<deviceType>IPCamera</deviceType>
+
+<telecontrolID>3</telecontrolID>
+
+<supportBeep>true</supportBeep>
+
+<supportVideoLoss>false</supportVideoLoss>
+
+<firmwareVersionInfo>B-R-G5-0</firmwareVersionInfo>
+
+<manufacturer>hikvision</manufacturer>
+
+<subSerialNumber>TESTSUB01</subSerialNumber>
+
+<OEMCode>1</OEMCode>
+
+</DeviceInfo>
+

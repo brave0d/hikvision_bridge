@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SmartCap version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+<isSupportROI>false</isSupportROI>
+<isSupportFaceDetect>true</isSupportFaceDetect>
+<isSupportIntelliTrace>false</isSupportIntelliTrace>
+<isSupportFieldDetection>true</isSupportFieldDetection>
+<isSupportDefocusDetection>true</isSupportDefocusDetection>
+<isSupportAudioDetection>true</isSupportAudioDetection>
+<isSupportSceneChangeDetection>true</isSupportSceneChangeDetection>
+<isSupportLineDetection>true</isSupportLineDetection>
+<isSupportRegionEntrance>true</isSupportRegionEntrance>
+<isSupportRegionExiting>true</isSupportRegionExiting>
+<isSupportLoitering>true</isSupportLoitering>
+<isSupportGroup>true</isSupportGroup>
+<isSupportRapidMove>true</isSupportRapidMove>
+<isSupportParking>true</isSupportParking>
+<isSupportUnattendedBaggage>true</isSupportUnattendedBaggage>
+<isSupportAttendedBaggage>true</isSupportAttendedBaggage>
+<isSupportShield>true</isSupportShield>
+<isSupportAnalysisUnitSwitch>true</isSupportAnalysisUnitSwitch>
+<isSupportSmartCalibration>true</isSupportSmartCalibration>
+<isSupportShipsDetection>true</isSupportShipsDetection>
+<isSupportDetectionDistance>false</isSupportDetectionDistance>
+</SmartCap>

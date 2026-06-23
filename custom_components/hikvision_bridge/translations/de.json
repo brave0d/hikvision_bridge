@@ -1,0 +1,606 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "Kamera oder Rekorder im lokalen Netz",
+          "cloud": "Hik-Connect-Konto (Cloud)"
+        }
+      },
+      "device": {
+        "title": "Gerät verbinden",
+        "description": "Bei der Einrichtung wird nur lesend zugegriffen.",
+        "data": {
+          "host": "Host",
+          "port": "Port (optional)",
+          "connection": "Verbindungsart",
+          "verify_tls": "HTTPS-Zertifikat prüfen",
+          "username": "Benutzername",
+          "password": "Passwort"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname der Kamera bzw. des Rekorders.",
+          "port": "Leer lassen für 80 (HTTP) bzw. 443 (HTTPS).",
+          "connection": "Automatisch versucht zuerst HTTPS und nur bei fehlender Verbindung HTTP.",
+          "username": "Jedes Gerät kann einen eigenen Benutzer haben. Empfohlen ist ein eigener Bediener-Benutzer."
+        }
+      },
+      "duplicate": {
+        "title": "Kamera bereits bekannt",
+        "description": "Diese Kamera wird bereits von {recorder} auf Kanal {channel} angezeigt. Mit diesem Kanal verknüpfen (ein Gerät, Stream direkt von der Kamera) oder als eigenes Gerät hinzufügen?",
+        "menu_options": {
+          "link_to_channel": "Mit dem Rekorder-Kanal verknüpfen",
+          "keep_separate": "Als eigenes Gerät hinzufügen"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Anmeldung fehlgeschlagen",
+        "description": "{device} ({host}) hat die gespeicherten Zugangsdaten abgelehnt. Bitte die aktuellen eingeben.",
+        "data": {
+          "username": "Benutzername",
+          "password": "Passwort"
+        }
+      },
+      "reconfigure": {
+        "title": "Verbindung ändern",
+        "description": "Die neue Adresse muss zum selben Gerät führen.",
+        "data": {
+          "host": "Host",
+          "port": "Port (optional)",
+          "connection": "Verbindungsart",
+          "verify_tls": "HTTPS-Zertifikat prüfen",
+          "username": "Benutzername",
+          "password": "Passwort"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname der Kamera bzw. des Rekorders.",
+          "port": "Leer lassen für 80 (HTTP) bzw. 443 (HTTPS).",
+          "connection": "Automatisch versucht zuerst HTTPS und nur bei fehlender Verbindung HTTP.",
+          "username": "Jedes Gerät kann einen eigenen Benutzer haben. Empfohlen ist ein eigener Bediener-Benutzer."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect bietet keine offizielle Schnittstelle für Dritte. Die Integration liest nur Geräteliste und Status; das Passwort wird in Home Assistant gespeichert.",
+        "data": {
+          "account": "Hik-Connect-Konto (E-Mail oder Telefon)",
+          "password": "Passwort"
+        }
+      },
+      "cloud_captcha": {
+        "title": "Bestätigungscode",
+        "description": "Den hier angezeigten Code eingeben: {image}",
+        "data": {
+          "captcha": "Code"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Hik-Connect-Anmeldung",
+        "description": "Passwort für {account} eingeben.",
+        "data": {
+          "password": "Passwort",
+          "captcha": "Bestätigungscode (nur falls verlangt)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Benutzername oder Passwort abgelehnt. Es wird kein weiterer Versuch unternommen, um eine Sperre zu vermeiden.",
+      "locked_out": "Gerät oder Konto ist nach Fehlanmeldungen vorübergehend gesperrt. Bitte vor einem neuen Versuch warten.",
+      "name_not_resolved": "Der Hostname konnte nicht aufgelöst werden.",
+      "tls_untrusted": "Dem HTTPS-Zertifikat wird nicht vertraut. Zertifikatsprüfung abschalten oder HTTP verwenden.",
+      "cannot_connect": "Keine Verbindung möglich.",
+      "not_isapi": "Die Adresse antwortet, aber nicht wie ein Hikvision-ISAPI-Gerät.",
+      "forbidden": "Dem Benutzer fehlen die nötigen Rechte.",
+      "unknown": "Unerwarteter Fehler.",
+      "wrong_camera": "Diese Adresse gehört zu einer anderen Kamera als der am gewählten Kanal.",
+      "captcha_required": "Hik-Connect verlangt einen Bestätigungscode.",
+      "cloud_unavailable": "Hik-Connect ist derzeit nicht erreichbar.",
+      "cloud_changed": "Hik-Connect hat in einem unerwarteten Format geantwortet.",
+      "cloud_rejected": "Hik-Connect hat die Anfrage abgelehnt."
+    },
+    "abort": {
+      "already_configured": "Dieses Gerät bzw. Konto ist bereits eingerichtet.",
+      "reauth_successful": "Zugangsdaten aktualisiert.",
+      "reconfigure_successful": "Verbindung aktualisiert.",
+      "other_device": "Diese Adresse gehört zu einem anderen Gerät. Bitte stattdessen als neues Gerät hinzufügen.",
+      "channel_already_linked": "Dieser Rekorder-Kanal hat bereits eine direkte Verbindung.",
+      "linked_to_channel": "Die Kamera wurde mit dem Rekorder-Kanal verknüpft."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen",
+        "data": {
+          "event_path": "Weg der Ereignisse",
+          "hold_seconds": "Erkennungen aktiv halten für (Sekunden)",
+          "rtsp_port": "RTSP-Port (optional)",
+          "rtsp_transport": "RTSP-Transport",
+          "target_sensors": "Eigene Sensoren für Personen und Fahrzeuge"
+        },
+        "data_description": {
+          "event_path": "Der Ereignis-Stream braucht keine Änderung am Gerät. Der Webhook setzt voraus, dass das Gerät an Home Assistant sendet.",
+          "hold_seconds": "Viele Geräte melden nur den Beginn einer Erkennung; der Sensor bleibt so lange nach der letzten Meldung an."
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "Meldungen werden unter {path} angenommen (nur lokales Netz). Das Gerät per Aktion „Benachrichtigungsziel setzen“ oder über seine Weboberfläche dorthin zeigen lassen."
+      }
+    },
+    "abort": {
+      "no_options": "Ein Hik-Connect-Konto hat keine Optionen."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "Kamera direkt anbinden"
+      },
+      "entry_type": "Direkte Kameraverbindung",
+      "step": {
+        "user": {
+          "title": "Direkte Kameraverbindung",
+          "description": "Die Kamera an einem Rekorder-Kanal direkt anbinden, mit eigener Adresse und eigenen Zugangsdaten. Der Live-Stream kommt dann von der Kamera; das hilft auch, wenn der Rekorder-Stream verschlüsselt ist.",
+          "data": {
+            "channel_id": "Rekorder-Kanal",
+            "host": "Host",
+            "port": "Port (optional)",
+            "connection": "Verbindungsart",
+            "verify_tls": "HTTPS-Zertifikat prüfen",
+            "username": "Benutzername",
+            "password": "Passwort",
+            "reuse_recorder_credentials": "Benutzername und Passwort des Rekorders verwenden",
+            "event_source": "Erkennungen übernehmen von"
+          },
+          "data_description": {
+            "host": "Adresse, unter der Home Assistant die Kamera direkt erreicht (z. B. im PoE-Netz des Rekorders, falls geroutet).",
+            "reuse_recorder_credentials": "Aus lassen, wenn die Kamera eigene Zugangsdaten hat."
+          }
+        },
+        "reconfigure": {
+          "title": "Direkte Kameraverbindung ändern",
+          "description": "Die Kamera an einem Rekorder-Kanal direkt anbinden, mit eigener Adresse und eigenen Zugangsdaten. Der Live-Stream kommt dann von der Kamera; das hilft auch, wenn der Rekorder-Stream verschlüsselt ist.",
+          "data": {
+            "channel_id": "Rekorder-Kanal",
+            "host": "Host",
+            "port": "Port (optional)",
+            "connection": "Verbindungsart",
+            "verify_tls": "HTTPS-Zertifikat prüfen",
+            "username": "Benutzername",
+            "password": "Passwort",
+            "reuse_recorder_credentials": "Benutzername und Passwort des Rekorders verwenden",
+            "event_source": "Erkennungen übernehmen von"
+          },
+          "data_description": {
+            "host": "Adresse, unter der Home Assistant die Kamera direkt erreicht (z. B. im PoE-Netz des Rekorders, falls geroutet).",
+            "reuse_recorder_credentials": "Aus lassen, wenn die Kamera eigene Zugangsdaten hat."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "Benutzername oder Passwort abgelehnt. Es wird kein weiterer Versuch unternommen, um eine Sperre zu vermeiden.",
+        "locked_out": "Gerät oder Konto ist nach Fehlanmeldungen vorübergehend gesperrt. Bitte vor einem neuen Versuch warten.",
+        "name_not_resolved": "Der Hostname konnte nicht aufgelöst werden.",
+        "tls_untrusted": "Dem HTTPS-Zertifikat wird nicht vertraut. Zertifikatsprüfung abschalten oder HTTP verwenden.",
+        "cannot_connect": "Keine Verbindung möglich.",
+        "not_isapi": "Die Adresse antwortet, aber nicht wie ein Hikvision-ISAPI-Gerät.",
+        "forbidden": "Dem Benutzer fehlen die nötigen Rechte.",
+        "unknown": "Unerwarteter Fehler.",
+        "wrong_camera": "Diese Adresse gehört zu einer anderen Kamera als der am gewählten Kanal.",
+        "captcha_required": "Hik-Connect verlangt einen Bestätigungscode.",
+        "cloud_unavailable": "Hik-Connect ist derzeit nicht erreichbar.",
+        "cloud_changed": "Hik-Connect hat in einem unerwarteten Format geantwortet.",
+        "cloud_rejected": "Hik-Connect hat die Anfrage abgelehnt."
+      },
+      "abort": {
+        "not_loaded": "Der Rekorder muss zuerst geladen sein.",
+        "not_a_recorder": "Nur Rekorder haben Kanäle zum Verknüpfen.",
+        "no_free_channel": "Alle Kanäle haben bereits eine direkte Verbindung.",
+        "reconfigure_successful": "Direkte Verbindung aktualisiert."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Bewegung"
+      },
+      "tamper": {
+        "name": "Sabotage"
+      },
+      "video_loss": {
+        "name": "Videoverlust"
+      },
+      "scene_change": {
+        "name": "Szenenwechsel"
+      },
+      "intrusion": {
+        "name": "Einbruch (Bereich)"
+      },
+      "line_crossing": {
+        "name": "Linienüberschreitung"
+      },
+      "region_entrance": {
+        "name": "Bereichseintritt"
+      },
+      "region_exiting": {
+        "name": "Bereichsaustritt"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "Unschärfe"
+      },
+      "audio_exception": {
+        "name": "Audio-Auffälligkeit"
+      },
+      "target_human": {
+        "name": "Person"
+      },
+      "target_vehicle": {
+        "name": "Fahrzeug"
+      },
+      "alarm_input": {
+        "name": "Alarmeingang {port}"
+      },
+      "channel_online": {
+        "name": "Kamera verbunden"
+      },
+      "storage_problem": {
+        "name": "Speicherproblem"
+      },
+      "event_link": {
+        "name": "Ereignisverbindung"
+      },
+      "cloud_online": {
+        "name": "Cloud-Verbindung"
+      },
+      "cloud_stream_encryption": {
+        "name": "Stream-Verschlüsselung (Hik-Connect)"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Erkennung Bewegung"
+      },
+      "tamper_detection": {
+        "name": "Erkennung Sabotage"
+      },
+      "scene_change_detection": {
+        "name": "Erkennung Szenenwechsel"
+      },
+      "intrusion_detection": {
+        "name": "Erkennung Einbruch (Bereich)"
+      },
+      "line_crossing_detection": {
+        "name": "Erkennung Linienüberschreitung"
+      },
+      "region_entrance_detection": {
+        "name": "Erkennung Bereichseintritt"
+      },
+      "region_exiting_detection": {
+        "name": "Erkennung Bereichsaustritt"
+      },
+      "alarm_output": {
+        "name": "Alarmausgang {port}"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "Hauptstream"
+      },
+      "sub_stream": {
+        "name": "Substream"
+      },
+      "third_stream": {
+        "name": "Drittstream"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "Erkennung",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Bewegung",
+              "intrusion": "Einbruch (Bereich)",
+              "line_crossing": "Linienüberschreitung",
+              "region_entrance": "Bereichseintritt",
+              "region_exiting": "Bereichsaustritt",
+              "face": "Gesicht",
+              "anpr": "Kennzeichen"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "Cloud-Verbindungswechsel",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "Online",
+              "went_offline": "Offline"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "Speicher {unit}",
+        "state": {
+          "ok": "OK",
+          "unformatted": "Nicht formatiert",
+          "error": "Fehler",
+          "idle": "Ruhend",
+          "sleeping": "Schlafend",
+          "abnormal": "Auffällig",
+          "full": "Voll",
+          "unknown": "Unbekannt"
+        }
+      },
+      "storage_free": {
+        "name": "Speicher {unit} frei"
+      },
+      "storage_capacity": {
+        "name": "Speicher {unit} Kapazität"
+      },
+      "event_latency": {
+        "name": "Ereignisverzögerung"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Neu starten"
+      },
+      "rescan": {
+        "name": "Fähigkeiten neu einlesen"
+      },
+      "cloud_unlock": {
+        "name": "Tür öffnen (Cloud)"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: Anmeldung gesperrt",
+      "description": "Das Gerät hat die Anmeldung nach Fehlversuchen gesperrt. Die Integration pausiert etwa {minutes} Minuten und versucht es nicht früher erneut."
+    },
+    "channel_link_auth": {
+      "title": "{device}: Direktverbindung zu {channel} abgelehnt",
+      "description": "Die Kamera hat die Zugangsdaten der Direktverbindung abgelehnt. Stattdessen wird der Rekorder verwendet. Bitte die Direktverbindung dieses Kanals aktualisieren."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: andere Kamera an {channel}",
+      "description": "Die Direktverbindung dieses Kanals führt zu einer anderen Kamera als der, die jetzt am Rekorder hängt. Sie wird bis zur Korrektur nicht verwendet."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} auf {channel} wird nicht gemeldet",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Meldung einschalten",
+            "description": "Das Gerät erkennt {kind}, sendet es aber nicht in den Ereignis-Stream, weil die Verknüpfung „Überwachungszentrum benachrichtigen“ aus ist. Bestätigen schaltet nur diese Verknüpfung ein (Auslöser {trigger}); sonst ändert sich nichts. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "Das Gerät hat die Änderung nicht übernommen."
+        },
+        "abort": {
+          "not_loaded": "Das Gerät ist nicht geladen."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: kein Bereich für {kind} auf {channel}",
+      "description": "Die Erkennung ist an, aber es ist keine Linie bzw. kein Bereich gezeichnet, daher kann sie nicht auslösen. Bitte in der Weboberfläche des Geräts zeichnen."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} ist auf {channel} aus",
+      "description": "Diese Erkennung wird unterstützt, ist aber ausgeschaltet. Bei Bedarf über die zugehörige Schalter-Entität einschalten."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} auf {channel} nur für {detail}",
+      "description": "Der Rekorder meldet diese Erkennung nur für die genannten Zieltypen. Andere Bewegungen lösen nicht aus."
+    },
+    "stream_encrypted": {
+      "title": "{device}: Videostream durch Hik-Connect verschlüsselt",
+      "description": "Die Stream-Verschlüsselung für Hik-Connect ist eingeschaltet. Home Assistant kann diesen Stream nicht entschlüsseln; Schnappschüsse und Ereignisse funktionieren weiterhin. Entweder „Stream-Verschlüsselung“ in den Plattformzugriffs-Einstellungen des Geräts abschalten oder die betroffenen Kameras direkt anbinden (direkte Kameraverbindung)."
+    },
+    "default_password": {
+      "title": "{device}: schwaches oder Standard-Passwort",
+      "description": "Das Gerät meldet ein schwaches oder noch das Standard-Passwort. Bitte am Gerät ändern."
+    },
+    "basic_over_http": {
+      "title": "{device}: Passwort ungeschützt übertragen",
+      "description": "Das Gerät akzeptiert über HTTP nur Basic-Authentifizierung; das Passwort wird damit im Klartext übertragen. Bitte Digest-Authentifizierung oder HTTPS am Gerät aktivieren."
+    },
+    "clock_skew": {
+      "title": "{device}: Uhr weicht um {detail} s ab",
+      "description": "Die Geräteuhr weicht deutlich von Home Assistant ab. Ereigniszeiten werden korrigiert, Aufnahmen tragen aber die falsche Zeit. Bitte NTP am Gerät einrichten."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "Das Gerät hat die Zugangsdaten abgelehnt."
+    },
+    "locked_out": {
+      "message": "Das Gerät hat die Anmeldung gesperrt. Die Einrichtung pausiert, um die Sperre nicht zu verlängern."
+    },
+    "not_isapi": {
+      "message": "Das Gerät antwortet nicht wie ein Hikvision-ISAPI-Gerät."
+    },
+    "unreachable": {
+      "message": "{host} ist nicht erreichbar."
+    },
+    "other_device": {
+      "message": "Unter {host} antwortet jetzt ein anderes Gerät. Bitte „Neu konfigurieren“ verwenden oder es als neues Gerät hinzufügen."
+    },
+    "write_failed": {
+      "message": "Das Gerät hat die Änderung nicht übernommen ({reason})."
+    },
+    "unknown_device": {
+      "message": "Das gewählte Gerät gehört nicht zu Hikvision Bridge."
+    },
+    "channel_needed": {
+      "message": "Bitte ein Kamera- oder Kanalgerät wählen."
+    },
+    "confirm_needed": {
+      "message": "Diese Aktion ändert das Gerät. Zum Ausführen „Änderung bestätigen“ setzen."
+    },
+    "bad_path": {
+      "message": "Nur Pfade unterhalb von /ISAPI/ sind erlaubt."
+    },
+    "webhook_off": {
+      "message": "Zuerst den Webhook in den Optionen aktivieren."
+    },
+    "no_url": {
+      "message": "In Home Assistant ist keine lokale URL eingerichtet."
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect hat die Anmeldung abgelehnt."
+    },
+    "cloud_failed": {
+      "message": "Hik-Connect-Anfrage fehlgeschlagen ({reason})."
+    },
+    "cloud_gone": {
+      "message": "Das Gerät ist nicht mehr im Hik-Connect-Konto."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "Automatisch",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "Ereignis-Stream (empfohlen)",
+        "webhook": "Webhook",
+        "both": "Beides"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "Rekorder",
+        "camera": "Kamera"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "Ereignismeldung einschalten",
+      "description": "Schaltet die Verknüpfung „Überwachungszentrum benachrichtigen“ für Erkennungen ein, denen sie fehlt. Läuft als Vorschau, solange „Nur Vorschau“ an ist.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Kamera, Kanal oder Rekorder."
+        },
+        "dry_run": {
+          "name": "Nur Vorschau",
+          "description": "Nur auflisten, was sich ändern würde."
+        },
+        "kinds": {
+          "name": "Erkennungen",
+          "description": "Auf diese Arten beschränken; leer bedeutet alle."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "ISAPI-Anfrage",
+      "description": "Sendet eine ISAPI-Anfrage und liefert die Antwort ohne Geheimnisse zurück. Ändernde Methoden brauchen eine Bestätigung.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Kamera, Kanal oder Rekorder."
+        },
+        "method": {
+          "name": "Methode",
+          "description": "HTTP-Methode."
+        },
+        "path": {
+          "name": "Pfad",
+          "description": "Pfad beginnend mit /ISAPI/."
+        },
+        "body": {
+          "name": "Inhalt",
+          "description": "XML- oder JSON-Inhalt für ändernde Methoden."
+        },
+        "confirm_write": {
+          "name": "Änderung bestätigen",
+          "description": "Erforderlich für alles, was das Gerät ändert."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "PTZ bewegen",
+      "description": "Bewegt eine PTZ-Kamera für kurze Zeit.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Kamera, Kanal oder Rekorder."
+        },
+        "pan": {
+          "name": "Schwenken",
+          "description": "Geschwindigkeit, negativ ist links."
+        },
+        "tilt": {
+          "name": "Neigen",
+          "description": "Geschwindigkeit, negativ ist unten."
+        },
+        "zoom": {
+          "name": "Zoom",
+          "description": "Geschwindigkeit, negativ zoomt heraus."
+        },
+        "duration": {
+          "name": "Dauer",
+          "description": "Sekunden bis zum Anhalten."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ-Preset",
+      "description": "Fährt eine PTZ-Kamera auf ein gespeichertes Preset.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Kamera, Kanal oder Rekorder."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "Preset-Nummer."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "Benachrichtigungsziel setzen",
+      "description": "Lässt einen Benachrichtigungsziel-Platz des Geräts auf den Webhook dieses Home Assistant zeigen.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Kamera, Kanal oder Rekorder."
+        },
+        "slot": {
+          "name": "Platz",
+          "description": "Nummer des Benachrichtigungsziels am Gerät."
+        },
+        "confirm_write": {
+          "name": "Änderung bestätigen",
+          "description": "Erforderlich für alles, was das Gerät ändert."
+        }
+      }
+    }
+  }
+}

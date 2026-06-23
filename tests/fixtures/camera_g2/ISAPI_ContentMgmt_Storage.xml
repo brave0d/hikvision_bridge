@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<storage version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<hddList version="1.0" xmlns="http://www.hikvision.com/ver10/XMLSchema" size="8" >
+
+<hdd>
+
+<id>1</id>
+
+<hddName>hdde</hddName>
+
+<hddPath></hddPath>
+
+<hddType>SATA</hddType>
+
+<status>ok</status>
+
+<capacity>244016</capacity>
+
+<freeSpace>56277</freeSpace>
+
+<property>RW</property>
+
+<formatType>EXT4</formatType>
+
+<Encryption>
+
+<passwordLen min="6" max="64"/>
+
+<encryptionStatus opt="unencrypted,encrypted,verfyFailed">unencrypted</encryptionStatus>
+
+<encryptFormatType opt="EXT4">EXT4</encryptFormatType>
+
+</Encryption>
+
+</hdd>
+
+</hddList>
+
+<nasList version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<supportMountType opt="NFS,SMB/CIFS"/>
+
+<authentication opt="SMB/CIFS"/>
+
+</nasList>
+
+<workMode>quota</workMode>
+
+</storage>
+

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<DeviceInfo version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<deviceName>Front Yard</deviceName>
+
+<deviceID>TESTDEVICEID</deviceID>
+
+<deviceDescription>IPCamera</deviceDescription>
+
+<deviceLocation>hangzhou</deviceLocation>
+
+<systemContact>Hikvision.China</systemContact>
+
+<model>DS-0000CAM-G3A</model>
+
+<serialNumber>TESTSERIAL201</serialNumber>
+
+<macAddress>02:00:00:00:02:01</macAddress>
+
+<firmwareVersion>V1.0.0</firmwareVersion>
+
+<firmwareReleasedDate>build 260101</firmwareReleasedDate>
+
+<encoderVersion>V1.0</encoderVersion>
+
+<encoderReleasedDate>build 260101</encoderReleasedDate>
+
+<bootVersion>V1.0.0</bootVersion>
+
+<bootReleasedDate>260101</bootReleasedDate>
+
+<hardwareVersion>0x0</hardwareVersion>
+
+<deviceType>IPCamera</deviceType>
+
+<telecontrolID>2</telecontrolID>
+
+<supportBeep>true</supportBeep>
+
+<supportVideoLoss>false</supportVideoLoss>
+
+<firmwareVersionInfo>B-R-H13-0</firmwareVersionInfo>
+
+<manufacturer>hikvision</manufacturer>
+
+<subSerialNumber>TESTSUB01</subSerialNumber>
+
+<OEMCode>1</OEMCode>
+
+<firmware>opdevsdk mediaDrv:v2.0.0</firmware>
+
+<platformName>H13</platformName>
+
+<bootTime>2026-08-21T15:30:59</bootTime>
+
+<encryptionModel>0x28e04</encryptionModel>
+
+</DeviceInfo>
+

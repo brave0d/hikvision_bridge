@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<AdminAccessProtocolList version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<AdminAccessProtocol version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<id>1</id>
+
+<enabled>true</enabled>
+
+<protocol>HTTP</protocol>
+
+<portNo>80</portNo>
+
+</AdminAccessProtocol>
+
+<AdminAccessProtocol version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<id>2</id>
+
+<enabled>true</enabled>
+
+<protocol>HTTPS</protocol>
+
+<redirectToHttps>false</redirectToHttps>
+
+<portNo>443</portNo>
+
+<TLS1_1Enable>false</TLS1_1Enable>
+
+<TLS1_2Enable>true</TLS1_2Enable>
+
+<TLS1_3Enable>true</TLS1_3Enable>
+
+</AdminAccessProtocol>
+
+<AdminAccessProtocol version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<id>3</id>
+
+<enabled>true</enabled>
+
+<protocol>DEV_MANAGE</protocol>
+
+<portNo>8000</portNo>
+
+</AdminAccessProtocol>
+
+<AdminAccessProtocol version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<id>4</id>
+
+<enabled>true</enabled>
+
+<protocol>RTSP</protocol>
+
+<portNo>554</portNo>
+
+</AdminAccessProtocol>
+
+<AdminAccessProtocol version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<id>5</id>
+
+<enabled>true</enabled>
+
+<protocol>SDK_OVER_TLS</protocol>
+
+<portNo>8443</portNo>
+
+</AdminAccessProtocol>
+
+<AdminAccessProtocol version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<id>6</id>
+
+<enabled>true</enabled>
+
+<protocol>WebSocket</protocol>
+
+<portNo>7681</portNo>
+
+</AdminAccessProtocol>
+
+<AdminAccessProtocol version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<id>7</id>
+
+<enabled>false</enabled>
+
+<protocol>WebSocketS</protocol>
+
+<portNo>7682</portNo>
+
+</AdminAccessProtocol>
+
+<AdminAccessProtocol version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<id>8</id>
+
+<enabled>false</enabled>
+
+<protocol>SRTP</protocol>
+
+<portNo>322</portNo>
+
+</AdminAccessProtocol>
+
+</AdminAccessProtocolList>
+

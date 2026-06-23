@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<EventCap version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+<isSupportHDFull>true</isSupportHDFull>
+<isSupportHDError>true</isSupportHDError>
+<isSupportNicBroken>true</isSupportNicBroken>
+<isSupportIpConflict>true</isSupportIpConflict>
+<isSupportIllAccess>true</isSupportIllAccess>
+<isSupportViException>false</isSupportViException>
+<isSupportViMismatch>false</isSupportViMismatch>
+<isSupportRecordException>true</isSupportRecordException>
+<isSupportRaidException>false</isSupportRaidException>
+<isSupportViResMismatch>false</isSupportViResMismatch>
+<isSupportPOCException>false</isSupportPOCException>
+<isSupportSmartDetection>false</isSupportSmartDetection>
+<isSupportSpareException>false</isSupportSpareException>
+<isSupportHumanRecognition>true</isSupportHumanRecognition>
+<isSupportFaceContrast>true</isSupportFaceContrast>
+<isSupportWhiteListFaceContrast>true</isSupportWhiteListFaceContrast>
+<isSupportStudentsStoodUp>true</isSupportStudentsStoodUp>
+<isSupportFaceSnap>true</isSupportFaceSnap>
+<isSupportPersonDensityDetection>true</isSupportPersonDensityDetection>
+<isSupportPersonQueueDetection>true</isSupportPersonQueueDetection>
+<isSupportSafetyHelmetDetection>true</isSupportSafetyHelmetDetection>
+<isSupportTeacherBehaviorDetect>true</isSupportTeacherBehaviorDetect>
+<isSupportCityManagement>true</isSupportCityManagement>
+<isSupportMixedTargetDetection>true</isSupportMixedTargetDetection>
+<isSupportFaceSnapModeling>true</isSupportFaceSnapModeling>
+<isSupportTriggerCapCheck>true</isSupportTriggerCapCheck>
+<isSupportPTEventCfg>true</isSupportPTEventCfg>
+</EventCap>

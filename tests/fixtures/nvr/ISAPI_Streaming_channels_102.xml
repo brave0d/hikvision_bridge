@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<StreamingChannel version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+<id>102</id>
+<channelName>102</channelName>
+<enabled>true</enabled>
+<Transport>
+<ControlProtocolList>
+<ControlProtocol>
+<streamingTransport>RTSP</streamingTransport>
+</ControlProtocol>
+</ControlProtocolList>
+</Transport>
+<Video>
+<enabled>true</enabled>
+<videoInputChannelID>1</videoInputChannelID>
+<videoCodecType>H.264</videoCodecType>
+<videoScanType>progressive</videoScanType>
+<videoResolutionWidth>1280</videoResolutionWidth>
+<videoResolutionHeight>720</videoResolutionHeight>
+<videoQualityControlType>VBR</videoQualityControlType>
+<fixedQuality>90</fixedQuality>
+<vbrUpperCap>320</vbrUpperCap>
+<vbrLowerCap>32</vbrLowerCap>
+<GovLength>30</GovLength>
+<maxFrameRate>1500</maxFrameRate>
+<snapShotImageType>JPEG</snapShotImageType>
+<SmartCodec>
+<enabled>false</enabled>
+</SmartCodec>
+<BPFrameInterval>P</BPFrameInterval>
+</Video>
+<Audio>
+<enabled>false</enabled>
+<audioInputChannelID>1</audioInputChannelID>
+<audioCompressionType>G.711ulaw</audioCompressionType>
+</Audio>
+</StreamingChannel>

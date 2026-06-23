@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<EventTrigger >
+<id>fielddetection-1</id>
+<eventType>fielddetection</eventType>
+<dynVideoInputChannelID>1</dynVideoInputChannelID>
+<EventTriggerNotificationList>
+<EventTriggerNotification>
+<id>record-1</id>
+<notificationMethod>record</notificationMethod>
+<dynVideoInputID>1</dynVideoInputID>
+</EventTriggerNotification>
+</EventTriggerNotificationList>
+</EventTrigger>

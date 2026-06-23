@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<DeviceInfo version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+<deviceName>NVR</deviceName>
+<deviceID>TESTDEVICEID</deviceID>
+<model>DS-0000NVR-T8</model>
+<serialNumber>TESTSERIAL101</serialNumber>
+<macAddress>02:00:00:00:01:01</macAddress>
+<firmwareVersion>V1.0.0</firmwareVersion>
+<firmwareReleasedDate>build 260101</firmwareReleasedDate>
+<encoderVersion>V1.0</encoderVersion>
+<encoderReleasedDate>build 260101</encoderReleasedDate>
+<deviceType>NVR</deviceType>
+<telecontrolID>255</telecontrolID>
+<hardwareVersion>0x0</hardwareVersion>
+<decordChannelNums>8</decordChannelNums>
+<VGANums>1</VGANums>
+<USBNums>2</USBNums>
+<auxoutNums>0</auxoutNums>
+<regionVersion>basic</regionVersion>
+</DeviceInfo>

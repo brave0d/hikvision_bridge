@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<EZVIZ version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<enabled>true</enabled>
+
+<registerStatus>true</registerStatus>
+
+<redirect>true</redirect>
+
+<serverAddress>
+
+<addressingFormatType>hostname</addressingFormatType>
+
+<hostName>litedev.eu.hik-connect.com</hostName>
+
+</serverAddress>
+
+<verificationCode></verificationCode>
+
+<convergenceCloudEnabled>false</convergenceCloudEnabled>
+
+<upISAPIStatus>close</upISAPIStatus>
+
+<heartBeatInterval>30</heartBeatInterval>
+
+</EZVIZ>
+

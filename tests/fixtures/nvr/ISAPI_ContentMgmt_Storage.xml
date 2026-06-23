@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<storage version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+<hddList>
+<hdd>
+<id>1</id>
+<hddName>hdd1</hddName>
+<hddPath></hddPath>
+<hddType>SATA</hddType>
+<status>ok</status>
+<capacity>13351936</capacity>
+<freeSpace>0</freeSpace>
+<property>RW</property>
+<group>1</group>
+<hddSerialNumber>TESTDISK01</hddSerialNumber>
+<hddModel>WUH721414ALE6L0</hddModel>
+</hdd>
+</hddList>
+<workMode opt="group,quota">quota</workMode>
+</storage>

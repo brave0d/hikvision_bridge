@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<EZVIZ version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+<enabled>true</enabled>
+<registerStatus>true</registerStatus>
+<bindStatus>bind</bindStatus>
+<redirect>true</redirect>
+<serverAddress>
+<addressingFormatType>hostname</addressingFormatType>
+<hostName>litedev.eu.hik-connect.com</hostName>
+</serverAddress>
+<verificationCode>ABCDEF</verificationCode>
+<enabledTiming>false</enabledTiming>
+<streamEncrypteEnabled>true</streamEncrypteEnabled>
+<protocolVersion>V2.0</protocolVersion>
+<substreamAdaptiveEnabled>true</substreamAdaptiveEnabled>
+</EZVIZ>

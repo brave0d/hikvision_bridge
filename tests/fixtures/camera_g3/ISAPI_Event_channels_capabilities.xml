@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ChannelEventCapList version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+
+<ChannelEventCap>
+
+<eventType opt="motionDetection,VMD,tamperDetection,Shelteralarm,ROI,fieldDetection,fielddetection,defocusDetection,defocus,sceneChangeDetection,scenechangedetection,lineDetection,linedetection,regionEntrance,regionExiting,storageDetection,diskfull,diskerror,nicbroken,ipconflict,illaccess"/>
+
+<channelID>1</channelID>
+
+<id>1</id>
+
+</ChannelEventCap>
+
+</ChannelEventCapList>
+

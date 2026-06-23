@@ -1,0 +1,191 @@
+"""Config, reauth and reconfigure flows of device entries and the cloud flow."""
+
+from __future__ import annotations
+
+from unittest.mock import patch
+
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from custom_components.hikvision_bridge.cloud.account import CaptchaRequired, CloudAuthFailed
+from custom_components.hikvision_bridge.const import (
+    CONF_ACCOUNT,
+    CONF_CONNECTION,
+    CONF_ENTRY_KIND,
+    CONF_SCHEME,
+    CONF_SERIAL,
+    DOMAIN,
+    KIND_CLOUD,
+    KIND_DEVICE,
+)
+from tests.conftest import device_entry
+from tests.fakedevice import FakeDevice
+
+
+async def _device_form(hass: HomeAssistant):
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "device"}
+    )
+
+
+def _form_input(server, device: FakeDevice, connection: str = "http", **extra) -> dict:
+    return {
+        CONF_HOST: server.host,
+        CONF_PORT: server.port,
+        CONF_CONNECTION: connection,
+        "verify_tls": True,
+        CONF_USERNAME: device.username,
+        CONF_PASSWORD: device.password,
+        **extra,
+    }
+
+
+async def test_device_flow_creates_entry_keyed_by_serial(hass: HomeAssistant, serve) -> None:
+    device = FakeDevice("camera_g3")
+    server = await serve(device)
+    form = await _device_form(hass)
+    with patch("custom_components.hikvision_bridge.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], _form_input(server, device)
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Front Yard"
+    assert result["result"].unique_id == "testserial201"
+    assert result["data"][CONF_ENTRY_KIND] == KIND_DEVICE
+    assert result["data"][CONF_SCHEME] == "http"
+    assert result["data"][CONF_SERIAL] == "TESTSERIAL201"
+    assert {method for method, _ in device.requests} == {"GET"}
+
+
+async def test_auto_connection_falls_back_to_http(hass: HomeAssistant, serve) -> None:
+    device = FakeDevice("camera_g3")
+    server = await serve(device)
+    form = await _device_form(hass)
+    with patch("custom_components.hikvision_bridge.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], _form_input(server, device, connection="auto")
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SCHEME] == "http"
+
+
+async def test_wrong_password_reports_once_without_retry(hass: HomeAssistant, serve) -> None:
+    device = FakeDevice("camera_g3")
+    server = await serve(device)
+    form = await _device_form(hass)
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"], _form_input(server, device, connection="auto", password="nope")
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert device.failed_logins == 1
+
+
+async def test_same_device_twice_aborts(hass: HomeAssistant, serve) -> None:
+    device = FakeDevice("camera_g3")
+    server = await serve(device)
+    entry = device_entry(server, device)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, unique_id="testserial201")
+    form = await _device_form(hass)
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"], _form_input(server, device)
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_reauth_updates_password(hass: HomeAssistant, serve) -> None:
+    device = FakeDevice("camera_g3")
+    server = await serve(device)
+    entry = device_entry(server, device, password="old")
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, unique_id="testserial201")
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+    with patch("custom_components.hikvision_bridge.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: device.username, CONF_PASSWORD: device.password}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == device.password
+
+
+async def test_reconfigure_refuses_other_device(hass: HomeAssistant, serve) -> None:
+    recorder = FakeDevice("nvr")
+    camera = FakeDevice("camera_g3")
+    recorder_server = await serve(recorder)
+    camera_server = await serve(camera)
+    entry = device_entry(recorder_server, recorder)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, unique_id="testserial101")
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _form_input(camera_server, camera)
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "other_device"
+    assert entry.data[CONF_HOST] == recorder_server.host
+    assert entry.data[CONF_PORT] == recorder_server.port
+
+
+async def _cloud_form(hass: HomeAssistant):
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "cloud"}
+    )
+
+
+async def test_cloud_flow_creates_entry(hass: HomeAssistant) -> None:
+    form = await _cloud_form(hass)
+    with (
+        patch(
+            "custom_components.hikvision_bridge.cloud.account.CloudAccount.login",
+            return_value=None,
+        ),
+        patch("custom_components.hikvision_bridge.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], {CONF_ACCOUNT: "someone@example.invalid", CONF_PASSWORD: "pw"}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_ENTRY_KIND] == KIND_CLOUD
+    assert result["result"].unique_id.startswith("cloud_")
+    assert "someone" not in result["result"].unique_id
+
+
+async def test_cloud_flow_bad_login_and_captcha(hass: HomeAssistant) -> None:
+    form = await _cloud_form(hass)
+    login = "custom_components.hikvision_bridge.cloud.account.CloudAccount.login"
+    with patch(login, side_effect=CloudAuthFailed()):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], {CONF_ACCOUNT: "a@example.invalid", CONF_PASSWORD: "pw"}
+        )
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch(login, side_effect=CaptchaRequired("https://example.invalid/c.png")):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], {CONF_ACCOUNT: "a@example.invalid", CONF_PASSWORD: "pw"}
+        )
+    assert result["step_id"] == "cloud_captcha"
+
+    with (
+        patch(login, return_value=None) as mocked,
+        patch("custom_components.hikvision_bridge.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], {"captcha": "1234"}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mocked.call_args.kwargs == {"captcha": "1234"}

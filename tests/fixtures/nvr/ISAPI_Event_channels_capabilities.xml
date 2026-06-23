@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ChannelEventCapList version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+<ChannelEventCap>
+<channelID>1</channelID>
+<eventType opt="lineDetection,linedetection,fieldDetection,fielddetection,regionEntrance,regionExiting,defocusDetection,defocus,sceneChangeDetection,scenechangedetection,alarmResult,videoloss,faceSnap,faceCapture,temperatureDetection,thermometry,motionDetection,VMD,shelteralarm"/><shieldEventType opt="faceSnap,faceCapture"/></ChannelEventCap>
+<ChannelEventCap>
+<channelID>2</channelID>
+<eventType opt="lineDetection,linedetection,fieldDetection,fielddetection,regionEntrance,regionExiting,audioDetection,audioexception,defocusDetection,defocus,sceneChangeDetection,scenechangedetection,alarmResult,videoloss,faceSnap,faceCapture,temperatureDetection,thermometry,motionDetection,VMD,shelteralarm"/><shieldEventType opt="faceSnap,faceCapture"/></ChannelEventCap>
+<ChannelEventCap>
+<channelID>3</channelID>
+<eventType opt="lineDetection,linedetection,fieldDetection,fielddetection,regionEntrance,regionExiting,audioDetection,audioexception,defocusDetection,defocus,sceneChangeDetection,scenechangedetection,alarmResult,videoloss,faceSnap,faceCapture,temperatureDetection,thermometry,motionDetection,VMD,shelteralarm"/><shieldEventType opt="faceSnap,faceCapture"/></ChannelEventCap>
+<ChannelEventCap>
+<channelID>4</channelID>
+<eventType opt="lineDetection,linedetection,fieldDetection,fielddetection,regionEntrance,regionExiting,sceneChangeDetection,scenechangedetection,alarmResult,videoloss,faceSnap,faceCapture,motionDetection,VMD,shelteralarm"/><shieldEventType opt="faceSnap,faceCapture"/></ChannelEventCap>
+<ChannelEventCap>
+<channelID>5</channelID>
+<eventType opt="lineDetection,linedetection,fieldDetection,fielddetection,regionEntrance,regionExiting,sceneChangeDetection,scenechangedetection,alarmResult,videoloss,faceSnap,faceCapture,motionDetection,VMD,shelteralarm"/><shieldEventType opt="faceSnap,faceCapture"/></ChannelEventCap>
+<ChannelEventCap>
+<channelID>6</channelID>
+<eventType opt="lineDetection,linedetection,fieldDetection,fielddetection,regionEntrance,regionExiting,defocusDetection,defocus,sceneChangeDetection,scenechangedetection,alarmResult,videoloss,faceSnap,faceCapture,temperatureDetection,thermometry,motionDetection,VMD,shelteralarm"/><shieldEventType opt="faceSnap,faceCapture"/></ChannelEventCap>
+<ChannelEventCap>
+<channelID>7</channelID>
+<eventType opt="alarmResult,videoloss,faceSnap,faceCapture"/><shieldEventType opt="faceSnap,faceCapture"/></ChannelEventCap>
+<ChannelEventCap>
+<channelID>8</channelID>
+<eventType opt="alarmResult,videoloss,faceSnap,faceCapture"/><shieldEventType opt="faceSnap,faceCapture"/></ChannelEventCap>
+</ChannelEventCapList>

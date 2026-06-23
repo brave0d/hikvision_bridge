@@ -1,0 +1,28 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# editor / local
+.idea/
+.vscode/
+.claude/settings.local.json
+
+# device backups and captures never belong in the repo
+device-backup/
+captures/
+
+# local notes and tools
+docs/
+scripts/soak.py
+scripts/cloud_probe.py

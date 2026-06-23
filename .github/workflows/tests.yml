@@ -1,0 +1,49 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install ruff==0.15.0
+      - run: ruff check custom_components tests scripts
+      - run: ruff format --check custom_components tests scripts
+
+  pytest:
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # pytest-homeassistant-custom-component release matching each Home Assistant version
+          - name: current (2026.10)
+            phcc: "pytest-homeassistant-custom-component==0.13.373"
+            experimental: false
+          - name: previous (2026.9)
+            phcc: "pytest-homeassistant-custom-component==0.13.367"
+            experimental: false
+          - name: beta
+            phcc: "--pre pytest-homeassistant-custom-component"
+            experimental: true
+    name: pytest ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: sudo apt-get update && sudo apt-get install -y libturbojpeg0
+      - run: pip install ${{ matrix.phcc }} PyTurboJPEG
+      - run: python -m pytest -q
