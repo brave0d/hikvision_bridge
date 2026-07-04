@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -157,8 +157,10 @@ def _devices(online: bool = True) -> dict[str, CloudDevice]:
 
 async def test_cloud_entry_entities_and_transitions(hass: HomeAssistant) -> None:
     # A locally configured recorder whose serial contains the cloud short serial.
-    # Owned by another entry so that it is not set up here.
-    local = MockConfigEntry(domain="local_test", data={}, title="local")
+    # Its entry is disabled so that it is not set up here.
+    local = MockConfigEntry(
+        domain=DOMAIN, data={}, title="local", disabled_by=ConfigEntryDisabler.USER
+    )
     local.add_to_hass(hass)
     local_device = dr.async_get(hass).async_get_or_create(
         config_entry_id=local.entry_id,

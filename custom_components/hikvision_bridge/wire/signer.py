@@ -108,6 +108,7 @@ class DigestSigner(Signer):
         self._count = 0
         self._nonce_proven = False
         self._ever_proven = False
+        self.generation = 0
         self.adopted_at = time.monotonic()
 
     @property
@@ -122,6 +123,7 @@ class DigestSigner(Signer):
         self._challenge = challenge
         self._count = 0
         self._nonce_proven = False
+        self.generation += 1
         self.adopted_at = time.monotonic()
 
     def mark_success(self) -> None:

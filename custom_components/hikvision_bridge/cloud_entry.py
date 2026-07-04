@@ -122,12 +122,14 @@ def local_device_id(hass: HomeAssistant, device: CloudDevice) -> str | None:
     locally (the full formats differ). Channel devices and cloud devices are skipped.
     """
     short = device.serial.lower()
-    for entry in dr.async_get(hass).devices.values():
-        for domain, key in entry.identifiers:
-            if domain != DOMAIN or "_ch" in key or key.startswith(CLOUD_PREFIX):
-                continue
-            if short in key:
-                return entry.id
+    registry = dr.async_get(hass)
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        for entry in dr.async_entries_for_config_entry(registry, config_entry.entry_id):
+            for domain, key in entry.identifiers:
+                if domain != DOMAIN or "_ch" in key or key.startswith(CLOUD_PREFIX):
+                    continue
+                if short in key:
+                    return entry.id
     return None
 
 

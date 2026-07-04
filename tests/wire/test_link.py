@@ -1,5 +1,7 @@
 """Authentication negotiation, lockout protection and error mapping of IsapiLink."""
 
+import asyncio
+
 import aiohttp
 from aiohttp.test_utils import TestServer
 import pytest
@@ -73,6 +75,21 @@ async def test_expired_nonce_is_renewed_once_without_counting_as_failure(rig) ->
     await link.read_xml("/ISAPI/System/deviceInfo")
     device.expire_nonces()
     assert (await link.read_xml("/ISAPI/Event/triggers")) is not None
+    assert device.failed_logins == 0
+
+
+async def test_parallel_requests_survive_an_expired_nonce(rig) -> None:
+    device = FakeDevice()
+    link = await rig(device)
+    await link.read_xml("/ISAPI/System/deviceInfo")
+    for _ in range(3):
+        device.expire_nonces()
+        results = await asyncio.gather(
+            link.read_xml("/ISAPI/Event/triggers"),
+            link.read_xml("/ISAPI/System/deviceInfo"),
+        )
+        assert all(result is not None for result in results)
+    assert link.blocked is None
     assert device.failed_logins == 0
 
 

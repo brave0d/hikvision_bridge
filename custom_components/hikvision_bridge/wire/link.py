@@ -247,6 +247,7 @@ class IsapiLink:
             headers = {"Accept": "*/*"}
             if payload is not None:
                 headers["Content-Type"] = content_type
+            signed = self._signed_state()
             if self._signer is not None:
                 headers["Authorization"] = self._signer.authorization(method, path)
             try:
@@ -258,17 +259,42 @@ class IsapiLink:
                 self.stats.last_error = type(err).__name__
                 raise
             if status != 401:
-                if self._signer is not None:
-                    self._signer.mark_success()
+                self._mark_success(signed)
                 elapsed = (time.monotonic() - started) * 1000
                 self.stats.last_success = time.monotonic()
                 self.stats.latency_ms[path.split("?", maxsplit=1)[0]] = round(elapsed, 1)
                 return self._finish(path, Reply(status, ctype, data, elapsed))
-            if not self._may_retry(attempt, challenges, data):
+            if not self._may_retry(attempt, challenges, data, signed):
                 break
         raise self._blocked or BadCredentials("rejected")
 
-    def _may_retry(self, attempt: int, challenges: list[str], data: bytes) -> bool:
+    def _signed_state(self) -> tuple[int, bool] | None:
+        """Nonce generation and whether that nonce had worked, at signing time."""
+        signer = self._signer
+        if isinstance(signer, DigestSigner):
+            return signer.generation, signer.nonce_proven
+        return None
+
+    def _mark_success(self, signed: tuple[int, bool] | None) -> None:
+        signer = self._signer
+        if signer is None:
+            return
+        # A reply to a request signed with an older nonce says nothing about the current one.
+        if (
+            isinstance(signer, DigestSigner)
+            and signed is not None
+            and signed[0] != signer.generation
+        ):
+            return
+        signer.mark_success()
+
+    def _may_retry(
+        self,
+        attempt: int,
+        challenges: list[str],
+        data: bytes,
+        signed: tuple[int, bool] | None,
+    ) -> bool:
         """Decide after a 401 whether one more attempt is safe; otherwise block the link."""
         status = read_status(decode(data))
         if is_lock(status):
@@ -276,15 +302,15 @@ class IsapiLink:
             return False
         fresh = pick(parse_challenges(challenges))
         signer = self._signer
-        if (
-            attempt == 0
-            and fresh is not None
-            and isinstance(signer, DigestSigner)
-            and (fresh.stale or signer.nonce_proven)
-        ):
-            # The nonce expired; credentials were fine with it. Exactly one retry.
-            signer.accept(fresh)
-            return True
+        if attempt == 0 and isinstance(signer, DigestSigner) and signed is not None:
+            generation, was_proven = signed
+            if generation != signer.generation:
+                # A parallel request already adopted a newer nonce; sign again with it.
+                return True
+            if fresh is not None and (fresh.stale or was_proven):
+                # The nonce expired; credentials were fine with it. Exactly one retry.
+                signer.accept(fresh)
+                return True
         self._blocked = BadCredentials("credentials rejected after a fresh challenge")
         _LOGGER.warning(
             "%s rejected the credentials; all requests stop until they are updated",
@@ -364,6 +390,7 @@ class IsapiLink:
         timeout = aiohttp.ClientTimeout(total=None, sock_connect=self._connect_timeout)
         for attempt in range(2):
             headers = {"Accept": "*/*"}
+            signed = self._signed_state()
             if self._signer is not None:
                 headers["Authorization"] = self._signer.authorization("GET", path)
             try:
@@ -378,7 +405,7 @@ class IsapiLink:
                 challenges = response.headers.getall("WWW-Authenticate", [])
                 data = await response.read()
                 response.release()
-                if self._may_retry(attempt, challenges, data):
+                if self._may_retry(attempt, challenges, data, signed):
                     continue
                 raise self._blocked or BadCredentials("rejected")
             if response.status != 200:
@@ -388,8 +415,7 @@ class IsapiLink:
                     f"HTTP {response.status}", response.status
                 )
                 raise fault
-            if self._signer is not None:
-                self._signer.mark_success()
+            self._mark_success(signed)
             try:
                 yield response
             finally:
