@@ -44,6 +44,9 @@ async def test_recorder_setup_builds_device_tree_and_unloads(hass: HomeAssistant
     # unique ids are derived from the serial, never from the address
     assert all(e.unique_id.startswith("testserial101_") for e in entities)
     assert all(server.host not in e.unique_id for e in entities)
+    sub_streams = [e for e in entities if e.unique_id.endswith("_stream_2")]
+    assert sub_streams, "sub streams must be offered"
+    assert all(e.disabled_by is None for e in sub_streams)
 
     # setup only reads
     assert {method for method, _ in device.requests} == {"GET"}

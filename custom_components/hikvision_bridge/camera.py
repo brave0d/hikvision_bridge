@@ -52,7 +52,8 @@ class ChannelCamera(BridgeEntity, Camera):
         self._attr_translation_key = {1: "main_stream", 2: "sub_stream"}.get(
             stream.rank, "third_stream"
         )
-        self._attr_entity_registry_enabled_default = stream.rank == 1
+        # Main and sub stream are both useful (full view, light live view); the third is rare.
+        self._attr_entity_registry_enabled_default = stream.rank <= 2
         encrypted = bool(bridge.profile.cloud and bridge.profile.cloud.stream_encrypted)
         direct = channel_id in bridge.routes and bridge.routes[channel_id].healthy
         self._playable = not encrypted or direct
