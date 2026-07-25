@@ -163,6 +163,7 @@ async def test_cloud_flow_creates_entry(hass: HomeAssistant) -> None:
     assert result["data"][CONF_ENTRY_KIND] == KIND_CLOUD
     assert result["result"].unique_id.startswith("cloud_")
     assert "someone" not in result["result"].unique_id
+    assert result["title"] == "Hik-Connect (s***@example.invalid)"
 
 
 async def test_cloud_flow_bad_login_and_captcha(hass: HomeAssistant) -> None:

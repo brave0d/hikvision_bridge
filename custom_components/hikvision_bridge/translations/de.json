@@ -260,7 +260,7 @@
         "name": "Cloud-Verbindung"
       },
       "cloud_stream_encryption": {
-        "name": "Stream-Verschlüsselung (Hik-Connect)"
+        "name": "Stream-Verschlüsselung"
       }
     },
     "switch": {

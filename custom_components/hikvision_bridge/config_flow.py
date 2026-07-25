@@ -157,6 +157,14 @@ def _recorder_entries_with_camera(
     return found
 
 
+def _masked_account(account: str) -> str:
+    """Short form of the account for titles: enough to tell accounts apart, not the address."""
+    name, at, domain = account.partition("@")
+    if at:
+        return f"{name[:1]}***@{domain}"
+    return f"***{account[-3:]}" if len(account) > 3 else "***"
+
+
 class BridgeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
@@ -419,7 +427,7 @@ class BridgeConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_CAPTCHA): str,
                 }
             ),
-            description_placeholders={"account": entry.title},
+            description_placeholders={"account": entry.data[CONF_ACCOUNT]},
             errors=errors,
         )
 
@@ -427,7 +435,7 @@ class BridgeConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(f"cloud_{account.account_id}")
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=user_input[CONF_ACCOUNT],
+            title=f"Hik-Connect ({_masked_account(user_input[CONF_ACCOUNT])})",
             data={
                 CONF_ENTRY_KIND: KIND_CLOUD,
                 CONF_ACCOUNT: user_input[CONF_ACCOUNT],
