@@ -7,7 +7,7 @@ from urllib.parse import quote
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -54,18 +54,50 @@ class ChannelCamera(BridgeEntity, Camera):
         )
         # Main and sub stream are both useful (full view, light live view); the third is rare.
         self._attr_entity_registry_enabled_default = stream.rank <= 2
-        encrypted = bool(bridge.profile.cloud and bridge.profile.cloud.stream_encrypted)
-        direct = channel_id in bridge.routes and bridge.routes[channel_id].healthy
-        self._playable = not encrypted or direct
-        if self._playable:
-            self._attr_supported_features = CameraEntityFeature.STREAM
         transport = bridge.entry.options.get(OPT_RTSP_TRANSPORT, RTSP_TCP)
         self.stream_options["rtsp_transport"] = transport
-        self._attr_extra_state_attributes = {
+        self._was_playable = self._playable
+
+    @property
+    def _blocked_by_encryption(self) -> bool:
+        """Hik-Connect stream encryption is on and no direct camera link avoids it."""
+        cloud = self.bridge.profile.cloud
+        route = self.bridge.routes.get(self.channel_id)
+        direct = route is not None and route.healthy
+        return bool(cloud and cloud.stream_encrypted) and not direct
+
+    @property
+    def _playable(self) -> bool:
+        return not self._blocked_by_encryption
+
+    @property
+    def supported_features(self) -> CameraEntityFeature:
+        return CameraEntityFeature.STREAM if self._playable else CameraEntityFeature(0)
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        stream = self._stream
+        return {
             "codec": stream.codec,
             "resolution": f"{stream.width}x{stream.height}" if stream.width else None,
-            "stream_encrypted": encrypted and not direct,
+            "stream_encrypted": self._blocked_by_encryption,
         }
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        # The encryption setting is re-read while running; follow it without a reload.
+        self.async_on_remove(self.bridge.refresher.async_add_listener(self._on_refresh))
+
+    @callback
+    def _on_refresh(self) -> None:
+        if self._playable == self._was_playable:
+            return
+        self._was_playable = self._playable
+        self.hass.async_create_task(self._async_playable_changed())
+
+    async def _async_playable_changed(self) -> None:
+        await self.async_refresh_providers(write_state=False)
+        self.async_write_ha_state()
 
     def _source(self) -> tuple[IsapiLink, str, dict]:
         """Link, stream id and credentials to use (direct camera link if configured)."""

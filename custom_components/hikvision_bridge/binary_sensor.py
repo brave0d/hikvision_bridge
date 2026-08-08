@@ -64,6 +64,8 @@ async def async_setup_entry(
     entities.extend(AlarmInputSensor(bridge, port) for port in profile.inputs.values())
     if profile.storage:
         entities.append(StorageProblemSensor(bridge))
+    if profile.cloud is not None:
+        entities.append(StreamEncryptionSensor(bridge))
     entities.append(EventLinkSensor(bridge))
     async_add_entities(entities)
 
@@ -140,6 +142,22 @@ class StorageProblemSensor(PolledEntity, BinarySensorEntity):
         if self.bridge.router.is_active(DEVICE_SCOPE, Kind.STORAGE.value):
             return True
         return any(unit.status not in HEALTHY for unit in self.coordinator.data.storage)
+
+
+class StreamEncryptionSensor(PolledEntity, BinarySensorEntity):
+    """On while Hik-Connect stream encryption keeps Home Assistant from playing the video."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "stream_encryption"
+
+    def __init__(self, bridge: DeviceBridge) -> None:
+        super().__init__(bridge, None, "stream_encryption")
+
+    @property
+    def is_on(self) -> bool:
+        cloud = self.bridge.profile.cloud
+        return bool(cloud and cloud.stream_encrypted)
 
 
 class EventLinkSensor(PushEntity, BinarySensorEntity):

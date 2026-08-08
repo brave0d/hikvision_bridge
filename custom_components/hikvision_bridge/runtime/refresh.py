@@ -18,6 +18,7 @@ from ..const import (
     FAST_INTERVAL,
     GRACE_BEFORE_UNAVAILABLE,
 )
+from ..model.discover import CLOUD_PATH, read_cloud_state
 from ..model.features import detection, io, storage
 from ..model.features.detection import DetectionState
 from ..model.inventory import StorageUnit
@@ -43,6 +44,7 @@ class Snapshot:
     outputs: dict[str, bool | None] = field(default_factory=dict)
     channels_online: dict[str, bool | None] = field(default_factory=dict)
     storage: list[StorageUnit] = field(default_factory=list)
+    stream_encrypted: bool | None = None
 
 
 class StatusRefresher(DataUpdateCoordinator[Snapshot]):
@@ -82,6 +84,7 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 outputs=dict(previous.outputs),
                 channels_online=dict(previous.channels_online),
                 storage=list(previous.storage),
+                stream_encrypted=previous.stream_encrypted,
             )
         )
         try:
@@ -90,6 +93,7 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 await self._read_detections(snapshot)
             if due(CHANNELS_EVERY):
                 await self._read_channels(snapshot)
+                await self._read_cloud(snapshot)
             if due(STORAGE_EVERY):
                 snapshot.storage = await storage.read(self._bridge.link)
         except BadCredentials as err:
@@ -162,6 +166,15 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 snapshot.detections[key] = result
         if keys and failures == len(keys):
             raise next(r for r in results if isinstance(r, BridgeFault))
+
+    async def _read_cloud(self, snapshot: Snapshot) -> None:
+        """Follow the Hik-Connect settings, so that switching stream encryption takes effect."""
+        if self._bridge.profile.cloud is None:
+            return
+        state = read_cloud_state(await self._bridge.link.read_xml(CLOUD_PATH, optional=True))
+        if state is not None:
+            self._bridge.update_cloud_state(state)
+            snapshot.stream_encrypted = state.stream_encrypted
 
     async def _read_channels(self, snapshot: Snapshot) -> None:
         profile = self._bridge.profile

@@ -4,15 +4,21 @@ from __future__ import annotations
 
 import json
 
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from custom_components.hikvision_bridge.const import DOMAIN
 from custom_components.hikvision_bridge.diagnostics import async_get_config_entry_diagnostics
+from custom_components.hikvision_bridge.model.discover import CLOUD_PATH
 from tests.conftest import device_entry
-from tests.fakedevice import FakeDevice
+from tests.fakedevice import FIXTURES, FakeDevice
 
 
 async def _set_up_entry(hass: HomeAssistant, entry) -> None:
@@ -54,6 +60,46 @@ async def test_recorder_setup_builds_device_tree_and_unloads(hass: HomeAssistant
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_stream_encryption_is_followed_without_reload(hass: HomeAssistant, serve) -> None:
+    device = FakeDevice("nvr")
+    server = await serve(device)
+    entry = device_entry(server, device)
+    await _set_up_entry(hass, entry)
+    entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+    sensor = next(e.entity_id for e in entities if e.unique_id.endswith("_stream_encryption"))
+    camera = next(e.entity_id for e in entities if e.unique_id.endswith("_stream_1"))
+    issue_id = f"{entry.entry_id}_audit_stream_encrypted_device"
+
+    assert hass.states.get(sensor).state == STATE_ON
+    assert hass.states.get(camera).attributes["stream_encrypted"] is True
+    assert hass.states.get(camera).attributes["supported_features"] == 0
+    await entry.runtime_data.async_run_audit()
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+
+    # Switched off on the device: followed at the next refresh, without a reload.
+    original = (FIXTURES / "nvr" / "ISAPI_System_Network_EZVIZ.xml").read_text()
+    device.overrides[CLOUD_PATH] = (
+        200,
+        original.replace(
+            "<streamEncrypteEnabled>true</streamEncrypteEnabled>",
+            "<streamEncrypteEnabled>false</streamEncrypteEnabled>",
+        ),
+    )
+    refresher = entry.runtime_data.refresher
+    refresher.request_full()
+    await refresher.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(sensor).state == STATE_OFF
+    assert hass.states.get(camera).attributes["stream_encrypted"] is False
+    assert hass.states.get(camera).attributes["supported_features"] == CameraEntityFeature.STREAM
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+    assert {method for method, _ in device.requests} == {"GET"}
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_diagnostics_leak_nothing(hass: HomeAssistant, serve) -> None:

@@ -256,6 +256,9 @@
       "event_link": {
         "name": "Ereignisverbindung"
       },
+      "stream_encryption": {
+        "name": "Stream-Verschlüsselung"
+      },
       "cloud_online": {
         "name": "Cloud-Verbindung"
       },

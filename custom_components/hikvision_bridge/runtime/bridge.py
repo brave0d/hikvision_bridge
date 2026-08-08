@@ -31,7 +31,7 @@ from ..const import (
 )
 from ..model import audit
 from ..model.discover import read_identity_only
-from ..model.inventory import DeviceProfile
+from ..model.inventory import CloudLinkState, DeviceProfile
 from ..wire.faults import BadCredentials, BridgeFault, LockedOut
 from ..wire.feed import AlarmFeed
 from ..wire.link import Endpoint, IsapiLink
@@ -214,6 +214,20 @@ class DeviceBridge:
             return
         self.report = report
         self._publish_audit(report)
+
+    @callback
+    def update_cloud_state(self, state: CloudLinkState) -> None:
+        """Take over re-read Hik-Connect settings and keep the encryption repair in step."""
+        if state == self.profile.cloud:
+            return
+        self.profile.cloud = state
+        if self.report is None:
+            return
+        items = [i for i in self.report.items if i.finding != audit.Finding.STREAM_ENCRYPTED]
+        if state.stream_encrypted:
+            items.append(audit.AuditItem(audit.Finding.STREAM_ENCRYPTED))
+        self.report.items = sorted(items, key=lambda item: item.key)
+        self._publish_audit(self.report)
 
     @callback
     def _publish_audit(self, report: audit.AuditReport) -> None:

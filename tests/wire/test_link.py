@@ -93,6 +93,46 @@ async def test_parallel_requests_survive_an_expired_nonce(rig) -> None:
     assert device.failed_logins == 0
 
 
+async def test_nonce_counts_reach_the_device_in_order(rig) -> None:
+    device = FakeDevice(strict_count=True)
+    link = await rig(device)
+    paths = ["/ISAPI/System/deviceInfo", "/ISAPI/Event/triggers"] * 6
+    results = await asyncio.gather(*(link.read_xml(path) for path in paths))
+    assert all(result is not None for result in results)
+    assert device.failed_logins == 0
+
+
+async def test_one_refusal_of_working_credentials_does_not_block(rig) -> None:
+    device = FakeDevice()
+    link = await rig(device)
+    await link.read_xml("/ISAPI/System/deviceInfo")
+    device.refuse_next = 2  # the request and its retry with a fresh nonce
+    with pytest.raises(faults.AuthHiccup):
+        await link.read_xml("/ISAPI/Event/triggers")
+    assert link.blocked is None
+    assert (await link.read_xml("/ISAPI/Event/triggers")) is not None
+    assert device.failed_logins == 2
+
+
+async def test_changed_password_blocks_on_the_second_refusal(rig) -> None:
+    device = FakeDevice()
+    link = await rig(device)
+    await link.read_xml("/ISAPI/System/deviceInfo")
+    device.password = "changed-on-device"
+    with pytest.raises(faults.AuthHiccup):
+        await link.read_xml("/ISAPI/Event/triggers")
+    with pytest.raises(faults.BadCredentials):
+        await link.read_xml("/ISAPI/Event/triggers")
+    assert isinstance(link.blocked, faults.BadCredentials)
+    before = len(device.requests)
+    with pytest.raises(faults.BadCredentials):
+        await link.read_xml("/ISAPI/Event/triggers")
+    assert len(device.requests) == before
+    # Well below the device's failed-login lock.
+    assert device.failed_logins == 3
+    assert device.failed_logins < device.lock_after
+
+
 async def test_lock_is_reported_and_blocks(rig) -> None:
     device = FakeDevice(lock_after=0)
     link = await rig(device)

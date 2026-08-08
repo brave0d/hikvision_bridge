@@ -143,6 +143,21 @@ def decide_shape(identity: Identity, proxy: int, local: int) -> DeviceShape:
     return DeviceShape.UNKNOWN
 
 
+CLOUD_PATH = "/ISAPI/System/Network/EZVIZ"
+
+
+def read_cloud_state(cloud: XmlNode | None) -> CloudLinkState | None:
+    """Hik-Connect platform access settings, including stream encryption."""
+    if cloud is None:
+        return None
+    return CloudLinkState(
+        enabled=bool(cloud.flag("enabled", False)),
+        registered=bool(cloud.flag("registerStatus", False)),
+        stream_encrypted=bool(cloud.flag("streamEncrypteEnabled", False))
+        or bool(cloud.flag("streamEncryptEnabled", False)),
+    )
+
+
 async def discover(link: IsapiLink, *, probe_switches: bool = True) -> DeviceProfile:
     """Collect everything needed to build entities. Only GET requests are sent."""
     identity = await read_identity_only(link)
@@ -168,7 +183,7 @@ async def discover(link: IsapiLink, *, probe_switches: bool = True) -> DevicePro
         link.read_xml(linkage.LIST_PATH, optional=True),
         link.read_xml("/ISAPI/System/IO/inputs", optional=True),
         link.read_xml("/ISAPI/System/IO/outputs", optional=True),
-        link.read_xml("/ISAPI/System/Network/EZVIZ", optional=True),
+        link.read_xml(CLOUD_PATH, optional=True),
         link.read_xml("/ISAPI/Security/adminAccesses", optional=True),
         link.read_xml("/ISAPI/Security/userCheck", optional=True),
     )
@@ -216,13 +231,7 @@ async def discover(link: IsapiLink, *, probe_switches: bool = True) -> DevicePro
         triggers=triggers,
         storage=await storage.read(link),
     )
-    if cloud is not None:
-        profile.cloud = CloudLinkState(
-            enabled=bool(cloud.flag("enabled", False)),
-            registered=bool(cloud.flag("registerStatus", False)),
-            stream_encrypted=bool(cloud.flag("streamEncrypteEnabled", False))
-            or bool(cloud.flag("streamEncryptEnabled", False)),
-        )
+    profile.cloud = read_cloud_state(cloud)
     if accesses is not None:
         for node in accesses.children("AdminAccessProtocol"):
             protocol = (node.text("protocol") or "").upper()

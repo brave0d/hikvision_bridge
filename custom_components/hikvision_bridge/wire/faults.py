@@ -31,6 +31,10 @@ class TlsUntrusted(Unreachable):
     translation_key = "tls_untrusted"
 
 
+class AuthHiccup(Unreachable):
+    """A request was refused although these credentials worked before; tried again later."""
+
+
 class NotIsapi(BridgeFault):
     """Something answered, but it is not an ISAPI device."""
 

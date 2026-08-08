@@ -15,6 +15,7 @@ import aiohttp
 from yarl import URL
 
 from .faults import (
+    AuthHiccup,
     BadCredentials,
     BridgeFault,
     DeviceRejected,
@@ -35,7 +36,12 @@ from .xmlview import XmlError, XmlNode, decode, parse
 _LOGGER = scrubbed_logger(__name__)
 
 PROBE_PATH = "/ISAPI/System/deviceInfo"
-MAX_PARALLEL = 2
+# One request at a time: digest nonce counts must reach the device in order, and requests
+# that overtake each other are refused.
+MAX_PARALLEL = 1
+# Refusals in a row of credentials that worked before, before the link is blocked. Kept low
+# so that a real password change cannot run into the device's failed-login lock.
+HICCUPS_BEFORE_BLOCK = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,6 +111,8 @@ class IsapiLink:
         self._signer: Signer | None = None
         self._auth_checked = False
         self._blocked: BridgeFault | None = None
+        self._worked = False
+        self._hiccups = 0
         self._gate = asyncio.Semaphore(MAX_PARALLEL)
         self._write_lock = asyncio.Lock()
         self._establish_lock = asyncio.Lock()
@@ -134,6 +142,8 @@ class IsapiLink:
         self._signer = None
         self._auth_checked = False
         self._blocked = None
+        self._worked = False
+        self._hiccups = 0
 
     # ------------------------------------------------------------ transport
 
@@ -221,8 +231,6 @@ class IsapiLink:
         """Send one request, handling digest nonce refresh. Raises a BridgeFault on errors."""
         if self._blocked is not None:
             raise self._blocked
-        if not self._auth_checked:
-            await self._establish()
         payload = body.encode("utf-8") if isinstance(body, str) else body
         writing = method != "GET"
         timeout = self._write_timeout if writing else self._read_timeout
@@ -244,6 +252,12 @@ class IsapiLink:
         started = time.monotonic()
         self.stats.requests += 1
         for attempt in range(2):
+            # Checked inside the request slot: an earlier request may have blocked the link
+            # or reset authentication while this one was waiting.
+            if self._blocked is not None:
+                raise self._blocked
+            if not self._auth_checked:
+                await self._establish()
             headers = {"Accept": "*/*"}
             if payload is not None:
                 headers["Content-Type"] = content_type
@@ -264,8 +278,11 @@ class IsapiLink:
                 self.stats.last_success = time.monotonic()
                 self.stats.latency_ms[path.split("?", maxsplit=1)[0]] = round(elapsed, 1)
                 return self._finish(path, Reply(status, ctype, data, elapsed))
-            if not self._may_retry(attempt, challenges, data, signed):
-                break
+            fault = self._after_refusal(attempt, challenges, data, signed)
+            if fault is not None:
+                self.stats.failures += 1
+                self.stats.last_error = type(fault).__name__
+                raise fault
         raise self._blocked or BadCredentials("rejected")
 
     def _signed_state(self) -> tuple[int, bool] | None:
@@ -279,6 +296,8 @@ class IsapiLink:
         signer = self._signer
         if signer is None:
             return
+        self._worked = True
+        self._hiccups = 0
         # A reply to a request signed with an older nonce says nothing about the current one.
         if (
             isinstance(signer, DigestSigner)
@@ -288,35 +307,46 @@ class IsapiLink:
             return
         signer.mark_success()
 
-    def _may_retry(
+    def _after_refusal(
         self,
         attempt: int,
         challenges: list[str],
         data: bytes,
         signed: tuple[int, bool] | None,
-    ) -> bool:
-        """Decide after a 401 whether one more attempt is safe; otherwise block the link."""
+    ) -> BridgeFault | None:
+        """Decide after a 401: None means one more attempt is safe, else the fault to raise."""
         status = read_status(decode(data))
         if is_lock(status):
             self._blocked = LockedOut("device reports a lock", status.unlock_seconds)
-            return False
+            return self._blocked
         fresh = pick(parse_challenges(challenges))
         signer = self._signer
         if attempt == 0 and isinstance(signer, DigestSigner) and signed is not None:
             generation, was_proven = signed
             if generation != signer.generation:
-                # A parallel request already adopted a newer nonce; sign again with it.
-                return True
+                # Another request already adopted a newer nonce; sign again with it.
+                return None
             if fresh is not None and (fresh.stale or was_proven):
                 # The nonce expired; credentials were fine with it. Exactly one retry.
                 signer.accept(fresh)
-                return True
+                return None
+        if self._worked and self._hiccups + 1 < HICCUPS_BEFORE_BLOCK:
+            # These credentials worked before: start over with a fresh challenge next time
+            # instead of giving up on a single refusal.
+            self._hiccups += 1
+            self._signer = None
+            self._auth_checked = False
+            _LOGGER.warning(
+                "%s refused a request although the credentials worked before; trying again later",
+                self.endpoint.host,
+            )
+            return AuthHiccup("refused after a fresh challenge")
         self._blocked = BadCredentials("credentials rejected after a fresh challenge")
         _LOGGER.warning(
             "%s rejected the credentials; all requests stop until they are updated",
             self.endpoint.host,
         )
-        return False
+        return self._blocked
 
     def _finish(self, path: str, reply: Reply) -> Reply:
         fault = classify(reply.status, reply.text if reply.body else "")
@@ -382,40 +412,44 @@ class IsapiLink:
 
     @asynccontextmanager
     async def open_stream(self, path: str) -> AsyncIterator[aiohttp.ClientResponse]:
-        """Open a long-lived authenticated GET (event stream). Does not use a request slot."""
+        """Open a long-lived authenticated GET (event stream).
+
+        The request slot is held only until the response headers arrive.
+        """
         if self._blocked is not None:
             raise self._blocked
-        if not self._auth_checked:
-            await self._establish()
         timeout = aiohttp.ClientTimeout(total=None, sock_connect=self._connect_timeout)
         for attempt in range(2):
-            headers = {"Accept": "*/*"}
-            signed = self._signed_state()
-            if self._signer is not None:
-                headers["Authorization"] = self._signer.authorization("GET", path)
-            try:
-                response = await self._session.get(
-                    self._url(path), headers=headers, timeout=timeout, allow_redirects=False
-                )
-            except aiohttp.ClientConnectorCertificateError as err:
-                raise TlsUntrusted(str(err)) from err
-            except (aiohttp.ClientError, TimeoutError, OSError) as err:
-                raise Unreachable(f"{type(err).__name__}: {err}") from err
-            if response.status == 401:
-                challenges = response.headers.getall("WWW-Authenticate", [])
-                data = await response.read()
-                response.release()
-                if self._may_retry(attempt, challenges, data, signed):
-                    continue
-                raise self._blocked or BadCredentials("rejected")
-            if response.status != 200:
-                data = await response.read()
-                response.release()
-                fault = classify(response.status, decode(data)) or DeviceRejected(
-                    f"HTTP {response.status}", response.status
-                )
-                raise fault
-            self._mark_success(signed)
+            async with self._gate:
+                if not self._auth_checked:
+                    await self._establish()
+                headers = {"Accept": "*/*"}
+                signed = self._signed_state()
+                if self._signer is not None:
+                    headers["Authorization"] = self._signer.authorization("GET", path)
+                try:
+                    response = await self._session.get(
+                        self._url(path), headers=headers, timeout=timeout, allow_redirects=False
+                    )
+                except aiohttp.ClientConnectorCertificateError as err:
+                    raise TlsUntrusted(str(err)) from err
+                except (aiohttp.ClientError, TimeoutError, OSError) as err:
+                    raise Unreachable(f"{type(err).__name__}: {err}") from err
+                if response.status == 401:
+                    challenges = response.headers.getall("WWW-Authenticate", [])
+                    data = await response.read()
+                    response.release()
+                    fault = self._after_refusal(attempt, challenges, data, signed)
+                    if fault is None:
+                        continue
+                    raise fault
+                if response.status != 200:
+                    data = await response.read()
+                    response.release()
+                    raise classify(response.status, decode(data)) or DeviceRejected(
+                        f"HTTP {response.status}", response.status
+                    )
+                self._mark_success(signed)
             try:
                 yield response
             finally:

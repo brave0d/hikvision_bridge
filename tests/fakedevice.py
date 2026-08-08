@@ -42,6 +42,11 @@ class FakeDevice:
     documents: dict[str, str] = field(default_factory=dict)
     nonces: set[str] = field(default_factory=set)
     expired: set[str] = field(default_factory=set)
+    # Refuse this many correctly signed requests (a device that briefly rejects logins).
+    refuse_next: int = 0
+    # Refuse a request whose nonce count is not above the last one seen for its nonce.
+    strict_count: bool = True
+    counts: dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         folder = FIXTURES / self.profile
@@ -80,9 +85,19 @@ class FakeDevice:
         ha1 = _md5(f"{params.get('username')}:{self.realm}:{self.password}")
         ha2 = _md5(f"{request.method}:{params.get('uri')}")
         expected = _md5(f"{ha1}:{nonce}:{params.get('nc')}:{params.get('cnonce')}:auth:{ha2}")
-        if params.get("username") != self.username or params.get("response") != expected:
+        count = int(params.get("nc", "0"), 16)
+        out_of_order = self.strict_count and count <= self.counts.get(nonce, 0)
+        refused = self.refuse_next > 0
+        if (
+            params.get("username") != self.username
+            or params.get("response") != expected
+            or out_of_order
+            or refused
+        ):
+            self.refuse_next = max(0, self.refuse_next - 1)
             self.failed_logins += 1
             return web.Response(status=401, headers={"WWW-Authenticate": self._challenge()})
+        self.counts[nonce] = count
         if params.get("uri") != request.path_qs:
             return web.Response(status=400, text="uri mismatch")
         return None
