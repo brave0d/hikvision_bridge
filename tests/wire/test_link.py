@@ -6,7 +6,7 @@ import aiohttp
 from aiohttp.test_utils import TestServer
 import pytest
 
-from custom_components.hikvision_bridge.wire import faults
+from custom_components.hikvision_bridge.wire import faults, link as link_module
 from custom_components.hikvision_bridge.wire.link import Endpoint, IsapiLink
 from tests.fakedevice import FakeDevice
 
@@ -23,7 +23,7 @@ async def _serve(device: FakeDevice):
 async def rig():
     started = []
 
-    async def make(device: FakeDevice, *, username=None, password=None):
+    async def make(device: FakeDevice, *, username=None, password=None, trusted=False):
         server = await _serve(device)
         session = aiohttp.ClientSession()
         started.append((server, session))
@@ -32,6 +32,7 @@ async def rig():
             Endpoint(server.host, server.port, "http"),
             username if username is not None else device.username,
             password if password is not None else device.password,
+            trusted=trusted,
         )
         return link
 
@@ -102,7 +103,12 @@ async def test_nonce_counts_reach_the_device_in_order(rig) -> None:
     assert device.failed_logins == 0
 
 
-async def test_one_refusal_of_working_credentials_does_not_block(rig) -> None:
+@pytest.fixture
+def no_pause(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(link_module, "HICCUP_PAUSE", 0.0)
+
+
+async def test_one_refusal_of_working_credentials_does_not_block(rig, no_pause) -> None:
     device = FakeDevice()
     link = await rig(device)
     await link.read_xml("/ISAPI/System/deviceInfo")
@@ -114,7 +120,38 @@ async def test_one_refusal_of_working_credentials_does_not_block(rig) -> None:
     assert device.failed_logins == 2
 
 
-async def test_changed_password_blocks_on_the_second_refusal(rig) -> None:
+async def test_link_pauses_after_a_refusal(rig) -> None:
+    device = FakeDevice()
+    link = await rig(device)
+    await link.read_xml("/ISAPI/System/deviceInfo")
+    device.refuse_next = 2
+    with pytest.raises(faults.AuthHiccup):
+        await link.read_xml("/ISAPI/Event/triggers")
+    before = len(device.requests)
+    with pytest.raises(faults.AuthHiccup):
+        await link.read_xml("/ISAPI/Event/triggers")
+    assert len(device.requests) == before
+    assert link.blocked is None
+
+
+async def test_stored_credentials_survive_a_replaced_nonce_on_first_use(rig) -> None:
+    # Another client of the same account made the device issue a new nonce.
+    device = FakeDevice(refuse_next=1)
+    link = await rig(device, trusted=True)
+    assert (await link.read_xml("/ISAPI/System/deviceInfo")) is not None
+    assert link.blocked is None
+    assert device.failed_logins == 1
+
+
+async def test_new_credentials_get_no_second_attempt(rig) -> None:
+    device = FakeDevice(refuse_next=1)
+    link = await rig(device)
+    with pytest.raises(faults.BadCredentials):
+        await link.read_xml("/ISAPI/System/deviceInfo")
+    assert device.failed_logins == 1
+
+
+async def test_changed_password_blocks_on_the_second_refusal(rig, no_pause) -> None:
     device = FakeDevice()
     link = await rig(device)
     await link.read_xml("/ISAPI/System/deviceInfo")
@@ -129,6 +166,16 @@ async def test_changed_password_blocks_on_the_second_refusal(rig) -> None:
         await link.read_xml("/ISAPI/Event/triggers")
     assert len(device.requests) == before
     # Well below the device's failed-login lock.
+    assert device.failed_logins == 3
+
+
+async def test_changed_stored_password_costs_at_most_three_logins(rig, no_pause) -> None:
+    device = FakeDevice(password="changed-on-device")
+    link = await rig(device, password="stored-before", trusted=True)
+    with pytest.raises(faults.AuthHiccup):
+        await link.read_xml("/ISAPI/System/deviceInfo")
+    with pytest.raises(faults.BadCredentials):
+        await link.read_xml("/ISAPI/System/deviceInfo")
     assert device.failed_logins == 3
     assert device.failed_logins < device.lock_after
 

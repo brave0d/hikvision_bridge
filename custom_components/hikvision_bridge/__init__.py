@@ -14,7 +14,14 @@ from .model.discover import discover
 from .runtime.bridge import DeviceBridge, build_link
 from .runtime.hookin import async_register_webhook, async_unregister_webhook
 from .services import async_register_services
-from .wire.faults import BadCredentials, BridgeFault, LockedOut, NotIsapi, Unreachable
+from .wire.faults import (
+    AuthHiccup,
+    BadCredentials,
+    BridgeFault,
+    LockedOut,
+    NotIsapi,
+    Unreachable,
+)
 from .wire.scrub import LOG_SCRUBBER, scrubbed_logger
 
 _LOGGER = scrubbed_logger(__name__)
@@ -55,7 +62,8 @@ async def _async_setup_device(hass: HomeAssistant, entry: BridgeConfigEntry) -> 
     link = build_link(hass, dict(entry.data))
     try:
         profile = await discover(link)
-    except BadCredentials as err:
+    except (BadCredentials, AuthHiccup) as err:
+        # A refusal during setup is not retried: setup retries would each cost logins.
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="bad_credentials"
         ) from err
@@ -95,7 +103,7 @@ async def _async_setup_device(hass: HomeAssistant, entry: BridgeConfigEntry) -> 
 
 
 async def _async_reload_on_change(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    await hass.config_entries.async_reload(entry.entry_id)
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

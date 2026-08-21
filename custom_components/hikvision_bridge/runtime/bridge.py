@@ -53,6 +53,7 @@ def build_link(hass: HomeAssistant, data: dict) -> IsapiLink:
         Endpoint(data[CONF_HOST], int(data[CONF_PORT]), scheme),
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
+        trusted=True,
     )
 
 

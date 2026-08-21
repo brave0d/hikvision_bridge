@@ -36,12 +36,14 @@ from .xmlview import XmlError, XmlNode, decode, parse
 _LOGGER = scrubbed_logger(__name__)
 
 PROBE_PATH = "/ISAPI/System/deviceInfo"
-# One request at a time: digest nonce counts must reach the device in order, and requests
-# that overtake each other are refused.
+# One request at a time: digest nonce counts then reach the device in order.
 MAX_PARALLEL = 1
-# Refusals in a row of credentials that worked before, before the link is blocked. Kept low
-# so that a real password change cannot run into the device's failed-login lock.
+# Devices refuse a valid digest now and then, e.g. when another client of the same account
+# makes them issue a new nonce. Credentials that worked before therefore get a second chance:
+# the first refused call pauses the link, the next refused call blocks it. A real password
+# change costs at most three failed logins, below the device's login lock.
 HICCUPS_BEFORE_BLOCK = 2
+HICCUP_PAUSE = 20.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,7 +105,9 @@ class IsapiLink:
         request_timeout: float = 15,
         write_timeout: float = 20,
         connect_timeout: float = 10,
+        trusted: bool = False,
     ) -> None:
+        """``trusted``: the credentials are stored ones that already worked (not a new login)."""
         self._session = session
         self.endpoint = endpoint
         self._username = username
@@ -111,8 +115,9 @@ class IsapiLink:
         self._signer: Signer | None = None
         self._auth_checked = False
         self._blocked: BridgeFault | None = None
-        self._worked = False
+        self._worked = trusted
         self._hiccups = 0
+        self._quiet_until = 0.0
         self._gate = asyncio.Semaphore(MAX_PARALLEL)
         self._write_lock = asyncio.Lock()
         self._establish_lock = asyncio.Lock()
@@ -144,6 +149,14 @@ class IsapiLink:
         self._blocked = None
         self._worked = False
         self._hiccups = 0
+        self._quiet_until = 0.0
+
+    def _check_open(self) -> None:
+        """Raise instead of sending while the link is blocked or pausing after a refusal."""
+        if self._blocked is not None:
+            raise self._blocked
+        if time.monotonic() < self._quiet_until:
+            raise AuthHiccup("pausing after a refused request")
 
     # ------------------------------------------------------------ transport
 
@@ -254,8 +267,7 @@ class IsapiLink:
         for attempt in range(2):
             # Checked inside the request slot: an earlier request may have blocked the link
             # or reset authentication while this one was waiting.
-            if self._blocked is not None:
-                raise self._blocked
+            self._check_open()
             if not self._auth_checked:
                 await self._establish()
             headers = {"Accept": "*/*"}
@@ -326,16 +338,19 @@ class IsapiLink:
             if generation != signer.generation:
                 # Another request already adopted a newer nonce; sign again with it.
                 return None
-            if fresh is not None and (fresh.stale or was_proven):
-                # The nonce expired; credentials were fine with it. Exactly one retry.
+            trusted = self._worked and self._hiccups == 0
+            if fresh is not None and (fresh.stale or was_proven or trusted):
+                # The nonce expired or was replaced; the credentials are known to work.
+                # Exactly one retry with the fresh challenge.
                 signer.accept(fresh)
                 return None
         if self._worked and self._hiccups + 1 < HICCUPS_BEFORE_BLOCK:
-            # These credentials worked before: start over with a fresh challenge next time
+            # These credentials worked before: pause, then start over with a fresh challenge
             # instead of giving up on a single refusal.
             self._hiccups += 1
             self._signer = None
             self._auth_checked = False
+            self._quiet_until = time.monotonic() + HICCUP_PAUSE
             _LOGGER.warning(
                 "%s refused a request although the credentials worked before; trying again later",
                 self.endpoint.host,
@@ -421,6 +436,7 @@ class IsapiLink:
         timeout = aiohttp.ClientTimeout(total=None, sock_connect=self._connect_timeout)
         for attempt in range(2):
             async with self._gate:
+                self._check_open()
                 if not self._auth_checked:
                     await self._establish()
                 headers = {"Accept": "*/*"}

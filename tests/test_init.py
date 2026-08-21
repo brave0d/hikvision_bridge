@@ -124,16 +124,15 @@ async def test_diagnostics_leak_nothing(hass: HomeAssistant, serve) -> None:
     await hass.async_block_till_done()
 
 
-async def test_wrong_password_starts_reauth_after_single_attempt(
-    hass: HomeAssistant, serve
-) -> None:
+async def test_wrong_password_starts_reauth_after_one_retry(hass: HomeAssistant, serve) -> None:
     device = FakeDevice("nvr")
     server = await serve(device)
     entry = device_entry(server, device, password="not-the-password")
     await _set_up_entry(hass, entry)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
-    assert device.failed_logins == 1
+    # Stored credentials get one retry with a fresh challenge, then reauth; no setup retries.
+    assert device.failed_logins == 2
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert [f["context"]["source"] for f in flows] == ["reauth"]
 
