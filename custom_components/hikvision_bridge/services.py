@@ -45,20 +45,16 @@ def _target_of(hass: HomeAssistant, device_id: str) -> tuple[Any, str | None]:
     device = dr.async_get(hass).async_get(device_id)
     if device is None:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="unknown_device")
-    for entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if entry is None or entry.domain != DOMAIN:
-            continue
-        bridge = getattr(entry, "runtime_data", None)
-        if not isinstance(bridge, DeviceBridge):
-            continue
-        for channel_id, registered in bridge.device_ids.items():
-            if registered == device_id and channel_id is not None:
-                if registered == bridge.device_ids.get(None):
-                    return bridge, next(iter(bridge.profile.channels), None)
-                return bridge, channel_id
-        return bridge, None
-    raise ServiceValidationError(translation_domain=DOMAIN, translation_key="unknown_device")
+    entry = hass.config_entries.async_get_entry(device.config_entry_id)
+    bridge = getattr(entry, "runtime_data", None) if entry and entry.domain == DOMAIN else None
+    if not isinstance(bridge, DeviceBridge):
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="unknown_device")
+    for channel_id, registered in bridge.device_ids.items():
+        if registered == device_id and channel_id is not None:
+            if registered == bridge.device_ids.get(None):
+                return bridge, next(iter(bridge.profile.channels), None)
+            return bridge, channel_id
+    return bridge, None
 
 
 def _fail(err: BridgeFault) -> HomeAssistantError:
