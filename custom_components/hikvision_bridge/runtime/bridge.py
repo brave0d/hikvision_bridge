@@ -153,11 +153,27 @@ class DeviceBridge:
                 self.device_ids[channel_id] = main.id
             return
         for channel in self.profile.channels.values():
+            route = self.routes.get(channel.channel_id)
+            subentry_id = route.subentry_id if route else None
+            info = identity.channel_device_info(self.profile, channel, main.id)
+            # A channel with a direct camera link belongs to that link; move it explicitly
+            # when a link was added or removed since the device was created.
+            existing = registry.async_get_device_by_identifier(
+                next(iter(info["identifiers"])), self.entry.entry_id
+            )
+            if existing is not None and existing.config_subentry_id != subentry_id:
+                registry.async_update_device(existing.id, new_config_subentry_id=subentry_id)
             device = registry.async_get_or_create(
-                config_entry_id=self.entry.entry_id,
-                **identity.channel_device_info(self.profile, channel, main.id),
+                config_entry_id=self.entry.entry_id, config_subentry_id=subentry_id, **info
             )
             self.device_ids[channel.channel_id] = device.id
+
+    def subentry_of(self, channel_id: str | None) -> str | None:
+        """The channel link sub-entry whose device shows this channel's entities."""
+        if channel_id is None or self.device_ids.get(channel_id) == self.device_ids.get(None):
+            return None
+        route = self.routes.get(channel_id)
+        return route.subentry_id if route else None
 
     def start_feeds(self) -> None:
         path = self.entry.options.get(OPT_EVENT_PATH, EVENT_PATH_STREAM)

@@ -17,7 +17,7 @@ from .const import (
     RTSP_TCP,
     SUBENTRY_CHANNEL_LINK,
 )
-from .entity import BridgeEntity
+from .entity import BridgeEntity, add_entities
 from .model.inventory import StreamSpec
 from .runtime.bridge import DeviceBridge
 from .wire.faults import BridgeFault, Unsupported
@@ -41,7 +41,7 @@ async def async_setup_entry(
             if stream.rank > 3:
                 continue
             entities.append(ChannelCamera(bridge, channel.channel_id, stream))
-    async_add_entities(entities)
+    add_entities(bridge, async_add_entities, entities)
 
 
 class ChannelCamera(BridgeEntity, Camera):

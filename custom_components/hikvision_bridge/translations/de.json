@@ -290,6 +290,24 @@
       },
       "alarm_output": {
         "name": "Alarmausgang {port}"
+      },
+      "blc": {
+        "name": "Gegenlichtkompensation"
+      },
+      "hlc": {
+        "name": "Spitzlichtkompensation"
+      },
+      "overexposure_suppression": {
+        "name": "Überbelichtungsschutz"
+      },
+      "image_flip": {
+        "name": "Bild spiegeln"
+      },
+      "stabilization": {
+        "name": "Bildstabilisierung"
+      },
+      "lens_correction": {
+        "name": "Objektivkorrektur"
       }
     },
     "camera": {
@@ -365,6 +383,159 @@
       },
       "cloud_unlock": {
         "name": "Tür öffnen (Cloud)"
+      }
+    },
+    "select": {
+      "day_night": {
+        "name": "Tag/Nacht-Modus",
+        "state": {
+          "day": "Tag",
+          "night": "Nacht",
+          "auto": "Automatisch",
+          "schedule": "Zeitplan",
+          "eventtrigger": "Ereignis"
+        }
+      },
+      "supplement_light": {
+        "name": "Zusatzlicht",
+        "state": {
+          "eventintelligence": "Smart (Ereignis)",
+          "colorvuwhitelight": "Weißlicht",
+          "irlight": "IR-Licht",
+          "close": "Aus"
+        }
+      },
+      "light_brightness_control": {
+        "name": "Lichthelligkeit-Regelung",
+        "state": {
+          "auto": "Automatisch",
+          "manual": "Manuell"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "Aus",
+          "open": "Ein",
+          "auto": "Automatisch"
+        }
+      },
+      "blc_area": {
+        "name": "Gegenlichtkompensation Bereich",
+        "state": {
+          "close": "Aus",
+          "up": "Oben",
+          "down": "Unten",
+          "left": "Links",
+          "right": "Rechts",
+          "center": "Mitte",
+          "region": "Eigener Bereich",
+          "auto": "Automatisch"
+        }
+      },
+      "noise_reduction": {
+        "name": "Rauschunterdrückung",
+        "state": {
+          "close": "Aus",
+          "general": "Normal",
+          "advanced": "Experte"
+        }
+      },
+      "defog": {
+        "name": "Entnebelung",
+        "state": {
+          "close": "Aus",
+          "open": "Ein",
+          "auto": "Automatisch"
+        }
+      },
+      "white_balance": {
+        "name": "Weißabgleich",
+        "state": {
+          "manual": "Manuell",
+          "auto1": "Automatisch 1",
+          "auto2": "Automatisch 2",
+          "locked": "Gesperrt",
+          "daylightlamp": "Leuchtstofflampe",
+          "incandescentlight": "Glühlampe",
+          "warmlight": "Warmes Licht",
+          "naturallight": "Natürliches Licht"
+        }
+      },
+      "exposure_mode": {
+        "name": "Belichtungsmodus",
+        "state": {
+          "auto": "Automatisch",
+          "manual": "Manuell"
+        }
+      },
+      "shutter": {
+        "name": "Verschlusszeit"
+      },
+      "power_line_frequency": {
+        "name": "Netzfrequenz",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "Spiegelrichtung",
+        "state": {
+          "leftright": "Links/rechts",
+          "updown": "Oben/unten",
+          "center": "Mitte"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "Tag/Nacht-Empfindlichkeit"
+      },
+      "day_night_delay": {
+        "name": "Tag/Nacht-Verzögerung"
+      },
+      "white_light_brightness": {
+        "name": "Weißlicht-Helligkeit"
+      },
+      "ir_light_brightness": {
+        "name": "IR-Licht-Helligkeit"
+      },
+      "white_light_duration": {
+        "name": "Weißlicht-Dauer"
+      },
+      "brightness": {
+        "name": "Helligkeit"
+      },
+      "contrast": {
+        "name": "Kontrast"
+      },
+      "saturation": {
+        "name": "Sättigung"
+      },
+      "sharpness": {
+        "name": "Schärfe"
+      },
+      "wdr_level": {
+        "name": "WDR-Stufe"
+      },
+      "hlc_level": {
+        "name": "Spitzlichtkompensation Stufe"
+      },
+      "noise_reduction_level": {
+        "name": "Rauschunterdrückung Stufe"
+      },
+      "defog_level": {
+        "name": "Entnebelung Stufe"
+      },
+      "white_balance_red": {
+        "name": "Weißabgleich Rot"
+      },
+      "white_balance_blue": {
+        "name": "Weißabgleich Blau"
+      },
+      "gain_limit": {
+        "name": "Verstärkungsgrenze"
       }
     }
   },
@@ -472,6 +643,9 @@
     },
     "cloud_gone": {
       "message": "Das Gerät ist nicht mehr im Hik-Connect-Konto."
+    },
+    "setting_inactive": {
+      "message": "Diese Einstellung ist im aktuellen Modus der Kamera nicht aktiv."
     }
   },
   "selector": {

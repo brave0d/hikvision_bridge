@@ -9,7 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_ENTRY_KIND, KIND_CLOUD
-from .entity import BridgeEntity
+from .entity import BridgeEntity, add_entities
 from .model.vocabulary import SMART, Kind
 from .runtime.bridge import DeviceBridge
 from .runtime.router import Hit, signal_trigger
@@ -26,10 +26,14 @@ async def async_setup_entry(
         await async_setup_cloud_events(hass, entry, async_add_entities)
         return
     bridge: DeviceBridge = entry.runtime_data
-    async_add_entities(
-        DetectionEvents(bridge, channel.channel_id, sorted(channel.kinds & SMART))
-        for channel in bridge.profile.channels.values()
-        if channel.kinds & SMART
+    add_entities(
+        bridge,
+        async_add_entities,
+        (
+            DetectionEvents(bridge, channel.channel_id, sorted(channel.kinds & SMART))
+            for channel in bridge.profile.channels.values()
+            if channel.kinds & SMART
+        ),
     )
 
 

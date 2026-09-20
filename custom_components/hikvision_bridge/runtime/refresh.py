@@ -19,8 +19,9 @@ from ..const import (
     GRACE_BEFORE_UNAVAILABLE,
 )
 from ..model.discover import CLOUD_PATH, read_cloud_state
-from ..model.features import detection, io, storage
+from ..model.features import detection, image, io, storage
 from ..model.features.detection import DetectionState
+from ..model.features.image import ImageValue
 from ..model.inventory import StorageUnit
 from ..model.vocabulary import Kind
 from ..wire.faults import BadCredentials, BridgeFault, LockedOut, Unreachable
@@ -45,6 +46,7 @@ class Snapshot:
     channels_online: dict[str, bool | None] = field(default_factory=dict)
     storage: list[StorageUnit] = field(default_factory=list)
     stream_encrypted: bool | None = None
+    image: dict[str, dict[str, ImageValue]] = field(default_factory=dict)
 
 
 class StatusRefresher(DataUpdateCoordinator[Snapshot]):
@@ -85,6 +87,7 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 channels_online=dict(previous.channels_online),
                 storage=list(previous.storage),
                 stream_encrypted=previous.stream_encrypted,
+                image=dict(previous.image),
             )
         )
         try:
@@ -94,6 +97,7 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
             if due(CHANNELS_EVERY):
                 await self._read_channels(snapshot)
                 await self._read_cloud(snapshot)
+                await self._read_image(snapshot)
             if due(STORAGE_EVERY):
                 snapshot.storage = await storage.read(self._bridge.link)
         except BadCredentials as err:
@@ -175,6 +179,27 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
         if state is not None:
             self._bridge.update_cloud_state(state)
             snapshot.stream_encrypted = state.stream_encrypted
+
+    async def _read_image(self, snapshot: Snapshot) -> None:
+        """Image settings, one document per channel that offers any."""
+        for channel in self._bridge.profile.channels.values():
+            if not channel.image:
+                continue
+            link, remote = self._bridge.route(channel.channel_id)
+            try:
+                values = await image.read_values(link, remote, set(channel.image))
+            except (BadCredentials, LockedOut) as err:
+                if self._bridge.is_main_link_fault(channel.channel_id):
+                    raise
+                self._bridge.report_channel_fault(channel.channel_id, err)
+                values = None
+            except BridgeFault as err:
+                _LOGGER.debug("Image settings of channel unreadable: %s", type(err).__name__)
+                values = None
+            if values is None:
+                snapshot.image.pop(channel.channel_id, None)
+            else:
+                snapshot.image[channel.channel_id] = values
 
     async def _read_channels(self, snapshot: Snapshot) -> None:
         profile = self._bridge.profile

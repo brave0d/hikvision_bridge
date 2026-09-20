@@ -1,5 +1,7 @@
 # Hikvision Bridge
 
+<img src="custom_components/hikvision_bridge/brand/icon.png" alt="" width="96" align="right">
+
 Local Home Assistant integration for Hikvision cameras and recorders (NVR/DVR) over ISAPI,
 with optional Hik-Connect cloud status. Events arrive by push; nothing is polled once per second.
 
@@ -12,6 +14,7 @@ The user interface is available in English and German.
 | Detections | Binary sensor per channel and detection kind (motion, line crossing, intrusion, region entrance/exit, tamper, video loss, …); optional person/vehicle sensors |
 | Event entities | One per channel, fires on every smart detection (good for automations that must not miss repeated triggers) |
 | Switches | Detections on/off (only the `enabled` flag is written back, everything else stays byte-identical); alarm outputs |
+| Image settings | Per channel, only what the camera offers: day/night mode, supplement light (IR/white light) and its brightness, brightness, contrast, saturation, sharpness, WDR (enabled by default); BLC, HLC, noise reduction, defog, white balance, exposure, shutter, gain limit, power line frequency, flip, stabilization, lens correction (disabled by default). A setting that is not part of the active mode (e.g. white light brightness while in IR mode) is unavailable. Writes change one element of one section and are read back |
 | Cameras | Main/sub stream per channel, snapshots |
 | Recorder | One HA device per channel below the recorder, channel connected, storage status/free/capacity, alarm inputs |
 | Health | Event connection, event delay, repairs for misconfigured devices (see below) |
@@ -51,7 +54,8 @@ Choose **Camera or recorder in the local network** or **Hik-Connect account**.
 Cameras connected to a recorder appear as channel devices of the recorder. If a camera is also
 reachable directly (for example the recorder's PoE subnet is routed), add a **Direct camera connection**
 to the recorder entry (*Add* on the recorder entry). It has its own address and credentials and is
-used for the live stream, and optionally for detections. When you add such a camera as a normal device,
+used for the live stream, image settings and detection switches, and optionally for detections. The
+channel device is then listed under its connection. When you add such a camera as a normal device,
 the integration notices it is already a recorder channel and offers to link it instead.
 
 ### Hik-Connect
@@ -84,7 +88,7 @@ Use a dedicated user per device (an *Operator* is enough):
 | --- | --- |
 | Discovery, sensors, events | Remote: Parameters settings (read), Notify surveillance center / alarm |
 | Live view, snapshots | Remote: Live view |
-| Detection switches, alarm outputs, repairs that tick linkage | Remote: Parameters settings |
+| Detection switches, image settings, alarm outputs, repairs that tick linkage | Remote: Parameters settings |
 | PTZ actions | Remote: PTZ control |
 | Restart button (disabled by default) | Remote: Shutdown/Reboot |
 

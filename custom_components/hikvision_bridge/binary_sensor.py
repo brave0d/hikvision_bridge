@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_ENTRY_KIND, KIND_CLOUD, OPT_TARGET_SENSORS
-from .entity import PolledEntity, PushEntity
+from .entity import PolledEntity, PushEntity, add_entities
 from .model.features.storage import HEALTHY
 from .model.inventory import IoPort
 from .model.vocabulary import Kind
@@ -67,7 +67,7 @@ async def async_setup_entry(
     if profile.cloud is not None:
         entities.append(StreamEncryptionSensor(bridge))
     entities.append(EventLinkSensor(bridge))
-    async_add_entities(entities)
+    add_entities(bridge, async_add_entities, entities)
 
 
 class DetectionSensor(PushEntity, BinarySensorEntity):

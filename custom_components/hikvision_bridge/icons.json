@@ -21,7 +21,13 @@
       "region_exiting_detection": { "default": "mdi:location-exit" },
       "tamper_detection": { "default": "mdi:shield-alert-outline" },
       "scene_change_detection": { "default": "mdi:image-filter-center-focus-weak" },
-      "alarm_output": { "default": "mdi:alarm-light-outline" }
+      "alarm_output": { "default": "mdi:alarm-light-outline" },
+      "blc": { "default": "mdi:weather-sunny-alert" },
+      "hlc": { "default": "mdi:car-light-high" },
+      "overexposure_suppression": { "default": "mdi:camera-iris" },
+      "image_flip": { "default": "mdi:flip-horizontal" },
+      "stabilization": { "default": "mdi:image-filter-tilt-shift" },
+      "lens_correction": { "default": "mdi:camera-metering-matrix" }
     },
     "sensor": {
       "storage_status": { "default": "mdi:harddisk" },
@@ -36,6 +42,38 @@
     "event": {
       "detection": { "default": "mdi:cctv" },
       "cloud_connection": { "default": "mdi:cloud-sync-outline" }
+    },
+    "select": {
+      "day_night": { "default": "mdi:theme-light-dark" },
+      "supplement_light": { "default": "mdi:lightbulb-on-outline" },
+      "light_brightness_control": { "default": "mdi:brightness-auto" },
+      "wdr": { "default": "mdi:hdr" },
+      "blc_area": { "default": "mdi:weather-sunny-alert" },
+      "noise_reduction": { "default": "mdi:blur" },
+      "defog": { "default": "mdi:weather-fog" },
+      "white_balance": { "default": "mdi:white-balance-auto" },
+      "exposure_mode": { "default": "mdi:camera-iris" },
+      "shutter": { "default": "mdi:camera-timer" },
+      "power_line_frequency": { "default": "mdi:sine-wave" },
+      "flip_direction": { "default": "mdi:flip-horizontal" }
+    },
+    "number": {
+      "day_night_sensitivity": { "default": "mdi:theme-light-dark" },
+      "day_night_delay": { "default": "mdi:timer-sand" },
+      "white_light_brightness": { "default": "mdi:lightbulb-on" },
+      "ir_light_brightness": { "default": "mdi:lightbulb-night" },
+      "white_light_duration": { "default": "mdi:timer-outline" },
+      "brightness": { "default": "mdi:brightness-6" },
+      "contrast": { "default": "mdi:contrast-box" },
+      "saturation": { "default": "mdi:palette" },
+      "sharpness": { "default": "mdi:image-filter-center-focus" },
+      "wdr_level": { "default": "mdi:hdr" },
+      "hlc_level": { "default": "mdi:car-light-high" },
+      "noise_reduction_level": { "default": "mdi:blur" },
+      "defog_level": { "default": "mdi:weather-fog" },
+      "white_balance_red": { "default": "mdi:white-balance-auto" },
+      "white_balance_blue": { "default": "mdi:white-balance-auto" },
+      "gain_limit": { "default": "mdi:tune-vertical" }
     }
   },
   "services": {

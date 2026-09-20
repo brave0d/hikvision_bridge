@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .entity import PolledEntity
+from .entity import ImageSettingEntity, PolledEntity, add_entities, image_entities
 from .model.features import detection, io
 from .model.inventory import IoPort
 from .model.vocabulary import Kind
@@ -32,7 +32,8 @@ async def async_setup_entry(
         for kind in sorted(channel.switchable)
     ]
     entities.extend(AlarmOutputSwitch(bridge, port) for port in bridge.profile.outputs.values())
-    async_add_entities(entities)
+    entities.extend(image_entities(bridge, "switch", ImageSwitch))
+    add_entities(bridge, async_add_entities, entities)
 
 
 def _raise_write_error(err: BridgeFault) -> None:
@@ -115,3 +116,18 @@ class AlarmOutputSwitch(PolledEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._apply(False)
+
+
+class ImageSwitch(ImageSettingEntity, SwitchEntity):
+    """An image function that is on or off (BLC, HLC, flip, stabilisation, ...)."""
+
+    @property
+    def is_on(self) -> bool | None:
+        current = self.current
+        return current.value.lower() == "true" if current else None
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.async_write_value("true")
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.async_write_value("false")

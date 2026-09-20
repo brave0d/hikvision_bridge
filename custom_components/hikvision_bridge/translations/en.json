@@ -290,6 +290,24 @@
       },
       "alarm_output": {
         "name": "Alarm output {port}"
+      },
+      "blc": {
+        "name": "Backlight compensation"
+      },
+      "hlc": {
+        "name": "Highlight compensation"
+      },
+      "overexposure_suppression": {
+        "name": "Overexposure suppression"
+      },
+      "image_flip": {
+        "name": "Image flip"
+      },
+      "stabilization": {
+        "name": "Image stabilization"
+      },
+      "lens_correction": {
+        "name": "Lens distortion correction"
       }
     },
     "camera": {
@@ -365,6 +383,159 @@
       },
       "cloud_unlock": {
         "name": "Open door (cloud)"
+      }
+    },
+    "select": {
+      "day_night": {
+        "name": "Day/night mode",
+        "state": {
+          "day": "Day",
+          "night": "Night",
+          "auto": "Auto",
+          "schedule": "Schedule",
+          "eventtrigger": "Event trigger"
+        }
+      },
+      "supplement_light": {
+        "name": "Supplement light",
+        "state": {
+          "eventintelligence": "Smart (event)",
+          "colorvuwhitelight": "White light",
+          "irlight": "IR light",
+          "close": "Off"
+        }
+      },
+      "light_brightness_control": {
+        "name": "Light brightness control",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "Off",
+          "open": "On",
+          "auto": "Auto"
+        }
+      },
+      "blc_area": {
+        "name": "Backlight compensation area",
+        "state": {
+          "close": "Off",
+          "up": "Top",
+          "down": "Bottom",
+          "left": "Left",
+          "right": "Right",
+          "center": "Center",
+          "region": "Custom region",
+          "auto": "Auto"
+        }
+      },
+      "noise_reduction": {
+        "name": "Noise reduction",
+        "state": {
+          "close": "Off",
+          "general": "Normal",
+          "advanced": "Expert"
+        }
+      },
+      "defog": {
+        "name": "Defog",
+        "state": {
+          "close": "Off",
+          "open": "On",
+          "auto": "Auto"
+        }
+      },
+      "white_balance": {
+        "name": "White balance",
+        "state": {
+          "manual": "Manual",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "locked": "Locked",
+          "daylightlamp": "Fluorescent lamp",
+          "incandescentlight": "Incandescent lamp",
+          "warmlight": "Warm light",
+          "naturallight": "Natural light"
+        }
+      },
+      "exposure_mode": {
+        "name": "Exposure mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "shutter": {
+        "name": "Shutter"
+      },
+      "power_line_frequency": {
+        "name": "Power line frequency",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "Flip direction",
+        "state": {
+          "leftright": "Left/right",
+          "updown": "Up/down",
+          "center": "Center"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "Day/night sensitivity"
+      },
+      "day_night_delay": {
+        "name": "Day/night delay"
+      },
+      "white_light_brightness": {
+        "name": "White light brightness"
+      },
+      "ir_light_brightness": {
+        "name": "IR light brightness"
+      },
+      "white_light_duration": {
+        "name": "White light duration"
+      },
+      "brightness": {
+        "name": "Brightness"
+      },
+      "contrast": {
+        "name": "Contrast"
+      },
+      "saturation": {
+        "name": "Saturation"
+      },
+      "sharpness": {
+        "name": "Sharpness"
+      },
+      "wdr_level": {
+        "name": "WDR level"
+      },
+      "hlc_level": {
+        "name": "Highlight compensation level"
+      },
+      "noise_reduction_level": {
+        "name": "Noise reduction level"
+      },
+      "defog_level": {
+        "name": "Defog level"
+      },
+      "white_balance_red": {
+        "name": "White balance red"
+      },
+      "white_balance_blue": {
+        "name": "White balance blue"
+      },
+      "gain_limit": {
+        "name": "Gain limit"
       }
     }
   },
@@ -472,6 +643,9 @@
     },
     "cloud_gone": {
       "message": "The device is no longer on the Hik-Connect account."
+    },
+    "setting_inactive": {
+      "message": "This setting is not active in the camera's current mode."
     }
   },
   "selector": {

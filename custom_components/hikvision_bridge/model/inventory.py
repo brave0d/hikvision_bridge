@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from .vocabulary import Kind
+
+if TYPE_CHECKING:
+    from .features.image import ImageCapability
 
 
 class DeviceShape(StrEnum):
@@ -71,6 +75,7 @@ class ChannelProfile:
     raw_kinds: set[str] = field(default_factory=set)
     streams: list[StreamSpec] = field(default_factory=list)
     switchable: set[Kind] = field(default_factory=set)
+    image: dict[str, ImageCapability] = field(default_factory=dict)
 
     @property
     def main_stream(self) -> StreamSpec | None:
