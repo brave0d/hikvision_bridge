@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 520" width="880" height="520" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title>Illustration of a camera channel device in Home Assistant</title>
+  <rect width="880" height="520" rx="16" fill="#eef1f6"/>
+
+  <!-- header -->
+  <text x="32" y="46" fill="#10306b" font-size="22" font-weight="600">Front yard</text>
+  <text x="32" y="70" fill="#5b6780" font-size="13">Video channel 1 · Hikvision · via NVR · Direct camera connection</text>
+
+  <!-- camera card -->
+  <rect x="32" y="92" width="380" height="250" rx="12" fill="#ffffff"/>
+  <text x="52" y="122" fill="#1b2433" font-size="15" font-weight="600">Cameras</text>
+  <rect x="52" y="136" width="340" height="150" rx="8" fill="#1d2b46"/>
+  <g transform="translate(222 211)" fill="none" stroke="#9fe9df" stroke-width="3">
+    <circle r="30"/>
+    <circle r="13"/>
+  </g>
+  <text x="62" y="276" fill="#d7def0" font-size="12">Sub stream · live</text>
+  <text x="52" y="314" fill="#1b2433" font-size="13">Main stream</text>
+  <text x="392" y="314" fill="#5b6780" font-size="13" text-anchor="end">H.265 · 3840×2160</text>
+  <text x="52" y="334" fill="#1b2433" font-size="13">Sub stream</text>
+  <text x="392" y="334" fill="#5b6780" font-size="13" text-anchor="end">H.264 · 1280×720</text>
+
+  <!-- sensors card -->
+  <rect x="32" y="356" width="380" height="140" rx="12" fill="#ffffff"/>
+  <text x="52" y="386" fill="#1b2433" font-size="15" font-weight="600">Sensors</text>
+  <g font-size="13">
+    <text x="52" y="414" fill="#1b2433">Motion</text><text x="392" y="414" fill="#5b6780" text-anchor="end">Clear</text>
+    <text x="52" y="438" fill="#1b2433">Line crossing</text><text x="392" y="438" fill="#0f8a7d" text-anchor="end">Detected</text>
+    <text x="52" y="462" fill="#1b2433">Intrusion</text><text x="392" y="462" fill="#5b6780" text-anchor="end">Clear</text>
+    <text x="52" y="486" fill="#1b2433">Camera connected</text><text x="392" y="486" fill="#5b6780" text-anchor="end">Connected</text>
+  </g>
+
+  <!-- configuration card -->
+  <rect x="432" y="92" width="416" height="404" rx="12" fill="#ffffff"/>
+  <text x="452" y="122" fill="#1b2433" font-size="15" font-weight="600">Configuration</text>
+  <g font-size="13">
+    <text x="452" y="154" fill="#1b2433">Day/night mode</text>
+    <rect x="688" y="139" width="140" height="24" rx="6" fill="#eef1f6"/><text x="698" y="156" fill="#1b2433">Auto ▾</text>
+
+    <text x="452" y="190" fill="#1b2433">Supplement light</text>
+    <rect x="688" y="175" width="140" height="24" rx="6" fill="#eef1f6"/><text x="698" y="192" fill="#1b2433">Smart (event) ▾</text>
+
+    <text x="452" y="226" fill="#1b2433">White light brightness</text>
+    <rect x="452" y="236" width="300" height="5" rx="2.5" fill="#d7def0"/><rect x="452" y="236" width="240" height="5" rx="2.5" fill="#14a898"/><circle cx="692" cy="238.5" r="8" fill="#14a898"/>
+    <text x="828" y="243" fill="#5b6780" text-anchor="end">80 %</text>
+
+    <text x="452" y="276" fill="#1b2433">Brightness</text>
+    <rect x="452" y="286" width="300" height="5" rx="2.5" fill="#d7def0"/><rect x="452" y="286" width="150" height="5" rx="2.5" fill="#14a898"/><circle cx="602" cy="288.5" r="8" fill="#14a898"/>
+    <text x="828" y="293" fill="#5b6780" text-anchor="end">50 %</text>
+
+    <text x="452" y="326" fill="#1b2433">WDR</text>
+    <rect x="688" y="311" width="140" height="24" rx="6" fill="#eef1f6"/><text x="698" y="328" fill="#1b2433">Auto ▾</text>
+
+    <text x="452" y="362" fill="#1b2433">Line crossing detection</text>
+    <rect x="788" y="349" width="40" height="20" rx="10" fill="#14a898"/><circle cx="818" cy="359" r="7" fill="#ffffff"/>
+
+    <text x="452" y="398" fill="#1b2433">Intrusion detection</text>
+    <rect x="788" y="385" width="40" height="20" rx="10" fill="#c3cad8"/><circle cx="798" cy="395" r="7" fill="#ffffff"/>
+
+    <text x="452" y="434" fill="#1b2433">Motion detection</text>
+    <rect x="788" y="421" width="40" height="20" rx="10" fill="#14a898"/><circle cx="818" cy="431" r="7" fill="#ffffff"/>
+
+    <text x="452" y="474" fill="#5b6780" font-size="12">+ 22 more settings, disabled by default</text>
+  </g>
+</svg>
