@@ -34,13 +34,6 @@
   <img src="images/architecture.svg" alt="Home Assistant talks ISAPI to the recorder; cameras can also be reached directly; Hik-Connect is optional" width="820">
 </p>
 
-## Preview
-
-<p align="center">
-  <img src="images/device-page.svg" alt="Illustration of a camera channel device with cameras, sensors and configuration entities" width="820">
-  <br><sub>Illustration of a channel device. Which entities appear depends on what the camera reports.</sub>
-</p>
-
 ## What you get
 
 | Area | Entities / functions |
