@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from dataclasses import dataclass, field
 import time
 from typing import TYPE_CHECKING
@@ -19,8 +20,9 @@ from ..const import (
     GRACE_BEFORE_UNAVAILABLE,
 )
 from ..model.discover import CLOUD_PATH, read_cloud_state
-from ..model.features import detection, image, io, storage
+from ..model.features import adjust, detection, health, io, storage
 from ..model.features.detection import DetectionState
+from ..model.features.health import DeviceHealth
 from ..model.features.image import ImageValue
 from ..model.inventory import StorageUnit
 from ..model.vocabulary import Kind
@@ -47,6 +49,20 @@ class Snapshot:
     storage: list[StorageUnit] = field(default_factory=list)
     stream_encrypted: bool | None = None
     image: dict[str, dict[str, ImageValue]] = field(default_factory=dict)
+    # Keyed by channel id; None is the device of the entry itself.
+    health: dict[str | None, DeviceHealth] = field(default_factory=dict)
+    recording: dict[str, bool] = field(default_factory=dict)
+    # (channel id or None for the entry's device, input port id) -> armed
+    armed: dict[tuple[str | None, str], bool] = field(default_factory=dict)
+    channel_storage: dict[str, list[StorageUnit]] = field(default_factory=dict)
+
+
+def _put[K, V](target: dict[K, V], key: K, value: V | None) -> None:
+    """Store a read value, or forget the key when the resource could not be read."""
+    if value is None:
+        target.pop(key, None)
+    else:
+        target[key] = value
 
 
 class StatusRefresher(DataUpdateCoordinator[Snapshot]):
@@ -88,6 +104,10 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 storage=list(previous.storage),
                 stream_encrypted=previous.stream_encrypted,
                 image=dict(previous.image),
+                health=dict(previous.health),
+                recording=dict(previous.recording),
+                armed=dict(previous.armed),
+                channel_storage=dict(previous.channel_storage),
             )
         )
         try:
@@ -98,8 +118,12 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 await self._read_channels(snapshot)
                 await self._read_cloud(snapshot)
                 await self._read_image(snapshot)
+                await self._read_recording(snapshot)
             if due(STORAGE_EVERY):
                 snapshot.storage = await storage.read(self._bridge.link)
+                await self._read_channel_storage(snapshot)
+                await self._read_health(snapshot)
+                await self._read_armed(snapshot)
         except BadCredentials as err:
             raise ConfigEntryAuthFailed(str(err)) from err
         except LockedOut as err:
@@ -147,8 +171,8 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
         jobs = []
         keys = []
         for channel in self._bridge.profile.channels.values():
-            link, remote = self._bridge.route(channel.channel_id)
             for kind in channel.switchable:
+                link, remote = self._bridge.detection_route(channel.channel_id, kind)
                 keys.append((channel.channel_id, kind))
                 jobs.append(detection.read(link, kind, remote))
         results = await asyncio.gather(*jobs, return_exceptions=True)
@@ -180,26 +204,85 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
             self._bridge.update_cloud_state(state)
             snapshot.stream_encrypted = state.stream_encrypted
 
+    async def _channel_read[T](self, channel_id: str, read: Awaitable[T]) -> T | None:
+        """Run one read for a channel; only refused logins on the main link stop the refresh."""
+        try:
+            return await read
+        except (BadCredentials, LockedOut) as err:
+            if self._bridge.is_main_link_fault(channel_id):
+                raise
+            self._bridge.report_channel_fault(channel_id, err)
+        except BridgeFault as err:
+            _LOGGER.debug("Channel resource unreadable: %s", type(err).__name__)
+        return None
+
     async def _read_image(self, snapshot: Snapshot) -> None:
-        """Image settings, one document per channel that offers any."""
+        """Adjustable settings, one document per source and channel that offers any."""
         for channel in self._bridge.profile.channels.values():
             if not channel.image:
                 continue
             link, remote = self._bridge.route(channel.channel_id)
-            try:
-                values = await image.read_values(link, remote, set(channel.image))
-            except (BadCredentials, LockedOut) as err:
-                if self._bridge.is_main_link_fault(channel.channel_id):
-                    raise
-                self._bridge.report_channel_fault(channel.channel_id, err)
-                values = None
-            except BridgeFault as err:
-                _LOGGER.debug("Image settings of channel unreadable: %s", type(err).__name__)
-                values = None
-            if values is None:
-                snapshot.image.pop(channel.channel_id, None)
-            else:
+            keys = set(channel.image)
+            values: dict[str, ImageValue] = {}
+            readable = False
+            for source in adjust.SOURCES.values():
+                wanted = keys & {s.key for s in source.settings}
+                if not wanted:
+                    continue
+                found = await self._channel_read(
+                    channel.channel_id, source.read_values(link, remote, wanted)
+                )
+                if found is not None:
+                    readable = True
+                    values.update(found)
+            if readable:
                 snapshot.image[channel.channel_id] = values
+            else:
+                snapshot.image.pop(channel.channel_id, None)
+
+    async def _read_health(self, snapshot: Snapshot) -> None:
+        bridge = self._bridge
+        profile = bridge.profile
+        if profile.health:
+            status = await health.read_status(bridge.link, memory_in_mb=profile.shape.records)
+            _put(snapshot.health, None, status)
+        for channel in profile.channels.values():
+            link, _ = bridge.route(channel.channel_id)
+            if not channel.health or link is bridge.link:
+                continue
+            status = await self._channel_read(
+                channel.channel_id, health.read_status(link, memory_in_mb=False)
+            )
+            _put(snapshot.health, channel.channel_id, status)
+
+    async def _read_recording(self, snapshot: Snapshot) -> None:
+        if self._bridge.profile.recording:
+            recording = await health.read_recording(self._bridge.link)
+            if recording is not None:
+                snapshot.recording = recording
+
+    async def _read_armed(self, snapshot: Snapshot) -> None:
+        bridge = self._bridge
+        if bridge.profile.armable_inputs:
+            armed = await io.read_armed(bridge.link) or {}
+            for port_id in bridge.profile.armable_inputs:
+                _put(snapshot.armed, (None, port_id), armed.get(port_id))
+        for channel in bridge.profile.channels.values():
+            link, _ = bridge.route(channel.channel_id)
+            if not channel.armable_inputs or link is bridge.link:
+                continue
+            armed = await self._channel_read(channel.channel_id, io.read_armed(link)) or {}
+            for port_id in channel.armable_inputs:
+                _put(snapshot.armed, (channel.channel_id, port_id), armed.get(port_id))
+
+    async def _read_channel_storage(self, snapshot: Snapshot) -> None:
+        bridge = self._bridge
+        for channel in bridge.profile.channels.values():
+            link, _ = bridge.route(channel.channel_id)
+            if not channel.storage or link is bridge.link:
+                continue
+            units = await self._channel_read(channel.channel_id, storage.read(link))
+            _put(snapshot.channel_storage, channel.channel_id, units)
 
     async def _read_channels(self, snapshot: Snapshot) -> None:
         profile = self._bridge.profile

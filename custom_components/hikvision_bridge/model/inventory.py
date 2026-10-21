@@ -75,7 +75,12 @@ class ChannelProfile:
     raw_kinds: set[str] = field(default_factory=set)
     streams: list[StreamSpec] = field(default_factory=list)
     switchable: set[Kind] = field(default_factory=set)
+    # Adjustable settings (image, strobe, siren, speaker) by key.
     image: dict[str, ImageCapability] = field(default_factory=dict)
+    # Read over a direct camera connection: memory card, status, armable inputs.
+    storage: list[StorageUnit] = field(default_factory=list)
+    health: bool = False
+    armable_inputs: tuple[str, ...] = ()
 
     @property
     def main_stream(self) -> StreamSpec | None:
@@ -139,6 +144,9 @@ class DeviceProfile:
     default_password: bool = False
     risky_password: bool = False
     has_alert_stream: bool = True
+    health: bool = False
+    recording: bool = False
+    armable_inputs: tuple[str, ...] = ()
 
     def trigger_for(self, kind: Kind, channel_id: str | None) -> TriggerLink | None:
         for trigger in self.triggers:

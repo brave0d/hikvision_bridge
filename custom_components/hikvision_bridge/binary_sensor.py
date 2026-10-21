@@ -61,6 +61,8 @@ async def async_setup_entry(
             entities.extend(TargetSensor(bridge, channel.channel_id, t) for t in _TARGETS)
         if profile.shape.records:
             entities.append(ChannelOnlineSensor(bridge, channel.channel_id))
+        if profile.recording:
+            entities.append(RecordingSensor(bridge, channel.channel_id))
     entities.extend(AlarmInputSensor(bridge, port) for port in profile.inputs.values())
     if profile.storage:
         entities.append(StorageProblemSensor(bridge))
@@ -177,3 +179,21 @@ class EventLinkSensor(PushEntity, BinarySensorEntity):
         return self.bridge.router.feed_connected(MAIN_FEED) or self.bridge.router.feed_connected(
             "webhook"
         )
+
+
+class RecordingSensor(PolledEntity, BinarySensorEntity):
+    """Whether the recorder is writing this channel to disk right now."""
+
+    _attr_device_class = BinarySensorDeviceClass.RUNNING
+    _attr_translation_key = "recording"
+
+    def __init__(self, bridge: DeviceBridge, channel_id: str) -> None:
+        super().__init__(bridge, channel_id, "recording")
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.channel_id in self.coordinator.data.recording
+
+    @property
+    def is_on(self) -> bool | None:
+        return self.coordinator.data.recording.get(self.channel_id)

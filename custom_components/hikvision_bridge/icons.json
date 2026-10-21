@@ -11,7 +11,8 @@
       "event_link": { "default": "mdi:lan-connect" },
       "stream_encryption": { "default": "mdi:lock-alert-outline", "state": { "off": "mdi:lock-open-variant-outline" } },
       "cloud_online": { "default": "mdi:cloud-check-outline" },
-      "cloud_stream_encryption": { "default": "mdi:lock-alert-outline" }
+      "cloud_stream_encryption": { "default": "mdi:lock-alert-outline" },
+      "recording": { "default": "mdi:record-rec" }
     },
     "switch": {
       "motion_detection": { "default": "mdi:motion-sensor" },
@@ -27,13 +28,20 @@
       "overexposure_suppression": { "default": "mdi:camera-iris" },
       "image_flip": { "default": "mdi:flip-horizontal" },
       "stabilization": { "default": "mdi:image-filter-tilt-shift" },
-      "lens_correction": { "default": "mdi:camera-metering-matrix" }
+      "lens_correction": { "default": "mdi:camera-metering-matrix" },
+      "video_loss_detection": { "default": "mdi:video-off-outline" },
+      "input_armed": { "default": "mdi:shield-home-outline" }
     },
     "sensor": {
       "storage_status": { "default": "mdi:harddisk" },
       "storage_free": { "default": "mdi:harddisk" },
       "storage_capacity": { "default": "mdi:harddisk" },
-      "event_latency": { "default": "mdi:timer-outline" }
+      "event_latency": { "default": "mdi:timer-outline" },
+      "boot_time": { "default": "mdi:restart" },
+      "cpu_load": { "default": "mdi:cpu-64-bit" },
+      "memory_use": { "default": "mdi:memory" },
+      "reboots": { "default": "mdi:restart-alert" },
+      "network_address": { "default": "mdi:ip-network-outline" }
     },
     "button": {
       "rescan": { "default": "mdi:magnify-scan" },
@@ -55,7 +63,9 @@
       "exposure_mode": { "default": "mdi:camera-iris" },
       "shutter": { "default": "mdi:camera-timer" },
       "power_line_frequency": { "default": "mdi:sine-wave" },
-      "flip_direction": { "default": "mdi:flip-horizontal" }
+      "flip_direction": { "default": "mdi:flip-horizontal" },
+      "strobe_frequency": { "default": "mdi:alarm-light" },
+      "siren_sound": { "default": "mdi:bullhorn-outline" }
     },
     "number": {
       "day_night_sensitivity": { "default": "mdi:theme-light-dark" },
@@ -73,7 +83,12 @@
       "defog_level": { "default": "mdi:weather-fog" },
       "white_balance_red": { "default": "mdi:white-balance-auto" },
       "white_balance_blue": { "default": "mdi:white-balance-auto" },
-      "gain_limit": { "default": "mdi:tune-vertical" }
+      "gain_limit": { "default": "mdi:tune-vertical" },
+      "strobe_duration": { "default": "mdi:timer-outline" },
+      "siren_volume": { "default": "mdi:volume-high" },
+      "siren_repeats": { "default": "mdi:repeat" },
+      "speaker_volume": { "default": "mdi:speaker" },
+      "microphone_volume": { "default": "mdi:microphone" }
     }
   },
   "services": {

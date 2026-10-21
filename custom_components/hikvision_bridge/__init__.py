@@ -92,6 +92,16 @@ async def _async_setup_device(hass: HomeAssistant, entry: BridgeConfigEntry) -> 
 
     bridge = DeviceBridge(hass, entry, link, profile)
     await bridge.async_prepare_routes()
+    try:
+        await bridge.async_probe_extras()
+    except (BadCredentials, AuthHiccup) as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="bad_credentials"
+        ) from err
+    except LockedOut as err:
+        raise ConfigEntryError(translation_domain=DOMAIN, translation_key="locked_out") from err
+    except BridgeFault as err:
+        raise ConfigEntryNotReady(str(err)) from err
     bridge.register_devices()
     entry.runtime_data = bridge
     await bridge.refresher.async_config_entry_first_refresh()

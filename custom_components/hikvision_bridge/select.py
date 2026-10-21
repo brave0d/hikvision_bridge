@@ -24,8 +24,13 @@ async def async_setup_entry(
 class ImageSelect(ImageSettingEntity, SelectEntity):
     def __init__(self, bridge: DeviceBridge, channel_id: str, capability: ImageCapability) -> None:
         super().__init__(bridge, channel_id, capability)
-        # Options use a translatable form and map back to the device spelling.
-        self._device_option = {option_key(o): o for o in capability.options}
+        if capability.labels:
+            # Device-named choices (alarm sounds): show the device's names.
+            self._device_option = dict(zip(capability.labels, capability.options, strict=True))
+        else:
+            # Options use a translatable form and map back to the device spelling.
+            self._device_option = {option_key(o): o for o in capability.options}
+        self._from_device = {device: shown for shown, device in self._device_option.items()}
         self._attr_options = list(self._device_option)
 
     @property
@@ -33,6 +38,8 @@ class ImageSelect(ImageSettingEntity, SelectEntity):
         current = self.current
         if current is None:
             return None
+        if current.value in self._from_device:
+            return self._from_device[current.value]
         key = option_key(current.value)
         return key if key in self._device_option else None
 

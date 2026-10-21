@@ -40,11 +40,12 @@
 | --- | --- |
 | Detections | Binary sensor per channel and detection kind (motion, line crossing, intrusion, region entrance/exit, tamper, video loss, scene change, defocus, audio exception); optional person/vehicle sensors |
 | Event entities | One per channel, fires on every smart detection (good for automations that must not miss repeated triggers) |
-| Switches | Detections on/off (only the `enabled` flag is written back, everything else stays byte-identical); alarm outputs |
+| Switches | Detections on/off including video loss on recorders (only the `enabled` flag is written back, everything else stays byte-identical); alarm outputs; arm/disarm alarm inputs |
 | Image settings | Day/night, supplement light, colour, WDR and more per channel (see below) |
+| Deterrence and audio | Strobe light duration and frequency, siren sound, volume and repeats, speaker and microphone volume (cameras that have them) |
 | Cameras | Main/sub stream per channel, snapshots, codec and resolution as attributes |
-| Recorder | One HA device per channel below the recorder, channel connected, storage status/free/capacity, alarm inputs |
-| Health | Event connection, event delay, stream encryption, repairs for misconfigured devices (see below) |
+| Recorder | One HA device per channel below the recorder, channel connected, recording per channel, storage status/free/capacity, alarm inputs |
+| Health | Event connection, event delay, stream encryption, IP address, repairs for misconfigured devices (see below); uptime/last boot, CPU, memory and reboot count (diagnostic, disabled by default); memory card of directly connected cameras |
 | Hik-Connect (optional) | Cloud connection per device, stream-encryption status, connection change events, door opening for intercoms (unverified, see limits) |
 | Actions | `add_center_links`, `isapi_request` (read-only unless confirmed), `ptz_move`, `ptz_preset`, `set_notification_host` |
 
@@ -64,6 +65,9 @@ entity list when you need them).
 | White balance | White balance mode, red and blue gain | select, number |
 | Exposure | Exposure mode, shutter, gain limit, overexposure suppression | select, number, switch |
 | Other | Power line frequency, image flip and direction, image stabilization, lens distortion correction | select, switch |
+| Strobe light | **Strobe light duration**, **strobe light frequency** (high, medium, low, steady on) | number, select |
+| Siren | **Siren sound** (names as the camera reports them), **siren volume**, siren repeats | select, number |
+| Two-way audio | **Speaker volume**, **microphone volume** | number |
 
 How it behaves:
 
@@ -74,7 +78,7 @@ How it behaves:
 * **Conflicts are reported, not resolved.** If the camera refuses a combination (for example WDR together
   with backlight compensation), you get an error message and nothing else changes.
 * **Behind a recorder** the settings go through the recorder, or straight to the camera when a direct
-  camera connection exists.
+  camera connection exists. Siren and two-way audio need a direct camera connection.
 
 ## Installation
 

@@ -18,7 +18,10 @@ _PATHS: dict[Kind, str] = {
     Kind.REGION_ENTRANCE: "/ISAPI/Smart/regionEntrance/{ch}",
     Kind.REGION_EXITING: "/ISAPI/Smart/regionExiting/{ch}",
     Kind.SCENE_CHANGE: "/ISAPI/Smart/SceneChangeDetection/{ch}",
+    Kind.VIDEO_LOSS: "/ISAPI/System/Video/inputs/channels/{ch}/videoLoss",
 }
+# Watched by the recorder itself, not by the camera: always configured on the recorder.
+RECORDER_ONLY: frozenset[Kind] = frozenset({Kind.VIDEO_LOSS})
 
 
 @dataclass(frozen=True, slots=True)

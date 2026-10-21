@@ -31,7 +31,9 @@ from ..const import (
 )
 from ..model import audit
 from ..model.discover import read_identity_only
+from ..model.features import adjust, detection, health, io, storage
 from ..model.inventory import CloudLinkState, DeviceProfile
+from ..model.vocabulary import Kind
 from ..wire.faults import BadCredentials, BridgeFault, LockedOut
 from ..wire.feed import AlarmFeed
 from ..wire.link import Endpoint, IsapiLink
@@ -98,6 +100,29 @@ class DeviceBridge:
             return direct.link, direct.remote_channel
         return self.link, channel_id
 
+    def detection_route(self, channel_id: str, kind: Kind) -> tuple[IsapiLink, str]:
+        """Like ``route``, but detections the recorder watches itself stay on the recorder."""
+        if kind in detection.RECORDER_ONLY:
+            return self.link, channel_id
+        return self.route(channel_id)
+
+    def reaches_camera(self, channel_id: str) -> bool:
+        """Whether settings of the camera itself are reachable for this channel."""
+        direct = self.routes.get(channel_id)
+        return (direct is not None and direct.healthy) or not self.profile.shape.records
+
+    def channel_address(self, channel_id: str | None) -> str | None:
+        """Network address of the camera of a channel (or of the device itself)."""
+        if channel_id is None:
+            return self.link.endpoint.host
+        direct = self.routes.get(channel_id)
+        if direct is not None:
+            return direct.link.endpoint.host
+        channel = self.profile.channels.get(channel_id)
+        if channel is not None and channel.camera_address:
+            return channel.camera_address
+        return None if identity.uses_channel_devices(self.profile) else self.link.endpoint.host
+
     def is_main_link_fault(self, channel_id: str) -> bool:
         direct = self.routes.get(channel_id)
         return direct is None or not direct.healthy
@@ -140,6 +165,44 @@ class DeviceBridge:
                     self.hass, DOMAIN, self._issue_id(f"channel_auth_{channel_id}")
                 )
 
+    async def async_probe_extras(self) -> None:
+        """Find adjustable settings, status, recording and armable inputs (GET only).
+
+        Camera-side resources are read over a direct connection where one exists. Faults of a
+        direct connection are reported and skipped; refused logins on the main link raise.
+        """
+        profile = self.profile
+        records = profile.shape.records
+        profile.health = await health.read_status(self.link, memory_in_mb=records) is not None
+        if records:
+            profile.recording = bool(await health.read_recording(self.link))
+        armed = await io.read_armed(self.link) or {}
+        profile.armable_inputs = tuple(p for p in armed if p in profile.inputs)
+        for channel in profile.channels.values():
+            if channel.online is False:
+                continue
+            channel_id = channel.channel_id
+            link, remote = self.route(channel_id)
+            reaches_camera = self.reaches_camera(channel_id)
+            try:
+                found = {}
+                for source in adjust.SOURCES.values():
+                    if source.direct_only and not reaches_camera:
+                        continue
+                    found.update(await source.read_capabilities(link, remote))
+                channel.image = found
+                if link is not self.link:
+                    status = await health.read_status(link, memory_in_mb=False)
+                    channel.health = status is not None
+                    channel.storage = await storage.read(link)
+                    channel.armable_inputs = tuple(await io.read_armed(link) or {})
+            except (BadCredentials, LockedOut) as err:
+                if self.is_main_link_fault(channel_id):
+                    raise
+                self.report_channel_fault(channel_id, err)
+            except BridgeFault as err:
+                _LOGGER.debug("Channel capabilities incomplete: %s", type(err).__name__)
+
     @callback
     def register_devices(self) -> None:
         registry = dr.async_get(self.hass)
@@ -156,6 +219,8 @@ class DeviceBridge:
             route = self.routes.get(channel.channel_id)
             subentry_id = route.subentry_id if route else None
             info = identity.channel_device_info(self.profile, channel, main.id)
+            if route is not None:
+                info["configuration_url"] = route.link.endpoint.base
             # A channel with a direct camera link belongs to that link; move it explicitly
             # when a link was added or removed since the device was created.
             existing = registry.async_get_device_by_identifier(

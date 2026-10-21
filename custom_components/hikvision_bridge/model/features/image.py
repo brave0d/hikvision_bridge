@@ -33,6 +33,8 @@ class ImageSetting:
     fields: tuple[str, ...]
     enabled_default: bool = False
     seconds: bool = False
+    # Which resource family serves the setting (see ``adjust.SOURCES``).
+    source: str = "image"
 
 
 def _s(
@@ -146,10 +148,14 @@ class ImageCapability:
     options: tuple[str, ...] = ()
     minimum: int | None = None
     maximum: int | None = None
+    # Display names for ``options`` when the device values are ids (e.g. alarm sounds).
+    labels: tuple[str, ...] = ()
 
     @property
     def setting(self) -> ImageSetting:
-        return BY_KEY[self.key]
+        from .adjust import BY_KEY as ALL  # noqa: PLC0415 - the registry imports this module
+
+        return ALL[self.key]
 
 
 @dataclass(frozen=True, slots=True)

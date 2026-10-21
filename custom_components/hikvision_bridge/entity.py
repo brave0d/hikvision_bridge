@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .model.features import image
+from .model.features import adjust
 from .model.features.image import ImageCapability, ImageValue
 from .runtime import identity
 from .runtime.bridge import DeviceBridge
@@ -93,7 +93,7 @@ class ImageSettingEntity(PolledEntity):
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="setting_inactive")
         link, remote = self.bridge.route(self.channel_id)
         try:
-            await image.write(link, remote, self.capability.key, current.field, value)
+            await adjust.write(link, remote, self.capability.key, current.field, value)
         except BridgeFault as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

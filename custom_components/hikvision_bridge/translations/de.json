@@ -264,6 +264,9 @@
       },
       "cloud_stream_encryption": {
         "name": "Stream-Verschlüsselung"
+      },
+      "recording": {
+        "name": "Aufnahme"
       }
     },
     "switch": {
@@ -308,6 +311,12 @@
       },
       "lens_correction": {
         "name": "Objektivkorrektur"
+      },
+      "video_loss_detection": {
+        "name": "Erkennung Videoverlust"
+      },
+      "input_armed": {
+        "name": "Alarmeingang {port} scharf"
       }
     },
     "camera": {
@@ -372,6 +381,21 @@
       },
       "event_latency": {
         "name": "Ereignisverzögerung"
+      },
+      "boot_time": {
+        "name": "Letzter Start"
+      },
+      "cpu_load": {
+        "name": "CPU-Auslastung"
+      },
+      "memory_use": {
+        "name": "Speicherauslastung"
+      },
+      "reboots": {
+        "name": "Neustarts"
+      },
+      "network_address": {
+        "name": "IP-Adresse"
       }
     },
     "button": {
@@ -486,6 +510,18 @@
           "updown": "Oben/unten",
           "center": "Mitte"
         }
+      },
+      "strobe_frequency": {
+        "name": "Blitzlicht-Frequenz",
+        "state": {
+          "high": "Hoch",
+          "medium": "Mittel",
+          "low": "Niedrig",
+          "normallyon": "Dauerlicht"
+        }
+      },
+      "siren_sound": {
+        "name": "Sirenenton"
       }
     },
     "number": {
@@ -536,6 +572,21 @@
       },
       "gain_limit": {
         "name": "Verstärkungsgrenze"
+      },
+      "strobe_duration": {
+        "name": "Blitzlicht-Dauer"
+      },
+      "siren_volume": {
+        "name": "Sirenenlautstärke"
+      },
+      "siren_repeats": {
+        "name": "Sirenenwiederholungen"
+      },
+      "speaker_volume": {
+        "name": "Lautsprecherlautstärke"
+      },
+      "microphone_volume": {
+        "name": "Mikrofonlautstärke"
       }
     }
   },

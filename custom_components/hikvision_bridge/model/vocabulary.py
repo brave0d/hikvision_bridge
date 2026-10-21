@@ -63,6 +63,7 @@ SWITCHABLE: tuple[Kind, ...] = (
     Kind.REGION_ENTRANCE,
     Kind.REGION_EXITING,
     Kind.SCENE_CHANGE,
+    Kind.VIDEO_LOSS,
 )
 
 # Kinds that produce event entities (each trigger matters, not just on/off).

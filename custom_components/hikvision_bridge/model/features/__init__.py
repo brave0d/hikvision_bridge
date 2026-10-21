@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
 from ...wire.faults import DeviceRejected, Unsupported
 from ...wire.link import IsapiLink
 from ...wire.xmlview import RawDocument
@@ -44,6 +47,41 @@ async def patch_and_verify(
                 f"{element} reads back as {actual!r} instead of {value!r}", 200, "verify"
             )
     return document
+
+
+async def patch_json_and_verify(
+    link: IsapiLink,
+    path: str,
+    root: str,
+    edits: dict[str, Any],
+    *,
+    skip_missing: bool = False,
+) -> None:
+    """Read-modify-write a JSON resource ``{root: {...}}`` changing only ``edits``.
+
+    With ``skip_missing`` keys the document does not have are left out (alternative names of
+    one value across firmware versions).
+    """
+    document = await link.read_json(path)
+    body = document.get(root) if isinstance(document, dict) else None
+    if not isinstance(body, dict):
+        raise Unsupported(f"{path} has no {root}")
+    if skip_missing:
+        edits = {key: value for key, value in edits.items() if key in body}
+    if not edits:
+        raise Unsupported(f"{path} has nothing to change")
+    for key, value in edits.items():
+        if key not in body:
+            raise Unsupported(f"{path} has no {key}")
+        body[key] = value
+    await link.call("PUT", path, body=json.dumps(document), content_type="application/json")
+    check = await link.read_json(path)
+    actual = check.get(root, {}) if isinstance(check, dict) else {}
+    for key, value in edits.items():
+        if str(actual.get(key)) != str(value):
+            raise VerifyMismatch(
+                f"{key} reads back as {actual.get(key)!r} instead of {value!r}", 200, "verify"
+            )
 
 
 async def _edit(link: IsapiLink, path: str, edits: dict[str, str]) -> RawDocument:

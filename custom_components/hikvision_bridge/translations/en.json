@@ -264,6 +264,9 @@
       },
       "cloud_stream_encryption": {
         "name": "Stream encryption"
+      },
+      "recording": {
+        "name": "Recording"
       }
     },
     "switch": {
@@ -308,6 +311,12 @@
       },
       "lens_correction": {
         "name": "Lens distortion correction"
+      },
+      "video_loss_detection": {
+        "name": "Video loss detection"
+      },
+      "input_armed": {
+        "name": "Alarm input {port} armed"
       }
     },
     "camera": {
@@ -372,6 +381,21 @@
       },
       "event_latency": {
         "name": "Event delay"
+      },
+      "boot_time": {
+        "name": "Last boot"
+      },
+      "cpu_load": {
+        "name": "CPU load"
+      },
+      "memory_use": {
+        "name": "Memory use"
+      },
+      "reboots": {
+        "name": "Reboots"
+      },
+      "network_address": {
+        "name": "IP address"
       }
     },
     "button": {
@@ -486,6 +510,18 @@
           "updown": "Up/down",
           "center": "Center"
         }
+      },
+      "strobe_frequency": {
+        "name": "Strobe light frequency",
+        "state": {
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low",
+          "normallyon": "Steady on"
+        }
+      },
+      "siren_sound": {
+        "name": "Siren sound"
       }
     },
     "number": {
@@ -536,6 +572,21 @@
       },
       "gain_limit": {
         "name": "Gain limit"
+      },
+      "strobe_duration": {
+        "name": "Strobe light duration"
+      },
+      "siren_volume": {
+        "name": "Siren volume"
+      },
+      "siren_repeats": {
+        "name": "Siren repeats"
+      },
+      "speaker_volume": {
+        "name": "Speaker volume"
+      },
+      "microphone_volume": {
+        "name": "Microphone volume"
       }
     }
   },

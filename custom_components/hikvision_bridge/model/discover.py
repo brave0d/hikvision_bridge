@@ -9,7 +9,7 @@ from ..wire.faults import NotIsapi
 from ..wire.link import IsapiLink
 from ..wire.scrub import scrubbed_logger
 from ..wire.xmlview import XmlNode
-from .features import detection, image, io, linkage, storage
+from .features import detection, io, linkage, storage
 from .inventory import (
     ChannelProfile,
     ChannelSource,
@@ -245,7 +245,6 @@ async def discover(link: IsapiLink, *, probe_switches: bool = True) -> DevicePro
 
     if probe_switches:
         await probe_switchable(link, profile)
-        await probe_image(link, profile)
     return profile
 
 
@@ -264,11 +263,3 @@ async def probe_switchable(link: IsapiLink, profile: DeviceProfile) -> None:
         wanted = [k for k in SWITCHABLE if k in channel.kinds] or [Kind.MOTION]
         jobs.extend(check(channel, kind) for kind in wanted)
     await asyncio.gather(*jobs)
-
-
-async def probe_image(link: IsapiLink, profile: DeviceProfile) -> None:
-    """Read which image settings each online channel offers (one request per channel)."""
-    for channel in profile.channels.values():
-        if channel.online is False:
-            continue
-        channel.image = await image.read_capabilities(link, channel.channel_id)

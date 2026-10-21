@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...wire.link import IsapiLink
 from ...wire.xmlview import XmlNode
 from ..inventory import IoPort
+from . import patch_and_verify
 
 _OUTPUT_COMMAND = (
     '<?xml version="1.0" encoding="UTF-8"?>'
@@ -53,6 +54,32 @@ async def read_state(link: IsapiLink, port: IoPort) -> bool | None:
     if state in ("inactive", "low"):
         return False
     return None
+
+
+INPUTS_PATH = "/ISAPI/System/IO/inputs"
+
+
+def parse_armed(document: XmlNode | None) -> dict[str, bool]:
+    """Which alarm inputs are armed (``enabled``), by port id."""
+    if document is None:
+        return {}
+    armed: dict[str, bool] = {}
+    for node in document.children("IOInputPort"):
+        port_id = node.text("id")
+        enabled = node.flag("enabled")
+        if port_id and enabled is not None:
+            armed[port_id] = enabled
+    return armed
+
+
+async def read_armed(link: IsapiLink) -> dict[str, bool] | None:
+    document = await link.read_xml(INPUTS_PATH, optional=True)
+    return parse_armed(document) if document is not None else None
+
+
+async def set_armed(link: IsapiLink, port_id: str, on: bool) -> None:
+    """Arm or disarm one input; only its ``enabled`` flag changes."""
+    await patch_and_verify(link, f"{INPUTS_PATH}/{port_id}", {"enabled": "true" if on else "false"})
 
 
 async def set_output(link: IsapiLink, port: IoPort, on: bool) -> None:
