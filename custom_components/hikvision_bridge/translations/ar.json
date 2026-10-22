@@ -871,7 +871,13 @@
         "previous_day": "اليوم السابق",
         "next_day": "اليوم التالي",
         "source": "المصدر",
-        "select_camera": "اختر كاميرا."
+        "select_camera": "اختر كاميرا.",
+        "cameras_top": "الكاميرات فوق الفيديو",
+        "cameras_left": "الكاميرات بجانب الفيديو",
+        "pick_day": "اختر يومًا",
+        "previous_month": "الشهر السابق",
+        "next_month": "الشهر التالي",
+        "recording_days": "أيام بها تسجيلات"
       }
     }
   },

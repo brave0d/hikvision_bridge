@@ -2,9 +2,10 @@
 
 Search results carry an RTSP ``playbackURI`` that names one recorded file (start, end,
 file name, size). The same URI is handed back to ``/ISAPI/ContentMgmt/download``, which
-answers with that whole file. Devices write their recordings as MPEG program stream,
-usually behind a 40 byte ``IMKH`` header; the codec field of search results is not
-reliable and is therefore not used.
+answers with that whole file. All times in searches and playback URIs are on the device's
+wall clock, although marked as UTC; they are converted with the offset of that clock.
+Devices write their recordings as MPEG program stream, usually behind a 40 byte ``IMKH``
+header; the codec field of search results is not reliable and is therefore not used.
 """
 
 from __future__ import annotations
@@ -13,17 +14,23 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+import time
 from urllib.parse import parse_qsl, urlsplit
 import uuid
+from weakref import WeakKeyDictionary
 from xml.sax.saxutils import escape
 
 from aiohttp import ClientResponse
 
-from ...wire.faults import DeviceRejected, Unsupported
+from ...wire.faults import BridgeFault, DeviceRejected, Unsupported
 from ...wire.link import IsapiLink
 from ...wire.xmlview import XmlNode
 
 SEARCH_PATH = "/ISAPI/ContentMgmt/search"
+TIME_PATH = "/ISAPI/System/time"
+# The clock offset is read again after this long (daylight saving time changes it).
+OFFSET_TTL = 3600
+_NO_OFFSET = timedelta(0)
 DOWNLOAD_PATH = "/ISAPI/ContentMgmt/download"
 DAYS_PATH = "/ISAPI/ContentMgmt/record/tracks/{track}/dailyDistribution"
 PAGE_SIZE = 50
@@ -90,33 +97,74 @@ def track_of(channel_id: str) -> str:
     return f"{int(channel_id) * 100 + 1}" if channel_id.isdigit() else "101"
 
 
-def parse_time(text: str | None) -> datetime | None:
-    """Device time stamp; one without a zone is taken as UTC, like the devices send it."""
+def wall_offset_of(local_time: str | None, now: datetime) -> timedelta:
+    """How far the device's wall clock is ahead of UTC, in quarter hours.
+
+    Taken from the clock reading of ``/ISAPI/System/time``; the zone it states is not
+    reliable (it leaves out daylight saving time).
+    """
+    if not local_time:
+        return timedelta(0)
+    try:
+        wall = datetime.strptime(local_time.strip()[:19], "%Y-%m-%dT%H:%M:%S")
+    except ValueError:
+        return timedelta(0)
+    quarters = round((wall.replace(tzinfo=UTC) - now).total_seconds() / 900)
+    return timedelta(minutes=15 * quarters)
+
+
+_offsets: WeakKeyDictionary[IsapiLink, tuple[float, timedelta]] = WeakKeyDictionary()
+
+
+async def wall_offset(link: IsapiLink) -> timedelta:
+    """The device's wall clock ahead of UTC, read again every OFFSET_TTL seconds."""
+    cached = _offsets.get(link)
+    if cached is not None and time.monotonic() - cached[0] < OFFSET_TTL:
+        return cached[1]
+    try:
+        reply = await link.call("GET", TIME_PATH)
+        offset = wall_offset_of(reply.xml().text("localTime"), datetime.now(UTC))
+    except BridgeFault:
+        offset = cached[1] if cached is not None else timedelta(0)
+    _offsets[link] = (time.monotonic(), offset)
+    return offset
+
+
+def parse_time(text: str | None, wall: timedelta = _NO_OFFSET) -> datetime | None:
+    """Device time stamp as UTC.
+
+    Devices write their own wall clock and mark it as UTC ("Z") or not at all; ``wall`` is
+    how far that clock is ahead of UTC. Stamps with a stated offset are taken as they are.
+    """
     if not text:
         return None
     text = text.strip()
     for pattern in ("%Y%m%dT%H%M%SZ", "%Y%m%dT%H%M%S"):
         try:
-            return datetime.strptime(text, pattern).replace(tzinfo=UTC)
+            return datetime.strptime(text, pattern).replace(tzinfo=UTC) - wall
         except ValueError:
             continue
     try:
-        moment = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        moment = datetime.fromisoformat(text.removesuffix("Z"))
     except ValueError:
         return None
-    return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
+    if moment.tzinfo is not None:
+        return moment.astimezone(UTC)
+    return moment.replace(tzinfo=UTC) - wall
 
 
-def _iso(moment: datetime) -> str:
-    return f"{moment.astimezone(UTC):%Y-%m-%dT%H:%M:%SZ}"
+def _iso(moment: datetime, wall: timedelta) -> str:
+    return f"{moment.astimezone(UTC) + wall:%Y-%m-%dT%H:%M:%SZ}"
 
 
-def compact(moment: datetime) -> str:
-    """Time stamp in the form of playback URIs."""
-    return f"{moment.astimezone(UTC):%Y%m%dT%H%M%SZ}"
+def compact(moment: datetime, wall: timedelta = _NO_OFFSET) -> str:
+    """Time stamp in the form of playback URIs, on the device's wall clock."""
+    return f"{moment.astimezone(UTC) + wall:%Y%m%dT%H%M%SZ}"
 
 
-def search_body(track: str, start: datetime, end: datetime, position: int = 0) -> str:
+def search_body(
+    track: str, start: datetime, end: datetime, position: int = 0, wall: timedelta = _NO_OFFSET
+) -> str:
     """Search for all recordings of a track; the kind is read from the results."""
     return (
         '<?xml version="1.0" encoding="UTF-8"?>'
@@ -124,7 +172,7 @@ def search_body(track: str, start: datetime, end: datetime, position: int = 0) -
         f"<searchID>{{{uuid.uuid4()}}}</searchID>"
         f"<trackList><trackID>{escape(track)}</trackID></trackList>"
         "<timeSpanList><timeSpan>"
-        f"<startTime>{_iso(start)}</startTime><endTime>{_iso(end)}</endTime>"
+        f"<startTime>{_iso(start, wall)}</startTime><endTime>{_iso(end, wall)}</endTime>"
         "</timeSpan></timeSpanList>"
         f"<maxResults>{PAGE_SIZE}</maxResults>"
         f"<searchResultPostion>{position}</searchResultPostion>"
@@ -140,13 +188,15 @@ def kind_of(descriptor: str | None) -> str:
     return _KIND_OF.get(last, KIND_OTHER)
 
 
-def parse_results(document: XmlNode, fallback_track: str) -> tuple[list[Recording], bool]:
+def parse_results(
+    document: XmlNode, fallback_track: str, wall: timedelta = _NO_OFFSET
+) -> tuple[list[Recording], bool]:
     """Recordings of one result page and whether the device has more."""
     status = (document.text("responseStatusStrg") or "").upper()
     found: list[Recording] = []
     for item in document.all("matchList/searchMatchItem"):
-        start = parse_time(item.text("timeSpan/startTime"))
-        end = parse_time(item.text("timeSpan/endTime"))
+        start = parse_time(item.text("timeSpan/startTime"), wall)
+        end = parse_time(item.text("timeSpan/endTime"), wall)
         uri = item.text("mediaSegmentDescriptor/playbackURI")
         if start is None or end is None or not uri:
             continue
@@ -174,10 +224,12 @@ async def search(link: IsapiLink, track: str, start: datetime, end: datetime) ->
     MORE; paging stops as soon as a page brings nothing new.
     """
     found: dict[tuple[str, datetime, str], Recording] = {}
+    wall = await wall_offset(link)
     position = 0
     while position < MAX_RESULTS:
-        reply = await link.call("POST", SEARCH_PATH, body=search_body(track, start, end, position))
-        page, more = parse_results(reply.xml(), track)
+        body = search_body(track, start, end, position, wall)
+        reply = await link.call("POST", SEARCH_PATH, body=body)
+        page, more = parse_results(reply.xml(), track, wall)
         fresh = 0
         for item in page:
             key = (item.track, item.start, item.name or item.playback_uri)
@@ -199,7 +251,10 @@ def days_body(year: int, month: int) -> str:
     )
 
 
-def parse_days(document: XmlNode) -> list[int]:
+def parse_days(document: XmlNode) -> list[int] | None:
+    """Recorded days of the month, or None when the answer holds no calendar."""
+    if document.first("dayList") is None:
+        return None
     days: list[int] = []
     for day in document.all("dayList/day"):
         number = day.numeric("dayOfMonth")

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -54,6 +54,43 @@ async def test_recorder_status_entities(hass: HomeAssistant, serve) -> None:
     assert (method, path) == ("PUT", "/ISAPI/System/IO/inputs/1")
     assert body == INPUT_1.replace("<enabled>false<", "<enabled>true<")
     assert hass.states.get(armed.entity_id).state == STATE_ON
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_values_outlive_a_few_failed_reads(hass: HomeAssistant, serve) -> None:
+    device = FakeDevice("nvr")
+    device.documents.update({"/ISAPI/System/status": STATUS, "/ISAPI/System/IO/inputs/1": INPUT_1})
+    server = await serve(device)
+    entry = device_entry(server, device)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    armed = _entity(hass, entry, "switch", "_armed_1").entity_id
+    assert hass.states.get(armed).state == STATE_OFF
+    refresher = entry.runtime_data.refresher
+    link = entry.runtime_data.link
+
+    async def refresh() -> str:
+        refresher.request_full()
+        await refresher.async_refresh()
+        await hass.async_block_till_done()
+        return hass.states.get(armed).state
+
+    # A busy device refuses a resource that answered before: not taken for unsupported.
+    inputs = "/ISAPI/System/IO/inputs"
+    device.overrides[inputs] = (
+        403,
+        "<ResponseStatus><statusCode>4</statusCode><subStatusCode>notSupport</subStatusCode></ResponseStatus>",
+    )
+    assert await refresh() == STATE_OFF
+    assert await refresh() == STATE_OFF
+    assert inputs not in link.unsupported
+    assert await refresh() == STATE_UNAVAILABLE
+
+    del device.overrides[inputs]
+    assert await refresh() == STATE_OFF
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

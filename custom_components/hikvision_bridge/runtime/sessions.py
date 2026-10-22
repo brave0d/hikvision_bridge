@@ -47,7 +47,7 @@ MAX_SESSIONS = 4
 # Video prepared beyond the last segment the player fetched (players buffer ahead too).
 READ_AHEAD = 60
 # Recordings closer than this count as one stretch.
-JOIN_GAP = timedelta(seconds=3)
+JOIN_GAP = timedelta(seconds=10)
 MAX_STRETCH = timedelta(hours=3)
 PLAYLIST = "index.m3u8"
 SEGMENT = "seg{:05d}.m4s"
@@ -104,10 +104,13 @@ def locate(found: list[recordings.Recording], moment: datetime) -> tuple[datetim
     return None
 
 
-def playback_uri(source: PlaybackSource, start: datetime, end: datetime) -> str:
+def playback_uri(
+    source: PlaybackSource, start: datetime, end: datetime, wall: timedelta = timedelta(0)
+) -> str:
+    """The span on the device's wall clock (``wall`` ahead of UTC)."""
     return (
         f"rtsp://device/Streaming/tracks/{source.track}/"
-        f"?starttime={recordings.compact(start)}&endtime={recordings.compact(end)}"
+        f"?starttime={recordings.compact(start, wall)}&endtime={recordings.compact(end, wall)}"
     )
 
 
@@ -244,6 +247,7 @@ class SessionManager:
             while len(self.sessions) >= MAX_SESSIONS:
                 oldest = min(self.sessions.values(), key=lambda s: s.last_access)
                 await self._stop(oldest.session_id)
+            uri = playback_uri(source, start, end, await recordings.wall_offset(source.link))
             folder = Path(
                 await self.hass.async_add_executor_job(tempfile.mkdtemp, "", "hikvision_")
             )
@@ -251,7 +255,7 @@ class SessionManager:
                 if source.link not in self._rtsp_only:
                     try:
                         session = await self._from_download(
-                            source, key, start, end, quality, folder
+                            source, key, start, end, uri, quality, folder
                         )
                     except _UseRtsp as err:
                         if err.lasting:
@@ -260,7 +264,9 @@ class SessionManager:
                         self.sessions[session.session_id] = session
                         self._watch()
                         return session
-                session = await self._from_rtsp(source, key, start, end, quality, codec, folder)
+                session = await self._from_rtsp(
+                    source, key, start, end, uri, quality, codec, folder
+                )
             except BaseException:
                 await self.hass.async_add_executor_job(shutil.rmtree, folder, True)
                 raise
@@ -276,13 +282,14 @@ class SessionManager:
         key: tuple[str, str, str],
         start: datetime,
         end: datetime,
+        uri: str,
         quality: str,
         folder: Path,
     ) -> Session:
         session = Session(secrets.token_urlsafe(16), key, start, end, quality, folder)
         ready: asyncio.Future[None] = self.hass.loop.create_future()
         session.pump = self.hass.async_create_background_task(
-            self._pump(session, source, playback_uri(source, start, end), ready),
+            self._pump(session, source, uri, ready),
             "hikvision_bridge playback download",
         )
         try:
@@ -354,11 +361,12 @@ class SessionManager:
         key: tuple[str, str, str],
         start: datetime,
         end: datetime,
+        uri: str,
         quality: str,
         codec: str | None,
         folder: Path,
     ) -> Session:
-        url = playback.rtsp_url(source, playback_uri(source, start, end))
+        url = playback.rtsp_url(source, uri)
         reason = "playback_failed"
         for attempt in range(2):
             session = Session(secrets.token_urlsafe(16), key, start, end, quality, folder)

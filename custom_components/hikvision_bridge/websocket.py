@@ -40,6 +40,7 @@ _CHANNEL = {
 def async_register_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_cameras)
     websocket_api.async_register_command(hass, ws_timeline)
+    websocket_api.async_register_command(hass, ws_days)
     websocket_api.async_register_command(hass, ws_playback_start)
     websocket_api.async_register_command(hass, ws_playback_stop)
 
@@ -205,6 +206,35 @@ async def ws_timeline(
             "events": events,
         },
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/days",
+        **_CHANNEL,
+        vol.Required("year"): vol.All(int, vol.Range(min=2000, max=2100)),
+        vol.Required("month"): vol.All(int, vol.Range(min=1, max=12)),
+    }
+)
+@websocket_api.async_response
+async def ws_days(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Days of a month with recordings for the date picker; None if the device can't tell."""
+    bridge = _bridge(hass, msg["entry_id"])
+    if bridge is None or msg["channel_id"] not in bridge.profile.channels:
+        connection.send_error(msg["id"], "not_found", "Unknown camera")
+        return
+    days = None
+    source = pick_source(bridge, msg["channel_id"], msg["source"])
+    if source is not None:
+        try:
+            days = await recordings.recorded_days(
+                source.link, source.track, msg["year"], msg["month"]
+            )
+        except BridgeFault:
+            days = None
+    connection.send_result(msg["id"], {"days": days})
 
 
 @websocket_api.websocket_command(

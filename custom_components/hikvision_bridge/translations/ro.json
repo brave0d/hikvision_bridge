@@ -871,7 +871,13 @@
         "previous_day": "Ziua anterioară",
         "next_day": "Ziua următoare",
         "source": "Sursă",
-        "select_camera": "Alege o cameră."
+        "select_camera": "Alege o cameră.",
+        "cameras_top": "Camere deasupra videoclipului",
+        "cameras_left": "Camere lângă videoclip",
+        "pick_day": "Alegeți o zi",
+        "previous_month": "Luna anterioară",
+        "next_month": "Luna următoare",
+        "recording_days": "Zile cu înregistrări"
       }
     }
   },

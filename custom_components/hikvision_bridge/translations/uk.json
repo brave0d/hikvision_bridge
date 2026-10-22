@@ -871,7 +871,13 @@
         "previous_day": "Попередній день",
         "next_day": "Наступний день",
         "source": "Джерело",
-        "select_camera": "Виберіть камеру."
+        "select_camera": "Виберіть камеру.",
+        "cameras_top": "Камери над відео",
+        "cameras_left": "Камери поруч із відео",
+        "pick_day": "Вибрати день",
+        "previous_month": "Попередній місяць",
+        "next_month": "Наступний місяць",
+        "recording_days": "Дні із записами"
       }
     }
   },

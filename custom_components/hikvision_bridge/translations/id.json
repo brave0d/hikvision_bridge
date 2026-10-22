@@ -871,7 +871,13 @@
         "previous_day": "Hari sebelumnya",
         "next_day": "Hari berikutnya",
         "source": "Sumber",
-        "select_camera": "Pilih kamera."
+        "select_camera": "Pilih kamera.",
+        "cameras_top": "Kamera di atas video",
+        "cameras_left": "Kamera di samping video",
+        "pick_day": "Pilih hari",
+        "previous_month": "Bulan sebelumnya",
+        "next_month": "Bulan berikutnya",
+        "recording_days": "Hari dengan rekaman"
       }
     }
   },

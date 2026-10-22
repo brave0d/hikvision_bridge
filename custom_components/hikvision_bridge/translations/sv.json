@@ -871,7 +871,13 @@
         "previous_day": "Föregående dag",
         "next_day": "Nästa dag",
         "source": "Källa",
-        "select_camera": "Välj en kamera."
+        "select_camera": "Välj en kamera.",
+        "cameras_top": "Kameror ovanför videon",
+        "cameras_left": "Kameror bredvid videon",
+        "pick_day": "Välj en dag",
+        "previous_month": "Föregående månad",
+        "next_month": "Nästa månad",
+        "recording_days": "Dagar med inspelningar"
       }
     }
   },

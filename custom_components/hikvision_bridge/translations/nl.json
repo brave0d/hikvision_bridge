@@ -871,7 +871,13 @@
         "previous_day": "Vorige dag",
         "next_day": "Volgende dag",
         "source": "Bron",
-        "select_camera": "Kies een camera."
+        "select_camera": "Kies een camera.",
+        "cameras_top": "Camera's boven de video",
+        "cameras_left": "Camera's naast de video",
+        "pick_day": "Kies een dag",
+        "previous_month": "Vorige maand",
+        "next_month": "Volgende maand",
+        "recording_days": "Dagen met opnamen"
       }
     }
   },

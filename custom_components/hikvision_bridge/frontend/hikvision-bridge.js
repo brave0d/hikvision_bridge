@@ -50,6 +50,12 @@ const TEXT = {
   recorder: "Recorder",
   card: "Memory card",
   select_camera: "Select a camera.",
+  cameras_top: "Cameras above the video",
+  cameras_left: "Cameras beside the video",
+  pick_day: "Choose a day",
+  previous_month: "Previous month",
+  next_month: "Next month",
+  recording_days: "Days with recordings",
 };
 
 const KIND_COLORS = {
@@ -73,6 +79,48 @@ const EVENT_COLORS = {
   target_person: "#22c55e",
   target_vehicle: "#06b6d4",
 };
+// Symbols of the event kinds (24x24, drawn with the even-odd rule).
+const SYMBOL_PATHS = {
+  person: "M12 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8m0 10c4.4 0 8 1.8 8 4v3H4v-3c0-2.2 3.6-4 8-4z",
+  vehicle:
+    "M6.5 6h11l2.5 6v7h-2.5v-2h-11v2H4v-7L6.5 6m1.2 2-1.4 4h11.4l-1.4-4H7.7M7.5 13.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m9 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z",
+  motion: "M15 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10M2 8h7v2H2V8m-1 3h7v2H1v-2m1 3h7v2H2v-2z",
+  area: "M3 3h18v18H3V3m3 3v12h12V6H6m3 3h6v6H9V9z",
+  line: "M11 2h2v20h-2V2M3 11h5V8l4 4-4 4v-3H3v-2z",
+  alert: "M10.5 3h3v11h-3V3m0 14h3v3h-3v-3z",
+};
+const EVENT_SYMBOLS = {
+  target_person: "person",
+  target_vehicle: "vehicle",
+  motion: "motion",
+  pir: "motion",
+  intrusion: "area",
+  region_entrance: "area",
+  region_exiting: "area",
+  line_crossing: "line",
+};
+// Drawn last (on top) and labelled first: what was seen beats that something moved.
+const EVENT_RANK = { target_person: 3, target_vehicle: 3, motion: 0, pir: 0 };
+const eventSymbol = (kind) => SYMBOL_PATHS[EVENT_SYMBOLS[kind] || "alert"];
+const eventRank = (kind) => EVENT_RANK[kind] ?? 1;
+// Recordings closer than this are drawn as one; the files of a recording follow each other.
+const JOIN_GAP = 10e3;
+
+function joinRecordings(recordings) {
+  const joined = [];
+  for (const rec of [...recordings].sort((a, b) => a.start - b.start)) {
+    const last = joined[joined.length - 1];
+    if (last && rec.start - last.end <= JOIN_GAP) {
+      if (rec.kind === last.kind) {
+        last.end = Math.max(last.end, rec.end);
+        continue;
+      }
+      last.end = Math.max(last.end, rec.start);
+    }
+    joined.push({ start: rec.start, end: rec.end, kind: rec.kind });
+  }
+  return joined;
+}
 
 let hlsLoader;
 function loadHls() {
@@ -130,8 +178,8 @@ function icon(path) {
 const ICONS = {
   play: icon("M8 5.14v14l11-7-11-7z"),
   pause: icon("M14 19h4V5h-4M6 19h4V5H6v14z"),
-  back: icon("M12.5 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v3l4-4-4-4v3z"),
-  forward: icon("M11.5 3a9 9 0 1 1-9 9h2a7 7 0 1 0 7-7v3l-4-4 4-4v3z"),
+  back: icon("M11.5 3a9 9 0 1 1-9 9h2a7 7 0 1 0 7-7v3l-4-4 4-4v3z"),
+  forward: icon("M12.5 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v3l4-4-4-4v3z"),
   prev: icon("M6 6h2v12H6zm3.5 6 8.5 6V6z"),
   next: icon("M16 18h2V6h-2zM6 18l8.5-6L6 6z"),
   download: icon("M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"),
@@ -142,7 +190,12 @@ const ICONS = {
   plus: icon("M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"),
   minus: icon("M19 13H5v-2h14v2z"),
   live: icon("M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8m0-6a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16z"),
+  camsLeft: icon("M3 3h18v18H3V3m2 2v14h5V5H5m7 0v14h7V5h-7z"),
+  calendar: icon("M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2m0 16H5V9h14v11M7 11h5v5H7v-5z"),
+  caret: icon("M7 10l5 5 5-5H7z"),
+  camsTop: icon("M3 3h18v18H3V3m2 2v5h14V5H5m0 7v7h14v-7H5z"),
 };
+const symbolIcon = (kind) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="${eventSymbol(kind)}"/></svg>`;
 
 const STYLE = `
   :host {
@@ -164,7 +217,7 @@ const STYLE = `
   .icon-button:hover { background: color-mix(in srgb, var(--hb-text) 10%, transparent); }
   .icon-button:disabled { opacity: .35; cursor: default; background: none; }
   .icon-button svg { width: 24px; height: 24px; fill: currentColor; }
-  select, input[type=date] {
+  select {
     font: inherit; color: var(--hb-text); background: var(--hb-surface);
     border: 1px solid var(--hb-line); border-radius: 8px; padding: 6px 8px; min-height: 36px;
   }
@@ -181,18 +234,95 @@ const STYLE = `
   .badges { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; pointer-events: none; }
   .badge { background: rgba(0,0,0,.6); color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 10px; letter-spacing: .02em; }
   .badge.live { background: #e5484d; }
-  .clock { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,.6); color: #fff; font-variant-numeric: tabular-nums; padding: 3px 10px; border-radius: 10px; font-size: 13px; pointer-events: none; }
-  .controls { display: flex; align-items: center; gap: 2px; padding: 4px 8px; flex-wrap: wrap; }
-  .controls .spacer { flex: 1; }
+  .viewer { container-type: inline-size; }
+  .controls { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 4px; padding: 4px 8px; }
+  .controls .group { display: flex; align-items: center; gap: 2px; min-width: 0; }
+  .controls .start { justify-self: start; }
+  .controls .middle { justify-self: center; }
+  .controls .end { justify-self: end; justify-content: flex-end; flex-wrap: wrap; }
+  .controls .middle [data-action="toggle"] { width: 48px; height: 48px; }
+  .controls .middle [data-action="toggle"] svg { width: 30px; height: 30px; }
+  .controls select { min-width: 0; max-width: 100%; }
+  @container (max-width: 640px) {
+    .controls { grid-template-columns: auto 1fr; grid-template-areas: "middle middle" "start end"; padding: 2px 4px; }
+    .controls .middle { grid-area: middle; }
+    .controls .start { grid-area: start; }
+    .controls .end { grid-area: end; }
+    .controls select { font-size: 13px; padding: 4px; min-height: 32px; }
+    .controls .icon-button { width: 36px; height: 36px; }
+    .day-bar .icon-button { width: 36px; height: 36px; }
+    .legend { gap: 6px; padding: 0 8px 4px; }
+  }
   .controls .live-button { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--hb-line); background: none; border-radius: 18px; padding: 4px 12px 4px 8px; cursor: pointer; min-height: 34px; }
   .controls .live-button svg { width: 18px; height: 18px; fill: #e5484d; }
   .controls .live-button.active { background: #e5484d; color: #fff; border-color: #e5484d; }
   .controls .live-button.active svg { fill: #fff; }
+  .date-button {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 6px 4px 10px;
+    border: 1px solid var(--hb-line); border-radius: 18px; background: none; cursor: pointer;
+    white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 0;
+  }
+  .date-button:hover { background: color-mix(in srgb, var(--hb-text) 8%, transparent); }
+  .date-button svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
+  .date-button svg:last-child { opacity: .6; }
+  .date-button .short { display: none; }
+  @container (max-width: 480px) {
+    .date-button .long { display: none; }
+    .date-button .short { display: inline; }
+  }
+  .calendar {
+    position: fixed; inset: auto; margin: 0; width: min(296px, calc(100vw - 16px)); box-sizing: border-box;
+    padding: 10px 10px 8px; border: 1px solid var(--hb-line); border-radius: 16px;
+    background: var(--card-background-color, var(--hb-surface)); color: var(--hb-text);
+    box-shadow: 0 16px 40px rgba(0,0,0,.35), 0 2px 8px rgba(0,0,0,.2); font: inherit; overflow: visible;
+  }
+  .calendar.fallback { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 10; }
+  .calendar.fallback.open { display: block; }
+  .date-picker { position: relative; min-width: 0; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 4px; }
+  .cal-head .icon-button { width: 34px; height: 34px; padding: 5px; }
+  .cal-title { font-weight: 500; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; }
+  .cal-title::after {
+    content: ""; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--hb-line);
+    border-top-color: var(--hb-accent); animation: spin .8s linear infinite; visibility: hidden;
+  }
+  .calendar.loading .cal-title::after { visibility: visible; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+  .cal-wd { text-align: center; font-size: 11px; color: var(--hb-muted); padding: 4px 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .cal-day {
+    position: relative; aspect-ratio: 1; min-width: 0; border: 0; border-radius: 50%; background: none; padding: 0;
+    cursor: pointer; font-size: 14px; font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; justify-content: center; transition: background .12s;
+  }
+  .cal-day:hover:not(:disabled) { background: color-mix(in srgb, var(--hb-text) 10%, transparent); }
+  .cal-day:disabled { opacity: .28; cursor: default; }
+  .cal-day.norec:not(.selected):not(:disabled) { color: var(--hb-muted); }
+  .cal-day.rec { font-weight: 500; }
+  .cal-day.rec::after {
+    content: ""; position: absolute; bottom: 4px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px;
+    border-radius: 50%; background: var(--hb-accent);
+  }
+  .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--hb-accent); }
+  .cal-day.selected { background: var(--hb-accent); color: var(--text-primary-color, #fff); font-weight: 600; }
+  .cal-day.selected:hover { background: var(--hb-accent); }
+  .cal-day.selected.rec::after { background: currentColor; }
+  .cal-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; padding-top: 8px;
+    border-top: 1px solid var(--hb-line); font-size: 12px; color: var(--hb-muted);
+  }
+  .cal-foot .key { display: inline-flex; align-items: center; gap: 6px; }
+  .cal-foot .key::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--hb-accent); }
+  .cal-foot .key[hidden] { visibility: hidden; display: inline-flex; }
+  .cal-foot button { background: none; border: 0; color: var(--hb-accent); font-weight: 500; cursor: pointer; padding: 4px 8px; border-radius: 12px; }
+  .cal-foot button:hover { background: color-mix(in srgb, var(--hb-accent) 12%, transparent); }
   .timeline { position: relative; user-select: none; touch-action: none; }
   .timeline canvas { width: 100%; height: 100%; display: block; cursor: pointer; }
   .tooltip { position: absolute; top: 2px; transform: translateX(-50%); background: var(--hb-text); color: var(--hb-surface); font-size: 12px; padding: 2px 6px; border-radius: 4px; pointer-events: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--hb-muted); padding: 0 12px 6px; }
-  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; background: var(--c); }
+  .legend span { display: inline-flex; align-items: center; gap: 4px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); }
+  .legend span.event::before { display: none; }
+  .legend span.event svg { width: 16px; height: 16px; padding: 2px; border-radius: 50%; background: var(--c); fill: #fff; box-sizing: border-box; }
   .hint { font-size: 12px; color: var(--hb-muted); padding: 0 12px 4px; }
 `;
 
@@ -273,10 +403,14 @@ class Timeline {
           this.draw();
         }
       }
-      const time = new Date(this.timeAt(x));
+      const time = this.timeAt(x);
+      const slack = (6 / (this.canvas.clientWidth || 1)) * this.span;
+      const seen = this.events
+        .filter((ev) => ev.start - slack <= time && ev.end + slack >= time)
+        .sort((a, b) => eventRank(b.kind) - eventRank(a.kind))[0];
       this.tip.hidden = false;
-      this.tip.style.left = `${Math.max(30, Math.min(this.canvas.clientWidth - 30, x))}px`;
-      this.tip.textContent = clock(time, this.span <= 2 * HOUR);
+      this.tip.style.left = `${Math.max(60, Math.min(this.canvas.clientWidth - 60, x))}px`;
+      this.tip.textContent = clock(new Date(time), this.span <= 2 * HOUR) + (seen ? ` · ${this.eventName(seen.kind)}` : "");
     });
     this.canvas.addEventListener("pointerup", (e) => {
       if (drag && !drag.moved) this.onSeek(new Date(this.timeAt(point(e))));
@@ -322,9 +456,7 @@ class Timeline {
     const x = (t) => ((t - this.viewStart) / this.span) * width;
     const axisY = 22;
     const recY = 30;
-    const recH = Math.max(14, Math.round((height - 40) * 0.45));
-    const evY = recY + recH + 6;
-    const evH = Math.max(10, height - evY - 6);
+    const recH = Math.max(18, height - recY - 8);
 
     // Hour ticks and labels.
     const steps = [5 * 60e3, 15 * 60e3, 30 * 60e3, HOUR, 2 * HOUR, 3 * HOUR, 6 * HOUR];
@@ -332,7 +464,6 @@ class Timeline {
     const tzOffset = new Date(this.viewStart).getTimezoneOffset() * 60e3;
     let tick = Math.ceil((this.viewStart - tzOffset) / step) * step + tzOffset;
     ctx.font = "11px sans-serif";
-    ctx.textAlign = "center";
     for (; tick <= this.viewStart + this.span; tick += step) {
       const px = Math.round(x(tick)) + 0.5;
       ctx.strokeStyle = line;
@@ -341,27 +472,56 @@ class Timeline {
       ctx.lineTo(px, height);
       ctx.stroke();
       ctx.fillStyle = muted;
+      // Labels at the edges stay inside the canvas.
+      ctx.textAlign = px < 16 ? "left" : px > width - 16 ? "right" : "center";
       ctx.fillText(clock(new Date(tick), false), px, 12);
     }
 
-    // Recordings.
+    // Recordings, on whole pixels so that joined parts show no seams.
     ctx.fillStyle = line;
     ctx.fillRect(0, recY, width, recH);
-    for (const rec of this.recordings) {
-      const a = Math.max(0, x(rec.start));
-      const b = Math.min(width, x(rec.end));
+    for (const rec of joinRecordings(this.recordings)) {
+      const a = Math.max(0, Math.floor(x(rec.start)));
+      const b = Math.min(width, Math.ceil(x(rec.end)));
       if (b < 0 || a > width) continue;
       ctx.fillStyle = KIND_COLORS[rec.kind] || KIND_COLORS.other;
-      ctx.fillRect(a, recY, Math.max(1.5, b - a), recH);
+      ctx.fillRect(a, recY, Math.max(2, b - a), recH);
     }
 
-    // Events, one marker per detection.
-    for (const ev of this.events) {
-      const a = x(ev.start);
-      const b = x(ev.end);
-      if (b < 0 || a > width) continue;
+    // Detections on the recordings: a coloured stretch each, people and vehicles on top.
+    const events = this.events
+      .filter((ev) => x(ev.end) >= 0 && x(ev.start) <= width)
+      .sort((a, b) => eventRank(a.kind) - eventRank(b.kind));
+    const bandY = recY + Math.round(recH * 0.55);
+    for (const ev of events) {
+      const a = Math.floor(x(ev.start));
+      const b = Math.ceil(x(ev.end));
       ctx.fillStyle = EVENT_COLORS[ev.kind] || accent;
-      ctx.fillRect(a, evY, Math.max(3, b - a), evH);
+      ctx.fillRect(a, bandY, Math.max(3, b - a), recY + recH - bandY);
+    }
+    // A symbol per detection where there is room, the most specific kinds first.
+    const radius = Math.max(6, Math.min(10, Math.floor(recH * 0.3)));
+    const placed = [];
+    for (const ev of [...events].reverse()) {
+      const cx = Math.max(radius, Math.min(width - radius, (x(ev.start) + x(ev.end)) / 2));
+      if (placed.some((p) => Math.abs(p - cx) < radius * 2 + 2)) continue;
+      placed.push(cx);
+      const cy = recY + Math.round(recH * 0.55) - radius + 1;
+      ctx.fillStyle = EVENT_COLORS[ev.kind] || accent;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(0,0,0,.35)";
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      const size = radius * 1.5;
+      ctx.save();
+      ctx.translate(cx - size / 2, cy - size / 2);
+      ctx.scale(size / 24, size / 24);
+      ctx.fillStyle = "#fff";
+      ctx.fill(new Path2D(eventSymbol(ev.kind)), "evenodd");
+      ctx.restore();
     }
 
     // Now and playhead.
@@ -627,6 +787,152 @@ class Player {
 
 /* ------------------------------------------------------------------- viewer */
 
+const POPOVER = Object.prototype.hasOwnProperty.call(HTMLElement.prototype, "popover");
+const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
+function firstWeekday(hass) {
+  const chosen = WEEKDAYS.indexOf(hass?.locale?.first_weekday);
+  if (chosen >= 0) return chosen;
+  try {
+    const locale = new Intl.Locale(hass?.language || "en");
+    const info = locale.getWeekInfo?.() || locale.weekInfo;
+    if (info?.firstDay) return info.firstDay % 7;
+  } catch (_err) {
+    /* unknown language */
+  }
+  return 1;
+}
+
+/*
+ * Month calendar of the day picker, in a popover. Days with recordings get a dot; the
+ * device keeps a calendar of them that `days(year, month)` asks for.
+ */
+class Calendar {
+  constructor(button, popup, onPick) {
+    this.button = button;
+    this.popup = popup;
+    this.onPick = onPick;
+    this.selected = startOfDay(new Date());
+    this.month = new Date(this.selected.getFullYear(), this.selected.getMonth(), 1);
+    this.days = async () => null;
+    this.language = "en";
+    this.firstDay = 1;
+    this.t = (key) => TEXT[key] || key;
+    if (POPOVER) {
+      popup.popover = "auto";
+      button.popoverTargetElement = popup;
+      popup.addEventListener("beforetoggle", (e) => {
+        if (e.newState === "open") this._opening();
+      });
+      popup.addEventListener("toggle", (e) => {
+        if (e.newState === "open") this._place();
+      });
+    } else {
+      popup.classList.add("fallback");
+      document.addEventListener("click", (e) => {
+        if (!e.composedPath().some((el) => el === popup || el === button)) this.close();
+      });
+    }
+    popup.addEventListener("click", (e) => this._click(e));
+  }
+
+  toggle() {
+    // Without the popover API; with it the button opens and closes the popover itself.
+    if (POPOVER) return;
+    if (this.popup.classList.contains("open")) this.close();
+    else {
+      this._opening();
+      this.popup.classList.add("open");
+    }
+  }
+
+  close() {
+    if (!POPOVER) this.popup.classList.remove("open");
+    else if (this.popup.matches(":popover-open")) this.popup.hidePopover();
+  }
+
+  _opening() {
+    this.month = new Date(this.selected.getFullYear(), this.selected.getMonth(), 1);
+    this.render();
+    this._place();
+  }
+
+  _place() {
+    if (!POPOVER) return;
+    const rect = this.button.getBoundingClientRect();
+    const width = this.popup.offsetWidth || 296;
+    const height = this.popup.offsetHeight || 360;
+    const below = innerHeight - rect.bottom - 8 >= height + 6;
+    this.popup.style.left = `${Math.max(8, Math.min(rect.left, innerWidth - width - 8))}px`;
+    this.popup.style.top = `${below ? rect.bottom + 6 : Math.max(8, rect.top - height - 6)}px`;
+  }
+
+  async render() {
+    const month = this.month;
+    const year = month.getFullYear();
+    const index = month.getMonth();
+    const today = startOfDay(new Date());
+    const count = new Date(year, index + 1, 0).getDate();
+    const lead = (month.getDay() - this.firstDay + 7) % 7;
+    const weekday = new Intl.DateTimeFormat(this.language, { weekday: "short" });
+    // 7 January 2024 was a Sunday.
+    const names = Array.from({ length: 7 }, (_, i) =>
+      weekday.format(new Date(2024, 0, 7 + ((this.firstDay + i) % 7))).replace(/\.$/, "")
+    );
+    const title = new Intl.DateTimeFormat(this.language, { month: "long", year: "numeric" }).format(month);
+    const cells = [];
+    for (let day = 1; day <= count; day += 1) {
+      const date = new Date(year, index, day);
+      const classes = ["cal-day"];
+      if (date.getTime() === today.getTime()) classes.push("today");
+      if (date.getTime() === this.selected.getTime()) classes.push("selected");
+      cells.push(
+        `<button class="${classes.join(" ")}" data-day="${isoDay(date)}"${date > today ? " disabled" : ""}>${day}</button>`
+      );
+    }
+    const t = this.t;
+    const last = year * 12 + index >= today.getFullYear() * 12 + today.getMonth();
+    this.popup.innerHTML = `
+      <div class="cal-head">
+        <button class="icon-button" data-month="-1" title="${t("previous_month")}" aria-label="${t("previous_month")}">${ICONS.left}</button>
+        <span class="cal-title">${title}</span>
+        <button class="icon-button" data-month="1" title="${t("next_month")}" aria-label="${t("next_month")}"${last ? " disabled" : ""}>${ICONS.right}</button>
+      </div>
+      <div class="cal-grid">
+        ${names.map((n) => `<span class="cal-wd">${n}</span>`).join("")}
+        ${"<span></span>".repeat(lead)}${cells.join("")}
+      </div>
+      <div class="cal-foot"><span class="key" hidden>${t("recording_days")}</span><button data-today>${t("today")}</button></div>`;
+    this.popup.classList.add("loading");
+    const days = await this.days(year, index + 1);
+    if (month !== this.month) return;
+    this.popup.classList.remove("loading");
+    if (!days) return;
+    for (const button of this.popup.querySelectorAll("[data-day]")) {
+      const recorded = days.has(Number(button.dataset.day.slice(8)));
+      button.classList.toggle("rec", recorded);
+      button.classList.toggle("norec", !recorded);
+    }
+    this.popup.querySelector(".key").hidden = false;
+  }
+
+  _click(e) {
+    const step = e.target.closest("[data-month]");
+    if (step) {
+      if (step.disabled) return;
+      this.month = new Date(this.month.getFullYear(), this.month.getMonth() + Number(step.dataset.month), 1);
+      this.render().then(() => this._place());
+      this._place();
+      return;
+    }
+    const day = e.target.closest("[data-day]");
+    const today = e.target.closest("[data-today]");
+    if ((!day || day.disabled) && !today) return;
+    this.close();
+    this.onPick(today ? new Date() : new Date(`${day.dataset.day}T00:00:00`));
+  }
+}
+
 /*
  * Video, controls and timeline of one camera. Used by the card on its own and by the
  * panel next to its camera list.
@@ -648,25 +954,32 @@ class Viewer {
         <div class="stage">
           <video playsinline muted></video>
           <div class="badges"></div>
-          <div class="clock" hidden></div>
           <div class="overlay"></div>
         </div>
         <div class="controls">
-          <button class="icon-button" data-action="prev">${ICONS.prev}</button>
-          <button class="icon-button" data-action="back">${ICONS.back}</button>
-          <button class="icon-button" data-action="toggle">${ICONS.pause}</button>
-          <button class="icon-button" data-action="forward">${ICONS.forward}</button>
-          <button class="icon-button" data-action="next">${ICONS.next}</button>
-          <button class="live-button" data-action="live">${ICONS.live}<span></span></button>
-          <span class="spacer"></span>
-          <select class="source" hidden></select>
-          <select class="quality"></select>
-          <button class="icon-button" data-action="download">${ICONS.download}</button>
-          <button class="icon-button" data-action="fullscreen">${ICONS.fullscreen}</button>
+          <div class="group start">
+            <button class="live-button" data-action="live">${ICONS.live}<span></span></button>
+          </div>
+          <div class="group middle">
+            <button class="icon-button" data-action="prev">${ICONS.prev}</button>
+            <button class="icon-button" data-action="back">${ICONS.back}</button>
+            <button class="icon-button" data-action="toggle">${ICONS.pause}</button>
+            <button class="icon-button" data-action="forward">${ICONS.forward}</button>
+            <button class="icon-button" data-action="next">${ICONS.next}</button>
+          </div>
+          <div class="group end">
+            <select class="source" hidden></select>
+            <select class="quality"></select>
+            <button class="icon-button" data-action="download">${ICONS.download}</button>
+            <button class="icon-button" data-action="fullscreen">${ICONS.fullscreen}</button>
+          </div>
         </div>
         <div class="day-bar">
           <button class="icon-button" data-action="day-prev">${ICONS.left}</button>
-          <input type="date" class="day">
+          <div class="date-picker">
+            <button class="date-button" data-action="calendar">${ICONS.calendar}<span class="long"></span><span class="short"></span>${ICONS.caret}</button>
+            <div class="calendar" role="dialog"></div>
+          </div>
           <button class="icon-button" data-action="day-next">${ICONS.right}</button>
           <button class="today" data-action="today"></button>
           <span class="spacer"></span>
@@ -688,9 +1001,9 @@ class Viewer {
       this.loadTimeline();
       if (this.mode === "playback") this.seek(new Date(this.player.position ?? Date.now()));
     });
-    root.querySelector(".day").addEventListener("change", (e) => {
-      if (e.target.value) this.setDay(new Date(`${e.target.value}T00:00:00`));
-    });
+    this._days = new Map();
+    this.calendar = new Calendar(root.querySelector(".date-button"), root.querySelector(".calendar"), (day) => this.setDay(day));
+    this.calendar.days = (year, month) => this._recordedDays(year, month);
     this.video.addEventListener("pause", () => this.update());
     this.video.addEventListener("play", () => this.update());
     this._tick = setInterval(() => this._frame(), 250);
@@ -733,6 +1046,15 @@ class Viewer {
     }
     this.root.querySelector(".live-button span").textContent = t("live");
     this.root.querySelector(".today").textContent = t("today");
+    const picker = this.root.querySelector(".date-button");
+    picker.title = t("pick_day");
+    picker.setAttribute("aria-label", t("pick_day"));
+    this.calendar.t = t;
+    this.calendar.language = this.hass?.language || "en";
+    this.calendar.firstDay = firstWeekday(this.hass);
+    this._dateLabel();
+    this.timeline.kindName = (k) => this.t.kind(k);
+    this.timeline.eventName = (k) => this.t.event(k);
     this._qualityOptions();
     this._legend();
   }
@@ -751,7 +1073,7 @@ class Viewer {
     const events = [...new Set(this.data.events.map((e) => e.kind))];
     this.root.querySelector(".legend").innerHTML = [
       ...kinds.map((k) => `<span style="--c:${KIND_COLORS[k] || KIND_COLORS.other}">${this.t.kind(k)}</span>`),
-      ...events.map((k) => `<span style="--c:${EVENT_COLORS[k] || "var(--hb-accent)"}">${this.t.event(k)}</span>`),
+      ...events.map((k) => `<span class="event" style="--c:${EVENT_COLORS[k] || "var(--hb-accent)"}">${symbolIcon(k)}${this.t.event(k)}</span>`),
     ].join("");
   }
 
@@ -776,9 +1098,39 @@ class Viewer {
     this.goLive();
   }
 
+  _dateLabel() {
+    const language = this.hass?.language || "en";
+    const button = this.root.querySelector(".date-button");
+    button.querySelector(".long").textContent = this.day.toLocaleDateString(language, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+    button.querySelector(".short").textContent = this.day.toLocaleDateString(language, { day: "numeric", month: "short" });
+    this.calendar.selected = this.day;
+  }
+
+  _recordedDays(year, month) {
+    const camera = this.camera;
+    if (!camera || !this.source) return Promise.resolve(null);
+    const key = `${camera.entry_id}/${camera.channel_id}/${this.source}/${year}-${month}`;
+    const now = new Date();
+    const current = year === now.getFullYear() && month === now.getMonth() + 1;
+    const cached = this._days.get(key);
+    // The running month gains days; ask again after a while.
+    if (cached && (!current || Date.now() - cached.at < 10 * 60e3)) return cached.days;
+    const days = this.hass
+      .callWS({ type: `${DOMAIN}/days`, entry_id: camera.entry_id, channel_id: camera.channel_id, source: this.source, year, month })
+      .then((result) => (result.days ? new Set(result.days) : null))
+      .catch(() => null);
+    this._days.set(key, { at: Date.now(), days });
+    return days;
+  }
+
   setDay(day) {
     this.day = startOfDay(day);
-    this.root.querySelector(".day").value = isoDay(this.day);
+    this._dateLabel();
     this.timeline.setDay(this.day);
     this.loadTimeline();
   }
@@ -788,7 +1140,7 @@ class Viewer {
     if (!camera) return;
     const day = this.day;
     if (this.timeline.dayStart !== day.getTime()) this.timeline.setDay(day);
-    this.root.querySelector(".day").value = isoDay(day);
+    this._dateLabel();
     try {
       const result = await this.hass.callWS({
         type: `${DOMAIN}/timeline`,
@@ -916,6 +1268,9 @@ class Viewer {
       case "today":
         this.setDay(new Date());
         break;
+      case "calendar":
+        this.calendar.toggle();
+        break;
       case "zoom-in":
         this.timeline.zoom(1);
         break;
@@ -998,11 +1353,7 @@ class Viewer {
 
   _frame() {
     const position = this.player.position;
-    const clockEl = this.root.querySelector(".clock");
     if (position != null && this.camera) {
-      const date = new Date(position);
-      clockEl.hidden = false;
-      clockEl.textContent = `${isoDay(date) === isoDay(new Date()) ? "" : `${date.toLocaleDateString()} `}${clock(date)}`;
       if (this.mode === "playback" || isoDay(this.day) === isoDay(new Date())) {
         this.timeline.playhead = position;
         // Follow the playhead when zoomed in.
@@ -1016,8 +1367,6 @@ class Viewer {
         this.video.pause();
         this.onEnded();
       }
-    } else {
-      clockEl.hidden = true;
     }
   }
 }
@@ -1064,7 +1413,7 @@ class HikvisionBridgePanel extends HTMLElement {
       <style>
         ${STYLE}
         :host { display: block; height: 100%; background: var(--hb-bg); }
-        .layout { display: grid; grid-template-columns: 280px 1fr; grid-template-rows: 56px 1fr; height: 100vh; height: 100dvh; }
+        .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); grid-template-rows: 56px minmax(0, 1fr); height: 100vh; height: 100dvh; }
         header { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--app-header-background-color, var(--hb-surface)); color: var(--app-header-text-color, var(--hb-text)); border-bottom: 1px solid var(--hb-line); }
         header h1 { font-size: 20px; font-weight: 400; margin: 0 0 0 4px; }
         header .menu { display: none; }
@@ -1086,23 +1435,46 @@ class HikvisionBridgePanel extends HTMLElement {
         .day-bar { display: flex; align-items: center; gap: 4px; padding: 0 8px; }
         .day-bar .spacer { flex: 1; }
         .today { background: none; border: 1px solid var(--hb-line); border-radius: 16px; padding: 4px 12px; cursor: pointer; margin-left: 4px; min-height: 32px; }
-        .timeline { height: 96px; background: var(--hb-surface); padding: 0 12px; }
+        .timeline { height: 84px; background: var(--hb-surface); padding: 0 12px; }
         .legend, .hint { background: var(--hb-surface); }
         .empty { padding: 24px; color: var(--hb-muted); }
+        header .spacer { flex: 1; }
+        /* Cameras above the video, in a row: chosen, or on narrow screens. */
+        :host([cams-top]) .layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: 56px auto minmax(0, 1fr); }
+        :host([cams-top]) aside { border-right: 0; border-bottom: 1px solid var(--hb-line); overflow-x: auto; overflow-y: hidden; }
+        :host([cams-top]) aside h2 { display: none; }
+        :host([cams-top]) .list { display: flex; }
+        :host([cams-top]) .cam { flex-direction: column; width: auto; min-width: 120px; border-left: 0; border-bottom: 3px solid transparent; padding: 8px; text-align: center; }
+        :host([cams-top]) .cam.active { border-bottom-color: var(--hb-accent); }
+        :host([cams-top]) .cam .sub { display: none; }
         @media (max-width: 860px) {
-          .layout { grid-template-columns: 1fr; grid-template-rows: 56px auto 1fr; }
-          aside { border-right: 0; border-bottom: 1px solid var(--hb-line); display: flex; overflow-x: auto; overflow-y: hidden; }
+          .layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: 48px auto minmax(0, 1fr); }
+          header { padding: 0 4px; }
+          header .layout-toggle { display: none; }
+          aside { border-right: 0; border-bottom: 1px solid var(--hb-line); overflow-x: auto; overflow-y: hidden; }
           aside h2 { display: none; }
-          .cam { flex-direction: column; width: auto; min-width: 112px; border-left: 0; border-bottom: 3px solid transparent; padding: 8px; text-align: center; }
+          .list { display: flex; }
+          .cam { flex-direction: column; width: auto; min-width: 96px; border-left: 0; border-bottom: 3px solid transparent; padding: 6px; gap: 4px; text-align: center; }
+          .cam img, .cam .noimg { width: 80px; height: 45px; }
+          .cam .name { font-size: 12px; }
           .cam.active { border-bottom-color: var(--hb-accent); }
           .cam .sub { display: none; }
-          .timeline { height: 84px; }
+          .stage { min-height: 200px; }
+          .timeline { height: 72px; padding: 0 6px; }
+          .day-bar { padding: 0 2px; }
+        }
+        @media (max-width: 860px) and (orientation: portrait) {
+          main { overflow-y: auto; }
+          .viewer { height: auto; }
+          .stage { flex: none; aspect-ratio: 16 / 9; }
         }
       </style>
       <div class="layout">
         <header>
           <button class="icon-button menu" title="Menu">${ICONS.menu}</button>
           <h1>Hikvision</h1>
+          <span class="spacer"></span>
+          <button class="icon-button layout-toggle"></button>
         </header>
         <aside><h2></h2><div class="list"></div></aside>
         <main></main>
@@ -1111,8 +1483,21 @@ class HikvisionBridgePanel extends HTMLElement {
       this.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }));
     });
     this.viewer = new Viewer(this.shadowRoot.querySelector("main"), this._hass);
+    this.texts = makeTranslator({});
+    this._camsTop(this._stored("hikvision-bridge-cams") === "top");
+    this.shadowRoot.querySelector(".layout-toggle").addEventListener("click", () => {
+      const top = !this.hasAttribute("cams-top");
+      this._camsTop(top);
+      try {
+        localStorage.setItem("hikvision-bridge-cams", top ? "top" : "left");
+      } catch (_err) {
+        /* private mode */
+      }
+    });
     loadTexts(this._hass).then((r) => {
-      this.shadowRoot.querySelector("aside h2").textContent = makeTranslator(r).ui("cameras");
+      this.texts = makeTranslator(r);
+      this.shadowRoot.querySelector("aside h2").textContent = this.texts.ui("cameras");
+      this._camsTop(this.hasAttribute("cams-top"));
     });
     this._load();
     this._thumbTimer = setInterval(() => this._thumbs(true), 10e3);
@@ -1148,16 +1533,28 @@ class HikvisionBridgePanel extends HTMLElement {
       button.querySelector(".sub").textContent = [devices > 1 ? camera.device : null, camera.resolution].filter(Boolean).join(" · ");
       button.addEventListener("click", () => this._select(i));
     });
-    const saved = (() => {
-      try {
-        return localStorage.getItem("hikvision-bridge-camera");
-      } catch (_err) {
-        return null;
-      }
-    })();
+    const saved = this._stored("hikvision-bridge-camera");
     const index = Math.max(0, cameras.findIndex((c) => `${c.entry_id}/${c.channel_id}` === saved));
     this._select(index);
     this._thumbs(true);
+  }
+
+  _stored(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  // Cameras in a row above the video, or in a column beside it.
+  _camsTop(top) {
+    this.toggleAttribute("cams-top", top);
+    const button = this.shadowRoot.querySelector(".layout-toggle");
+    const label = this.texts.ui(top ? "cameras_left" : "cameras_top");
+    button.innerHTML = top ? ICONS.camsLeft : ICONS.camsTop;
+    button.title = label;
+    button.setAttribute("aria-label", label);
   }
 
   _select(index) {
@@ -1239,8 +1636,7 @@ class HikvisionBridgeCard extends HTMLElement {
         .day-bar { display: flex; align-items: center; gap: 2px; padding: 0 4px; }
         .day-bar .spacer { flex: 1; }
         .today { background: none; border: 1px solid var(--hb-line); border-radius: 16px; padding: 2px 10px; cursor: pointer; }
-        .controls select { max-width: 46%; }
-        .timeline { height: 72px; padding: 0 8px; }
+        .timeline { height: 64px; padding: 0 8px; }
       </style>
       <ha-card><div class="card"></div></ha-card>`;
     this.viewer = new Viewer(this.shadowRoot.querySelector(".card"), this._hass, { compact: true });

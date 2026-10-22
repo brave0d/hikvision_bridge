@@ -871,7 +871,13 @@
         "previous_day": "Předchozí den",
         "next_day": "Další den",
         "source": "Zdroj",
-        "select_camera": "Vyberte kameru."
+        "select_camera": "Vyberte kameru.",
+        "cameras_top": "Kamery nad videem",
+        "cameras_left": "Kamery vedle videa",
+        "pick_day": "Vyberte den",
+        "previous_month": "Předchozí měsíc",
+        "next_month": "Další měsíc",
+        "recording_days": "Dny se záznamy"
       }
     }
   },

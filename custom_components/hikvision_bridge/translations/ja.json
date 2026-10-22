@@ -871,7 +871,13 @@
         "previous_day": "前の日",
         "next_day": "次の日",
         "source": "ソース",
-        "select_camera": "カメラを選択してください。"
+        "select_camera": "カメラを選択してください。",
+        "cameras_top": "カメラを動画の上に表示",
+        "cameras_left": "カメラを動画の横に表示",
+        "pick_day": "日を選択",
+        "previous_month": "前の月",
+        "next_month": "次の月",
+        "recording_days": "録画のある日"
       }
     }
   },

@@ -871,7 +871,13 @@
         "previous_day": "روز قبل",
         "next_day": "روز بعد",
         "source": "منبع",
-        "select_camera": "یک دوربین انتخاب کنید."
+        "select_camera": "یک دوربین انتخاب کنید.",
+        "cameras_top": "دوربین‌ها بالای ویدیو",
+        "cameras_left": "دوربین‌ها کنار ویدیو",
+        "pick_day": "انتخاب روز",
+        "previous_month": "ماه قبل",
+        "next_month": "ماه بعد",
+        "recording_days": "روزهای دارای ضبط"
       }
     }
   },

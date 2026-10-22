@@ -8,6 +8,7 @@ import stat
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 import pytest
 
 from custom_components.hikvision_bridge.const import DOMAIN
@@ -155,6 +156,18 @@ async def test_cameras_and_timeline(hass: HomeAssistant, serve, hass_ws_client) 
     await client.send_json_auto_id(
         {"type": f"{DOMAIN}/timeline", "entry_id": "nope", "channel_id": "1", "source": "auto"}
         | period
+    )
+    assert (await client.receive_json())["error"]["code"] == "not_found"
+
+    # The device calendar lists only today.
+    today = dt_util.now()
+    days = {"type": f"{DOMAIN}/days", "channel_id": "1", "source": "auto", "year": today.year}
+    await client.send_json_auto_id(days | {"entry_id": entry.entry_id, "month": today.month})
+    answer = await client.receive_json()
+    assert answer["success"]
+    assert answer["result"] == {"days": [today.day]}
+    await client.send_json_auto_id(
+        days | {"entry_id": entry.entry_id, "channel_id": "9", "month": 1}
     )
     assert (await client.receive_json())["error"]["code"] == "not_found"
 

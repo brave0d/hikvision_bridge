@@ -125,6 +125,8 @@ class IsapiLink:
         self._write_timeout = aiohttp.ClientTimeout(total=write_timeout, connect=connect_timeout)
         self._connect_timeout = connect_timeout
         self.unsupported: set[str] = set()
+        # Paths that answered a GET once: a later refusal there is a hiccup, not "unsupported".
+        self.served: set[str] = set()
         self.stats = LinkStats()
         LOG_SCRUBBER.remember(username, password)
 
@@ -289,7 +291,7 @@ class IsapiLink:
                 elapsed = (time.monotonic() - started) * 1000
                 self.stats.last_success = time.monotonic()
                 self.stats.latency_ms[path.split("?", maxsplit=1)[0]] = round(elapsed, 1)
-                return self._finish(path, Reply(status, ctype, data, elapsed))
+                return self._finish(method, path, Reply(status, ctype, data, elapsed))
             fault = self._after_refusal(attempt, challenges, data, signed)
             if fault is not None:
                 self.stats.failures += 1
@@ -363,31 +365,41 @@ class IsapiLink:
         )
         return self._blocked
 
-    def _finish(self, path: str, reply: Reply) -> Reply:
+    def _finish(self, method: str, path: str, reply: Reply) -> Reply:
         fault = classify(reply.status, reply.text if reply.body else "")
+        base = path.split("?", maxsplit=1)[0]
         if fault is None:
+            if method == "GET":
+                self.served.add(base)
             return reply
-        if isinstance(fault, Unsupported):
-            self.unsupported.add(path.split("?", maxsplit=1)[0])
+        if isinstance(fault, Unsupported) and base not in self.served:
+            self.unsupported.add(base)
         if isinstance(fault, LockedOut):
             self._blocked = fault
         raise fault
 
     # ------------------------------------------------------------ helpers
 
+    def _absent(self, path: str, optional: bool) -> bool:
+        """Whether an optional read may answer None, i.e. the path never worked."""
+        return optional and path.split("?", maxsplit=1)[0] not in self.served
+
     async def read_xml(self, path: str, *, optional: bool = False) -> XmlNode | None:
-        """GET an XML document. With ``optional`` unsupported resources return None."""
+        """GET an XML document. With ``optional`` unsupported resources return None.
+
+        A path that answered before is not taken for unsupported later: its errors are raised.
+        """
         if optional and path.split("?", maxsplit=1)[0] in self.unsupported:
             return None
         try:
             reply = await self.call("GET", path)
             return reply.xml()
         except Unsupported:
-            if optional:
+            if self._absent(path, optional):
                 return None
             raise
         except DeviceRejected as err:
-            if optional and err.status in (400, 500, 501):
+            if self._absent(path, optional) and err.status in (400, 500, 501):
                 self.unsupported.add(path.split("?", maxsplit=1)[0])
                 return None
             raise
@@ -402,7 +414,7 @@ class IsapiLink:
         try:
             return (await self.call("GET", path)).text
         except Unsupported:
-            if optional:
+            if self._absent(path, optional):
                 return None
             raise
 

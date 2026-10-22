@@ -104,6 +104,9 @@ def test_parse_days() -> None:
         "</dayList></trackDailyDistribution>"
     )
     assert recordings.parse_days(document) == [1, 3]
+    # A bare status answer is no calendar.
+    status = parse("<ResponseStatus><statusCode>1</statusCode></ResponseStatus>")
+    assert recordings.parse_days(status) is None
 
 
 @pytest.mark.parametrize("page", [1, 2, None])
@@ -125,6 +128,48 @@ async def test_search_pages(serve, page: int | None) -> None:
     searches = [w for w in device.writes if w[1] == recordings.SEARCH_PATH]
     assert "<trackID>101</trackID>" in searches[0][2]
     assert "<startTime>2026-03-01T08:00:00Z</startTime>" in searches[0][2]
+
+
+def test_wall_offset_of() -> None:
+    now = datetime(2026, 10, 22, 14, 27, 46, tzinfo=UTC)
+    # Summer time on the wall clock although the stated zone says +01:00.
+    assert recordings.wall_offset_of("2026-10-22T16:27:44+01:00", now) == timedelta(hours=2)
+    assert recordings.wall_offset_of("2026-10-22T14:27:40Z", now) == timedelta(0)
+    assert recordings.wall_offset_of("2026-10-22T19:57:50", now) == timedelta(hours=5, minutes=30)
+    assert recordings.wall_offset_of(None, now) == timedelta(0)
+    assert recordings.wall_offset_of("garbage", now) == timedelta(0)
+
+
+def test_times_on_the_wall_clock() -> None:
+    wall = timedelta(hours=2)
+    assert recordings.parse_time("20260301T100000Z", wall) == T0
+    assert recordings.parse_time("2026-03-01T10:00:00Z", wall) == T0
+    # A stated offset is taken as it is.
+    assert recordings.parse_time("2026-03-01T09:00:00+01:00", wall) == T0
+    assert recordings.compact(T0, wall) == "20260301T100000Z"
+    found, _ = recordings.parse_results(parse(result(CLIPS, "OK")), "101", wall)
+    assert found[0].start == T0 - wall
+
+
+async def test_search_on_the_wall_clock(serve) -> None:
+    """The device takes and gives times on its wall clock, two hours ahead of UTC here."""
+    device = FakeDevice("camera_g3")
+    device.responders[recordings.SEARCH_PATH] = searcher(CLIPS, None)
+    wall_now = datetime.now(UTC) + timedelta(hours=2)
+    device.responders[recordings.TIME_PATH] = lambda _m, _b: web.Response(
+        text=f"<Time><localTime>{wall_now:%Y-%m-%dT%H:%M:%S}+01:00</localTime></Time>",
+        content_type="application/xml",
+    )
+    server = await serve(device)
+    async with aiohttp.ClientSession() as session:
+        link = IsapiLink(
+            session, Endpoint(server.host, server.port), device.username, device.password
+        )
+        start = T0 - timedelta(hours=2)
+        found = await recordings.search(link, "101", start, start + timedelta(hours=1))
+    searches = [w for w in device.writes if w[1] == recordings.SEARCH_PATH]
+    assert "<startTime>2026-03-01T08:00:00Z</startTime>" in searches[0][2]
+    assert [r.start for r in found][:1] == [T0 - timedelta(hours=2)]
 
 
 def program_stream(*, scrambled: bool = False, codec: str = "hevc") -> bytes:

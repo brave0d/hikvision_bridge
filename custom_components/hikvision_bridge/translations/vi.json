@@ -871,7 +871,13 @@
         "previous_day": "Ngày trước",
         "next_day": "Ngày sau",
         "source": "Nguồn",
-        "select_camera": "Hãy chọn một camera."
+        "select_camera": "Hãy chọn một camera.",
+        "cameras_top": "Camera phía trên video",
+        "cameras_left": "Camera bên cạnh video",
+        "pick_day": "Chọn ngày",
+        "previous_month": "Tháng trước",
+        "next_month": "Tháng sau",
+        "recording_days": "Ngày có bản ghi"
       }
     }
   },

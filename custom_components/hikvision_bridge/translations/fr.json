@@ -871,7 +871,13 @@
         "previous_day": "Jour précédent",
         "next_day": "Jour suivant",
         "source": "Source",
-        "select_camera": "Choisissez une caméra."
+        "select_camera": "Choisissez une caméra.",
+        "cameras_top": "Caméras au-dessus de la vidéo",
+        "cameras_left": "Caméras à côté de la vidéo",
+        "pick_day": "Choisir un jour",
+        "previous_month": "Mois précédent",
+        "next_month": "Mois suivant",
+        "recording_days": "Jours avec enregistrements"
       }
     }
   },

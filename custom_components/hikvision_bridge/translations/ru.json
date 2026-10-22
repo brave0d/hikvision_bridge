@@ -871,7 +871,13 @@
         "previous_day": "Предыдущий день",
         "next_day": "Следующий день",
         "source": "Источник",
-        "select_camera": "Выберите камеру."
+        "select_camera": "Выберите камеру.",
+        "cameras_top": "Камеры над видео",
+        "cameras_left": "Камеры рядом с видео",
+        "pick_day": "Выбрать день",
+        "previous_month": "Предыдущий месяц",
+        "next_month": "Следующий месяц",
+        "recording_days": "Дни с записями"
       }
     }
   },

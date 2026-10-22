@@ -871,7 +871,13 @@
         "previous_day": "Előző nap",
         "next_day": "Következő nap",
         "source": "Forrás",
-        "select_camera": "Válassz kamerát."
+        "select_camera": "Válassz kamerát.",
+        "cameras_top": "Kamerák a videó felett",
+        "cameras_left": "Kamerák a videó mellett",
+        "pick_day": "Nap kiválasztása",
+        "previous_month": "Előző hónap",
+        "next_month": "Következő hónap",
+        "recording_days": "Napok felvételekkel"
       }
     }
   },

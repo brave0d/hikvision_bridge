@@ -82,6 +82,8 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
         self._failures = 0
         self._last_success = time.monotonic()
         self._force_full = True
+        # Failed reads in a row per (resource, key); values outlive a few of them.
+        self._misses: dict[tuple[str, object], int] = {}
 
     def request_full(self) -> None:
         """Make the next refresh read every resource (after writes or events)."""
@@ -120,7 +122,7 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 await self._read_image(snapshot)
                 await self._read_recording(snapshot)
             if due(STORAGE_EVERY):
-                snapshot.storage = await storage.read(self._bridge.link)
+                await self._read_storage(snapshot)
                 await self._read_channel_storage(snapshot)
                 await self._read_health(snapshot)
                 await self._read_armed(snapshot)
@@ -165,7 +167,12 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 isinstance(result, BaseException) and not isinstance(result, BridgeFault)
             ):
                 raise result
-            target[port.port_id] = None if isinstance(result, BaseException) else result
+            key = ("io", port.port_id)
+            if not isinstance(result, BaseException):
+                self._misses.pop(key, None)
+                target[port.port_id] = result
+            elif self._missed(key):
+                target[port.port_id] = None
 
     async def _read_detections(self, snapshot: Snapshot) -> None:
         jobs = []
@@ -185,13 +192,12 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 snapshot.detections.pop(key, None)
             elif isinstance(result, BridgeFault):
                 failures += 1
-                snapshot.detections.pop(key, None)
+                if self._missed(("detection", key)):
+                    snapshot.detections.pop(key, None)
             elif isinstance(result, BaseException):
                 raise result
-            elif result is None:
-                snapshot.detections.pop(key, None)
             else:
-                snapshot.detections[key] = result
+                self._settle("detection", snapshot.detections, key, True, result)
         if keys and failures == len(keys):
             raise next(r for r in results if isinstance(r, BridgeFault))
 
@@ -199,22 +205,48 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
         """Follow the Hik-Connect settings, so that switching stream encryption takes effect."""
         if self._bridge.profile.cloud is None:
             return
-        state = read_cloud_state(await self._bridge.link.read_xml(CLOUD_PATH, optional=True))
+        ok, document = await self._try_read(self._bridge.link.read_xml(CLOUD_PATH, optional=True))
+        state = read_cloud_state(document) if ok else None
         if state is not None:
             self._bridge.update_cloud_state(state)
             snapshot.stream_encrypted = state.stream_encrypted
 
-    async def _channel_read[T](self, channel_id: str, read: Awaitable[T]) -> T | None:
-        """Run one read for a channel; only refused logins on the main link stop the refresh."""
+    async def _try_read[T](
+        self, read: Awaitable[T], channel_id: str | None = None
+    ) -> tuple[bool, T | None]:
+        """Run one read; returns whether it worked and the value.
+
+        Refused logins on the main link stop the refresh, as does an unreachable device for
+        reads of the entry's device itself. Any other failure only fails this read.
+        """
         try:
-            return await read
+            return True, await read
         except (BadCredentials, LockedOut) as err:
-            if self._bridge.is_main_link_fault(channel_id):
+            if channel_id is None or self._bridge.is_main_link_fault(channel_id):
                 raise
             self._bridge.report_channel_fault(channel_id, err)
+        except Unreachable:
+            if channel_id is None:
+                raise
+            _LOGGER.debug("Channel %s unreachable", channel_id)
         except BridgeFault as err:
-            _LOGGER.debug("Channel resource unreadable: %s", type(err).__name__)
-        return None
+            _LOGGER.debug("Resource unreadable: %s", type(err).__name__)
+        return False, None
+
+    def _missed(self, key: tuple[str, object]) -> bool:
+        """Count a failed read; True once the last value should be given up."""
+        self._misses[key] = self._misses.get(key, 0) + 1
+        return self._misses[key] >= FAILURES_BEFORE_UNAVAILABLE
+
+    def _settle[K, V](
+        self, resource: str, target: dict[K, V], key: K, ok: bool, value: V | None
+    ) -> None:
+        """Store a read value; through a few failed reads in a row keep the last one."""
+        if ok:
+            self._misses.pop((resource, key), None)
+            _put(target, key, value)
+        elif self._missed((resource, key)):
+            target.pop(key, None)
 
     async def _read_image(self, snapshot: Snapshot) -> None:
         """Adjustable settings, one document per source and channel that offers any."""
@@ -223,57 +255,74 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
                 continue
             link, remote = self._bridge.route(channel.channel_id)
             keys = set(channel.image)
+            previous = snapshot.image.get(channel.channel_id, {})
             values: dict[str, ImageValue] = {}
-            readable = False
+            readable = failed = False
             for source in adjust.SOURCES.values():
                 wanted = keys & {s.key for s in source.settings}
                 if not wanted:
                     continue
-                found = await self._channel_read(
-                    channel.channel_id, source.read_values(link, remote, wanted)
+                ok, found = await self._try_read(
+                    source.read_values(link, remote, wanted), channel.channel_id
                 )
-                if found is not None:
+                if not ok:
+                    # Keep this source's last values while the other sources still answer.
+                    failed = True
+                    values.update({k: v for k, v in previous.items() if k in wanted})
+                elif found is not None:
                     readable = True
                     values.update(found)
-            if readable:
-                snapshot.image[channel.channel_id] = values
+            if readable or not failed:
+                self._settle("image", snapshot.image, channel.channel_id, True, values or None)
             else:
-                snapshot.image.pop(channel.channel_id, None)
+                self._settle("image", snapshot.image, channel.channel_id, False, None)
 
     async def _read_health(self, snapshot: Snapshot) -> None:
         bridge = self._bridge
         profile = bridge.profile
         if profile.health:
-            status = await health.read_status(bridge.link, memory_in_mb=profile.shape.records)
-            _put(snapshot.health, None, status)
+            ok, status = await self._try_read(
+                health.read_status(bridge.link, memory_in_mb=profile.shape.records)
+            )
+            self._settle("health", snapshot.health, None, ok, status)
         for channel in profile.channels.values():
             link, _ = bridge.route(channel.channel_id)
             if not channel.health or link is bridge.link:
                 continue
-            status = await self._channel_read(
-                channel.channel_id, health.read_status(link, memory_in_mb=False)
+            ok, status = await self._try_read(
+                health.read_status(link, memory_in_mb=False), channel.channel_id
             )
-            _put(snapshot.health, channel.channel_id, status)
+            self._settle("health", snapshot.health, channel.channel_id, ok, status)
 
     async def _read_recording(self, snapshot: Snapshot) -> None:
         if self._bridge.profile.recording:
-            recording = await health.read_recording(self._bridge.link)
+            _, recording = await self._try_read(health.read_recording(self._bridge.link))
             if recording is not None:
                 snapshot.recording = recording
 
     async def _read_armed(self, snapshot: Snapshot) -> None:
         bridge = self._bridge
         if bridge.profile.armable_inputs:
-            armed = await io.read_armed(bridge.link) or {}
+            ok, armed = await self._try_read(io.read_armed(bridge.link))
             for port_id in bridge.profile.armable_inputs:
-                _put(snapshot.armed, (None, port_id), armed.get(port_id))
+                value = (armed or {}).get(port_id)
+                self._settle("armed", snapshot.armed, (None, port_id), ok, value)
         for channel in bridge.profile.channels.values():
             link, _ = bridge.route(channel.channel_id)
             if not channel.armable_inputs or link is bridge.link:
                 continue
-            armed = await self._channel_read(channel.channel_id, io.read_armed(link)) or {}
+            ok, armed = await self._try_read(io.read_armed(link), channel.channel_id)
             for port_id in channel.armable_inputs:
-                _put(snapshot.armed, (channel.channel_id, port_id), armed.get(port_id))
+                value = (armed or {}).get(port_id)
+                self._settle("armed", snapshot.armed, (channel.channel_id, port_id), ok, value)
+
+    async def _read_storage(self, snapshot: Snapshot) -> None:
+        ok, units = await self._try_read(storage.read(self._bridge.link))
+        if ok:
+            self._misses.pop(("storage", None), None)
+            snapshot.storage = units or []
+        elif self._missed(("storage", None)):
+            snapshot.storage = []
 
     async def _read_channel_storage(self, snapshot: Snapshot) -> None:
         bridge = self._bridge
@@ -281,15 +330,17 @@ class StatusRefresher(DataUpdateCoordinator[Snapshot]):
             link, _ = bridge.route(channel.channel_id)
             if not channel.storage or link is bridge.link:
                 continue
-            units = await self._channel_read(channel.channel_id, storage.read(link))
-            _put(snapshot.channel_storage, channel.channel_id, units)
+            ok, units = await self._try_read(storage.read(link), channel.channel_id)
+            self._settle("storage", snapshot.channel_storage, channel.channel_id, ok, units)
 
     async def _read_channels(self, snapshot: Snapshot) -> None:
         profile = self._bridge.profile
         if not profile.shape.records:
             return
-        status = await self._bridge.link.read_xml(
-            "/ISAPI/ContentMgmt/InputProxy/channels/status", optional=True
+        _, status = await self._try_read(
+            self._bridge.link.read_xml(
+                "/ISAPI/ContentMgmt/InputProxy/channels/status", optional=True
+            )
         )
         if status is None:
             return

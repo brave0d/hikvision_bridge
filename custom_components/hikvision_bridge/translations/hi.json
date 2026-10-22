@@ -871,7 +871,13 @@
         "previous_day": "पिछला दिन",
         "next_day": "अगला दिन",
         "source": "स्रोत",
-        "select_camera": "एक कैमरा चुनें।"
+        "select_camera": "एक कैमरा चुनें।",
+        "cameras_top": "कैमरे वीडियो के ऊपर",
+        "cameras_left": "कैमरे वीडियो के बगल में",
+        "pick_day": "दिन चुनें",
+        "previous_month": "पिछला महीना",
+        "next_month": "अगला महीना",
+        "recording_days": "रिकॉर्डिंग वाले दिन"
       }
     }
   },
