@@ -54,6 +54,12 @@
 | Hik-Connect (optional) | Cloud connection per device, stream-encryption status, connection change events, door opening for intercoms (unverified, see limits) |
 | Actions | `add_center_links`, `isapi_request` (read-only unless confirmed), `ptz_move`, `ptz_preset`, `set_notification_host`, `search_recordings`, `download_recording` |
 
+<p align="center">
+  <img src="images/configuration.png" alt="Device page, Configuration: detection switches, alarm input, image settings, siren, strobe light and audio" width="300">
+  &nbsp;
+  <img src="images/controls-sensors.png" alt="Device page, Controls and Sensors: alarm outputs, detections, streams and recording status" width="300">
+</p>
+
 ### Image settings
 
 Read from each camera's image capabilities, so a camera only gets what it actually supports. The
