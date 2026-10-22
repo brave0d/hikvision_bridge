@@ -56,13 +56,20 @@ def test_switched_off_serial_ptz() -> None:
 
 
 def test_fixed_lens_without_pan_and_tilt() -> None:
-    """A camera describes serial PTZ but its settings deny moving the lens sideways."""
-    settings = parse(
+    """A fixed camera describes serial PTZ; its settings deny pan and tilt."""
+    fixed = parse(
         f"<PTZChannel {NS}><id>1</id><enabled>true</enabled><controlProtocol>PELCO-D"
         "</controlProtocol><panSupport>false</panSupport><tiltSupport>false</tiltSupport>"
         "<zoomSupport>true</zoomSupport></PTZChannel>"
     )
-    found = ptz.parse_capabilities(parse(CAPS), None, settings)
+    # Its zoom is the digital one; serial commands move nothing.
+    assert ptz.parse_capabilities(parse(CAPS), None, fixed) is None
+    motor_zoom = parse(
+        f"<PTZChannel {NS}><controlProtocol>HIKVISION</controlProtocol>"
+        "<panSupport>false</panSupport><tiltSupport>false</tiltSupport>"
+        "<zoomSupport>true</zoomSupport></PTZChannel>"
+    )
+    found = ptz.parse_capabilities(parse(CAPS), None, motor_zoom)
     assert found is not None
     assert found.directions == ["zoom_in", "zoom_out"]
     no_zoom = parse(

@@ -64,7 +64,8 @@ def parse_capabilities(
     """None for channels without PTZ (fixed cameras usually refuse the capabilities).
 
     Some fixed cameras describe a serial (RS-485) PTZ anyway: switched off (NVRs), or with
-    the axes the lens can't move marked unsupported in the channel settings.
+    pan and tilt marked unsupported in the channel settings. Their "zoom" is then the
+    digital zoom of the picture, which serial PTZ commands don't reach.
     """
     if caps is None or caps.flag("enabled") is False:
         return None
@@ -73,6 +74,9 @@ def parse_capabilities(
     can_pan = settings.flag("panSupport") if settings is not None else None
     can_tilt = settings.flag("tiltSupport") if settings is not None else None
     can_zoom = settings.flag("zoomSupport") if settings is not None else None
+    protocol = (settings.text("controlProtocol") or "") if settings is not None else ""
+    if can_pan is False and can_tilt is False and protocol.upper() not in ("", "HIKVISION"):
+        can_zoom = False
     found = PtzCapability(
         pan_tilt=caps.first("ContinuousPanTiltSpace") is not None
         and not (can_pan is False and can_tilt is False),
