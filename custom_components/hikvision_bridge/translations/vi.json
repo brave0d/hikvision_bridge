@@ -832,6 +832,44 @@
         "manual": "Thủ công",
         "other": "Khác"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Trực tiếp",
+        "playback": "Phát lại",
+        "quality": "Chất lượng",
+        "auto": "Tự động",
+        "low": "Thấp (nhanh)",
+        "high": "Cao",
+        "original": "Gốc",
+        "compatible": "Tương thích (H.264)",
+        "cameras": "Camera",
+        "no_cameras": "Không tìm thấy camera.",
+        "no_recordings": "Không có bản ghi trong ngày này.",
+        "no_recording": "Không có bản ghi từ thời điểm này.",
+        "playback_encrypted": "Thiết bị mã hóa các bản ghi; không thể phát ở đây.",
+        "playback_busy": "Camera đang phát một bản ghi ở nơi khác. Hãy thử lại sau giây lát.",
+        "playback_auth": "Thiết bị đã từ chối thông tin đăng nhập.",
+        "playback_failed": "Phát lại thất bại.",
+        "no_ffmpeg": "ffmpeg không có trong Home Assistant.",
+        "live_unavailable": "Không có luồng trực tiếp cho camera này.",
+        "hevc_hint": "Trình duyệt này không phát được bản ghi H.265; 'Tương thích' sẽ chuyển đổi chúng (chậm trên máy nhỏ).",
+        "today": "Hôm nay",
+        "previous_event": "Sự kiện trước",
+        "next_event": "Sự kiện tiếp theo",
+        "back": "Lùi 10 giây",
+        "forward": "Tiến 10 giây",
+        "play": "Phát",
+        "pause": "Tạm dừng",
+        "download": "Tải bản ghi này",
+        "fullscreen": "Toàn màn hình",
+        "zoom_in": "Phóng to",
+        "zoom_out": "Thu nhỏ",
+        "previous_day": "Ngày trước",
+        "next_day": "Ngày sau",
+        "source": "Nguồn",
+        "select_camera": "Hãy chọn một camera."
+      }
     }
   },
   "services": {

@@ -832,6 +832,44 @@
         "manual": "Manual",
         "other": "Lainnya"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Langsung",
+        "playback": "Pemutaran",
+        "quality": "Kualitas",
+        "auto": "Otomatis",
+        "low": "Rendah (cepat)",
+        "high": "Tinggi",
+        "original": "Asli",
+        "compatible": "Kompatibel (H.264)",
+        "cameras": "Kamera",
+        "no_cameras": "Tidak ada kamera.",
+        "no_recordings": "Tidak ada rekaman pada hari ini.",
+        "no_recording": "Tidak ada rekaman sejak saat ini.",
+        "playback_encrypted": "Perangkat mengenkripsi rekamannya; tidak dapat diputar di sini.",
+        "playback_busy": "Kamera sedang memutar rekaman di tempat lain. Coba lagi sebentar lagi.",
+        "playback_auth": "Perangkat menolak kredensial login.",
+        "playback_failed": "Pemutaran gagal.",
+        "no_ffmpeg": "ffmpeg tidak tersedia di Home Assistant.",
+        "live_unavailable": "Tidak ada siaran langsung untuk kamera ini.",
+        "hevc_hint": "Peramban ini tidak dapat memutar rekaman H.265; 'Kompatibel' mengubahnya (lambat di mesin kecil).",
+        "today": "Hari ini",
+        "previous_event": "Peristiwa sebelumnya",
+        "next_event": "Peristiwa berikutnya",
+        "back": "Mundur 10 detik",
+        "forward": "Maju 10 detik",
+        "play": "Putar",
+        "pause": "Jeda",
+        "download": "Unduh rekaman ini",
+        "fullscreen": "Layar penuh",
+        "zoom_in": "Perbesar",
+        "zoom_out": "Perkecil",
+        "previous_day": "Hari sebelumnya",
+        "next_day": "Hari berikutnya",
+        "source": "Sumber",
+        "select_camera": "Pilih kamera."
+      }
     }
   },
   "services": {

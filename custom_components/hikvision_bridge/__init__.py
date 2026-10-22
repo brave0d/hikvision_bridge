@@ -11,10 +11,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ENTRY_KIND, CONF_SERIAL, DOMAIN, KIND_CLOUD
 from .model.discover import discover
+from .panel import async_register_frontend
 from .runtime.bridge import DeviceBridge, build_link
 from .runtime.hookin import async_register_webhook, async_unregister_webhook
 from .services import async_register_services
 from .views import async_register_views
+from .websocket import async_register_commands
 from .wire.faults import (
     AuthHiccup,
     BadCredentials,
@@ -51,6 +53,8 @@ type BridgeConfigEntry = ConfigEntry[DeviceBridge]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_register_services(hass)
     async_register_views(hass)
+    async_register_commands(hass)
+    await async_register_frontend(hass)
     return True
 
 

@@ -832,6 +832,44 @@
         "manual": "Manuaalinen",
         "other": "Muu"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Live",
+        "playback": "Toisto",
+        "quality": "Laatu",
+        "auto": "Auto",
+        "low": "Matala (nopea)",
+        "high": "Korkea",
+        "original": "Alkuperäinen",
+        "compatible": "Yhteensopiva (H.264)",
+        "cameras": "Kamerat",
+        "no_cameras": "Kameroita ei löytynyt.",
+        "no_recordings": "Tältä päivältä ei ole tallenteita.",
+        "no_recording": "Tästä hetkestä eteenpäin ei ole tallennetta.",
+        "playback_encrypted": "Laite salaa tallenteensa; niitä ei voi toistaa täällä.",
+        "playback_busy": "Kamera toistaa jo tallennetta muualla. Yritä hetken päästä uudelleen.",
+        "playback_auth": "Laite hylkäsi kirjautumistiedot.",
+        "playback_failed": "Toisto epäonnistui.",
+        "no_ffmpeg": "ffmpeg ei ole käytettävissä Home Assistantissa.",
+        "live_unavailable": "Tälle kameralle ei ole suoraa lähetystä.",
+        "hevc_hint": "Tämä selain ei toista H.265-tallenteita; ”Yhteensopiva” muuntaa ne (hidasta pienillä koneilla).",
+        "today": "Tänään",
+        "previous_event": "Edellinen tapahtuma",
+        "next_event": "Seuraava tapahtuma",
+        "back": "10 sekuntia taaksepäin",
+        "forward": "10 sekuntia eteenpäin",
+        "play": "Toista",
+        "pause": "Tauko",
+        "download": "Lataa tämä tallenne",
+        "fullscreen": "Koko näyttö",
+        "zoom_in": "Lähennä",
+        "zoom_out": "Loitonna",
+        "previous_day": "Edellinen päivä",
+        "next_day": "Seuraava päivä",
+        "source": "Lähde",
+        "select_camera": "Valitse kamera."
+      }
     }
   },
   "services": {

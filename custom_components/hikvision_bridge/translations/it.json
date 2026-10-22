@@ -832,6 +832,44 @@
         "manual": "Manuale",
         "other": "Altro"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Live",
+        "playback": "Riproduzione",
+        "quality": "Qualità",
+        "auto": "Auto",
+        "low": "Bassa (veloce)",
+        "high": "Alta",
+        "original": "Originale",
+        "compatible": "Compatibile (H.264)",
+        "cameras": "Telecamere",
+        "no_cameras": "Nessuna telecamera trovata.",
+        "no_recordings": "Nessuna registrazione in questo giorno.",
+        "no_recording": "Nessuna registrazione da questo momento.",
+        "playback_encrypted": "Il dispositivo cifra le sue registrazioni; non possono essere riprodotte qui.",
+        "playback_busy": "La telecamera sta già riproducendo una registrazione altrove. Riprova tra un momento.",
+        "playback_auth": "Il dispositivo ha rifiutato le credenziali.",
+        "playback_failed": "Riproduzione non riuscita.",
+        "no_ffmpeg": "ffmpeg non è disponibile in Home Assistant.",
+        "live_unavailable": "Nessuno stream live per questa telecamera.",
+        "hevc_hint": "Questo browser non riproduce registrazioni H.265; «Compatibile» le converte (lento sulle macchine piccole).",
+        "today": "Oggi",
+        "previous_event": "Evento precedente",
+        "next_event": "Evento successivo",
+        "back": "Indietro di 10 secondi",
+        "forward": "Avanti di 10 secondi",
+        "play": "Riproduci",
+        "pause": "Pausa",
+        "download": "Scarica questa registrazione",
+        "fullscreen": "Schermo intero",
+        "zoom_in": "Ingrandisci",
+        "zoom_out": "Riduci",
+        "previous_day": "Giorno precedente",
+        "next_day": "Giorno successivo",
+        "source": "Sorgente",
+        "select_camera": "Scegli una telecamera."
+      }
     }
   },
   "services": {

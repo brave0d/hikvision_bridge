@@ -832,6 +832,44 @@
         "manual": "Manual",
         "other": "Other"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Live",
+        "playback": "Playback",
+        "quality": "Quality",
+        "auto": "Auto",
+        "low": "Low (fast)",
+        "high": "High",
+        "original": "Original",
+        "compatible": "Compatible (H.264)",
+        "cameras": "Cameras",
+        "no_cameras": "No cameras found.",
+        "no_recordings": "No recordings on this day.",
+        "no_recording": "No recording from this time on.",
+        "playback_encrypted": "The device encrypts its recordings; they cannot be played here.",
+        "playback_busy": "The camera is already playing a recording elsewhere. Try again in a moment.",
+        "playback_auth": "The device rejected the login.",
+        "playback_failed": "Playback failed.",
+        "no_ffmpeg": "ffmpeg is not available in Home Assistant.",
+        "live_unavailable": "No live stream for this camera.",
+        "hevc_hint": "This browser cannot play H.265 recordings; 'Compatible' converts them (slow on small machines).",
+        "today": "Today",
+        "previous_event": "Previous event",
+        "next_event": "Next event",
+        "back": "10 seconds back",
+        "forward": "10 seconds forward",
+        "play": "Play",
+        "pause": "Pause",
+        "download": "Download this recording",
+        "fullscreen": "Full screen",
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out",
+        "previous_day": "Previous day",
+        "next_day": "Next day",
+        "source": "Source",
+        "select_camera": "Select a camera."
+      }
     }
   },
   "services": {

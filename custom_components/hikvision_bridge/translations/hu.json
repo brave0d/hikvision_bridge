@@ -832,6 +832,44 @@
         "manual": "Kézi",
         "other": "Egyéb"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Élő",
+        "playback": "Lejátszás",
+        "quality": "Minőség",
+        "auto": "Auto",
+        "low": "Alacsony (gyors)",
+        "high": "Magas",
+        "original": "Eredeti",
+        "compatible": "Kompatibilis (H.264)",
+        "cameras": "Kamerák",
+        "no_cameras": "Nem található kamera.",
+        "no_recordings": "Ezen a napon nincs felvétel.",
+        "no_recording": "Ettől az időponttól nincs felvétel.",
+        "playback_encrypted": "Az eszköz titkosítja a felvételeit; itt nem játszhatók le.",
+        "playback_busy": "A kamera már máshol játszik le felvételt. Próbáld újra egy kicsit később.",
+        "playback_auth": "Az eszköz elutasította a bejelentkezési adatokat.",
+        "playback_failed": "A lejátszás sikertelen.",
+        "no_ffmpeg": "Az ffmpeg nem érhető el a Home Assistantban.",
+        "live_unavailable": "Ehhez a kamerához nincs élő adás.",
+        "hevc_hint": "Ez a böngésző nem tudja lejátszani a H.265 felvételeket; a „Kompatibilis” átalakítja őket (kis gépeken lassú).",
+        "today": "Ma",
+        "previous_event": "Előző esemény",
+        "next_event": "Következő esemény",
+        "back": "10 másodperc vissza",
+        "forward": "10 másodperc előre",
+        "play": "Lejátszás",
+        "pause": "Szünet",
+        "download": "A felvétel letöltése",
+        "fullscreen": "Teljes képernyő",
+        "zoom_in": "Nagyítás",
+        "zoom_out": "Kicsinyítés",
+        "previous_day": "Előző nap",
+        "next_day": "Következő nap",
+        "source": "Forrás",
+        "select_camera": "Válassz kamerát."
+      }
     }
   },
   "services": {

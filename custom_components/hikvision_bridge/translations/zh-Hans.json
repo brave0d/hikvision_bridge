@@ -832,6 +832,44 @@
         "manual": "手动",
         "other": "其他"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "实时",
+        "playback": "回放",
+        "quality": "画质",
+        "auto": "自动",
+        "low": "低（快速）",
+        "high": "高",
+        "original": "原始",
+        "compatible": "兼容（H.264）",
+        "cameras": "摄像机",
+        "no_cameras": "未找到摄像机。",
+        "no_recordings": "这一天没有录像。",
+        "no_recording": "从此时刻起没有录像。",
+        "playback_encrypted": "设备对录像进行了加密，无法在此播放。",
+        "playback_busy": "摄像机正在其他地方播放录像，请稍后重试。",
+        "playback_auth": "设备拒绝了登录凭据。",
+        "playback_failed": "播放失败。",
+        "no_ffmpeg": "Home Assistant 中没有可用的 ffmpeg。",
+        "live_unavailable": "此摄像机没有实时流。",
+        "hevc_hint": "此浏览器无法播放 H.265 录像；“兼容”会进行转换（在小型设备上较慢）。",
+        "today": "今天",
+        "previous_event": "上一个事件",
+        "next_event": "下一个事件",
+        "back": "后退 10 秒",
+        "forward": "前进 10 秒",
+        "play": "播放",
+        "pause": "暂停",
+        "download": "下载此录像",
+        "fullscreen": "全屏",
+        "zoom_in": "放大",
+        "zoom_out": "缩小",
+        "previous_day": "前一天",
+        "next_day": "后一天",
+        "source": "来源",
+        "select_camera": "请选择摄像机。"
+      }
     }
   },
   "services": {

@@ -124,6 +124,37 @@ broken file. Switch stream encryption off (*Network → Platform Access*, on the
 behind it) or use the camera's memory card through a direct camera connection. Files recorded while it
 was on stay encrypted.
 
+### Recordings panel and card
+
+The sidebar entry **Hikvision** opens a viewer for all cameras: the camera list on the left, the
+picture in the middle and a timeline of the day at the bottom. The timeline shows recordings coloured by
+kind and the detections of the event sensors (from Home Assistant's history). Click or drag on it to
+jump in time, scroll to zoom from 24 hours down to 15 minutes; the buttons step from event to event or
+10 seconds back and forward. *Live* returns to the live picture. The download button saves the
+recording that is playing.
+
+Quality defaults to **Auto**:
+
+* **Live** starts with the sub stream, which loads fastest, and switches to the main stream once the
+  picture runs smoothly and the connection is fast enough; it goes back to the sub stream when the
+  picture stalls. *Low* and *High* fix one stream.
+* **Playback** plays the recording as recorded (*Original*). Recordings only exist in the main stream's
+  quality, so there is no fast low-quality version of them. A browser without H.265 support gets
+  *Compatible*, which converts to H.264 on the fly; on a Raspberry Pi this is slower than real time for
+  4K recordings.
+
+The same viewer is available as a dashboard card:
+
+```yaml
+type: custom:hikvision-bridge-card
+camera_entity: camera.front_yard_main   # a camera entity of the channel
+```
+
+Playback asks the device to play from the chosen moment over RTSP; Home Assistant passes it to the
+browser as HLS. Cameras serve one playback at a time, so a second viewer of the same camera's
+recordings replaces the first. Recordings of devices with stream encryption cannot be played (see
+below).
+
 ## Installation
 
 ### HACS (recommended)
@@ -352,7 +383,8 @@ Logged requests never contain passwords; still check the log before attaching it
 * Session login (cookie based) is not implemented; Digest and Basic authentication are.
 * Holiday schedules are not exposed.
 * Encrypted Hik-Connect streams and recordings cannot be decoded; this needs the manufacturer's player.
-* Converted playback starts at the beginning of the recorded file and cannot seek; save the file for that.
+* In the media browser, converted playback starts at the beginning of the recorded file and cannot seek; the Hikvision panel can.
+* Cameras play one recording at a time; recordings exist only in main stream quality.
 
 ## Development
 
@@ -374,4 +406,4 @@ from English and German the texts are machine-assisted; corrections are welcome 
 
 ## License
 
-[Apache License 2.0](LICENSE)
+[Apache License 2.0](LICENSE). The panel includes [hls.js](https://github.com/video-dev/hls.js) (Apache License 2.0, see `frontend/hls.js.LICENSE.txt`).

@@ -832,6 +832,44 @@
         "manual": "Manual",
         "other": "Otra"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "En directo",
+        "playback": "Reproducción",
+        "quality": "Calidad",
+        "auto": "Auto",
+        "low": "Baja (rápida)",
+        "high": "Alta",
+        "original": "Original",
+        "compatible": "Compatible (H.264)",
+        "cameras": "Cámaras",
+        "no_cameras": "No se encontraron cámaras.",
+        "no_recordings": "No hay grabaciones este día.",
+        "no_recording": "No hay grabación a partir de este momento.",
+        "playback_encrypted": "El dispositivo cifra sus grabaciones; no se pueden reproducir aquí.",
+        "playback_busy": "La cámara ya está reproduciendo una grabación en otro sitio. Inténtalo de nuevo en un momento.",
+        "playback_auth": "El dispositivo rechazó las credenciales.",
+        "playback_failed": "La reproducción falló.",
+        "no_ffmpeg": "ffmpeg no está disponible en Home Assistant.",
+        "live_unavailable": "No hay transmisión en directo para esta cámara.",
+        "hevc_hint": "Este navegador no puede reproducir grabaciones H.265; «Compatible» las convierte (lento en equipos pequeños).",
+        "today": "Hoy",
+        "previous_event": "Evento anterior",
+        "next_event": "Evento siguiente",
+        "back": "Retroceder 10 segundos",
+        "forward": "Avanzar 10 segundos",
+        "play": "Reproducir",
+        "pause": "Pausa",
+        "download": "Descargar esta grabación",
+        "fullscreen": "Pantalla completa",
+        "zoom_in": "Acercar",
+        "zoom_out": "Alejar",
+        "previous_day": "Día anterior",
+        "next_day": "Día siguiente",
+        "source": "Origen",
+        "select_camera": "Elige una cámara."
+      }
     }
   },
   "services": {

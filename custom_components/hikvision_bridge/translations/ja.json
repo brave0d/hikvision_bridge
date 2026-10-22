@@ -832,6 +832,44 @@
         "manual": "手動",
         "other": "その他"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "ライブ",
+        "playback": "再生",
+        "quality": "画質",
+        "auto": "自動",
+        "low": "低（高速）",
+        "high": "高",
+        "original": "オリジナル",
+        "compatible": "互換（H.264）",
+        "cameras": "カメラ",
+        "no_cameras": "カメラが見つかりません。",
+        "no_recordings": "この日の録画はありません。",
+        "no_recording": "この時点以降の録画はありません。",
+        "playback_encrypted": "デバイスが録画を暗号化しているため、ここでは再生できません。",
+        "playback_busy": "カメラは別の場所で録画を再生中です。しばらくしてから再試行してください。",
+        "playback_auth": "デバイスがログイン情報を拒否しました。",
+        "playback_failed": "再生に失敗しました。",
+        "no_ffmpeg": "Home Assistant で ffmpeg を利用できません。",
+        "live_unavailable": "このカメラのライブ映像はありません。",
+        "hevc_hint": "このブラウザーは H.265 の録画を再生できません。「互換」で変換します（小型のマシンでは低速）。",
+        "today": "今日",
+        "previous_event": "前のイベント",
+        "next_event": "次のイベント",
+        "back": "10 秒戻る",
+        "forward": "10 秒進む",
+        "play": "再生",
+        "pause": "一時停止",
+        "download": "この録画をダウンロード",
+        "fullscreen": "全画面",
+        "zoom_in": "ズームイン",
+        "zoom_out": "ズームアウト",
+        "previous_day": "前の日",
+        "next_day": "次の日",
+        "source": "ソース",
+        "select_camera": "カメラを選択してください。"
+      }
     }
   },
   "services": {

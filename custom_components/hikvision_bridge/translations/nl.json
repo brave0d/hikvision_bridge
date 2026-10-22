@@ -832,6 +832,44 @@
         "manual": "Handmatig",
         "other": "Overig"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Live",
+        "playback": "Afspelen",
+        "quality": "Kwaliteit",
+        "auto": "Auto",
+        "low": "Laag (snel)",
+        "high": "Hoog",
+        "original": "Origineel",
+        "compatible": "Compatibel (H.264)",
+        "cameras": "Camera's",
+        "no_cameras": "Geen camera's gevonden.",
+        "no_recordings": "Geen opnames op deze dag.",
+        "no_recording": "Vanaf dit moment is er geen opname.",
+        "playback_encrypted": "Het apparaat versleutelt zijn opnames; ze kunnen hier niet worden afgespeeld.",
+        "playback_busy": "De camera speelt al ergens anders een opname af. Probeer het zo opnieuw.",
+        "playback_auth": "Het apparaat heeft de inloggegevens geweigerd.",
+        "playback_failed": "Afspelen mislukt.",
+        "no_ffmpeg": "ffmpeg is niet beschikbaar in Home Assistant.",
+        "live_unavailable": "Geen livestream voor deze camera.",
+        "hevc_hint": "Deze browser kan geen H.265-opnames afspelen; 'Compatibel' zet ze om (traag op kleine machines).",
+        "today": "Vandaag",
+        "previous_event": "Vorige gebeurtenis",
+        "next_event": "Volgende gebeurtenis",
+        "back": "10 seconden terug",
+        "forward": "10 seconden vooruit",
+        "play": "Afspelen",
+        "pause": "Pauze",
+        "download": "Deze opname downloaden",
+        "fullscreen": "Volledig scherm",
+        "zoom_in": "Inzoomen",
+        "zoom_out": "Uitzoomen",
+        "previous_day": "Vorige dag",
+        "next_day": "Volgende dag",
+        "source": "Bron",
+        "select_camera": "Kies een camera."
+      }
     }
   },
   "services": {

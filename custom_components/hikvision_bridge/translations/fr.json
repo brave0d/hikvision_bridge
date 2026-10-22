@@ -832,6 +832,44 @@
         "manual": "Manuel",
         "other": "Autre"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "En direct",
+        "playback": "Lecture",
+        "quality": "Qualité",
+        "auto": "Auto",
+        "low": "Basse (rapide)",
+        "high": "Élevée",
+        "original": "Originale",
+        "compatible": "Compatible (H.264)",
+        "cameras": "Caméras",
+        "no_cameras": "Aucune caméra trouvée.",
+        "no_recordings": "Aucun enregistrement ce jour-là.",
+        "no_recording": "Aucun enregistrement à partir de ce moment.",
+        "playback_encrypted": "L'appareil chiffre ses enregistrements ; ils ne peuvent pas être lus ici.",
+        "playback_busy": "La caméra lit déjà un enregistrement ailleurs. Réessayez dans un instant.",
+        "playback_auth": "L'appareil a refusé les identifiants.",
+        "playback_failed": "La lecture a échoué.",
+        "no_ffmpeg": "ffmpeg n'est pas disponible dans Home Assistant.",
+        "live_unavailable": "Pas de flux en direct pour cette caméra.",
+        "hevc_hint": "Ce navigateur ne lit pas les enregistrements H.265 ; « Compatible » les convertit (lent sur les petites machines).",
+        "today": "Aujourd'hui",
+        "previous_event": "Événement précédent",
+        "next_event": "Événement suivant",
+        "back": "Reculer de 10 secondes",
+        "forward": "Avancer de 10 secondes",
+        "play": "Lire",
+        "pause": "Pause",
+        "download": "Télécharger cet enregistrement",
+        "fullscreen": "Plein écran",
+        "zoom_in": "Zoom avant",
+        "zoom_out": "Zoom arrière",
+        "previous_day": "Jour précédent",
+        "next_day": "Jour suivant",
+        "source": "Source",
+        "select_camera": "Choisissez une caméra."
+      }
     }
   },
   "services": {

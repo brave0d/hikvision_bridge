@@ -13,7 +13,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .runtime import playback as playback_module
+from .runtime import playback as playback_module, sessions
 from .runtime.bridge import DeviceBridge
 from .runtime.playback import (
     EXTENSION,
@@ -204,6 +204,36 @@ class ThumbnailView(HomeAssistantView):
         )
 
 
+class SessionView(HomeAssistantView):
+    """Playlist and segments of a playback session.
+
+    Players fetch these without the login header; the random session id is the access
+    token, like Home Assistant's own HLS streams.
+    """
+
+    url = "/api/hikvision_bridge/session/{session_id}/{name}"
+    name = "api:hikvision_bridge:session"
+    requires_auth = False
+
+    async def get(self, request: web.Request, session_id: str, name: str) -> web.StreamResponse:
+        session = sessions.manager(request.app[KEY_HASS]).get(session_id)
+        if session is None or not sessions.FILE_NAME.match(name):
+            return web.Response(status=404)
+        path = session.folder / name
+        if not await request.app[KEY_HASS].async_add_executor_job(path.is_file):
+            return web.Response(status=404)
+        content_type = {
+            "m3u8": "application/vnd.apple.mpegurl",
+            "m4s": "video/iso.segment",
+            "mp4": "video/mp4",
+            "ts": "video/mp2t",
+        }[name.rsplit(".", 1)[1]]
+        return web.FileResponse(
+            path, headers={"Content-Type": content_type, "Cache-Control": "no-cache"}
+        )
+
+
 def async_register_views(hass: HomeAssistant) -> None:
     hass.http.register_view(RecordingView())
     hass.http.register_view(ThumbnailView())
+    hass.http.register_view(SessionView())

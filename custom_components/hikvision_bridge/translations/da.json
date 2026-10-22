@@ -832,6 +832,44 @@
         "manual": "Manuel",
         "other": "Andet"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Live",
+        "playback": "Afspilning",
+        "quality": "Kvalitet",
+        "auto": "Auto",
+        "low": "Lav (hurtig)",
+        "high": "Høj",
+        "original": "Original",
+        "compatible": "Kompatibel (H.264)",
+        "cameras": "Kameraer",
+        "no_cameras": "Ingen kameraer fundet.",
+        "no_recordings": "Ingen optagelser denne dag.",
+        "no_recording": "Der er ingen optagelse fra dette tidspunkt.",
+        "playback_encrypted": "Enheden krypterer sine optagelser; de kan ikke afspilles her.",
+        "playback_busy": "Kameraet afspiller allerede en optagelse et andet sted. Prøv igen om lidt.",
+        "playback_auth": "Enheden afviste loginoplysningerne.",
+        "playback_failed": "Afspilning mislykkedes.",
+        "no_ffmpeg": "ffmpeg er ikke tilgængelig i Home Assistant.",
+        "live_unavailable": "Ingen livestream for dette kamera.",
+        "hevc_hint": "Denne browser kan ikke afspille H.265-optagelser; 'Kompatibel' konverterer dem (langsomt på små maskiner).",
+        "today": "I dag",
+        "previous_event": "Forrige hændelse",
+        "next_event": "Næste hændelse",
+        "back": "10 sekunder tilbage",
+        "forward": "10 sekunder frem",
+        "play": "Afspil",
+        "pause": "Pause",
+        "download": "Download denne optagelse",
+        "fullscreen": "Fuld skærm",
+        "zoom_in": "Zoom ind",
+        "zoom_out": "Zoom ud",
+        "previous_day": "Forrige dag",
+        "next_day": "Næste dag",
+        "source": "Kilde",
+        "select_camera": "Vælg et kamera."
+      }
     }
   },
   "services": {

@@ -832,6 +832,44 @@
         "manual": "Manuell",
         "other": "Sonstige"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Live",
+        "playback": "Wiedergabe",
+        "quality": "Qualität",
+        "auto": "Auto",
+        "low": "Niedrig (schnell)",
+        "high": "Hoch",
+        "original": "Original",
+        "compatible": "Kompatibel (H.264)",
+        "cameras": "Kameras",
+        "no_cameras": "Keine Kameras gefunden.",
+        "no_recordings": "Keine Aufnahmen an diesem Tag.",
+        "no_recording": "Ab diesem Zeitpunkt gibt es keine Aufnahme.",
+        "playback_encrypted": "Das Gerät verschlüsselt seine Aufnahmen; sie können hier nicht abgespielt werden.",
+        "playback_busy": "Die Kamera spielt bereits anderswo eine Aufnahme ab. Versuche es gleich noch einmal.",
+        "playback_auth": "Das Gerät hat die Anmeldedaten abgelehnt.",
+        "playback_failed": "Wiedergabe fehlgeschlagen.",
+        "no_ffmpeg": "ffmpeg ist in Home Assistant nicht verfügbar.",
+        "live_unavailable": "Kein Livestream für diese Kamera.",
+        "hevc_hint": "Dieser Browser kann keine H.265-Aufnahmen abspielen; „Kompatibel“ wandelt sie um (langsam auf kleinen Rechnern).",
+        "today": "Heute",
+        "previous_event": "Vorheriges Ereignis",
+        "next_event": "Nächstes Ereignis",
+        "back": "10 Sekunden zurück",
+        "forward": "10 Sekunden vor",
+        "play": "Abspielen",
+        "pause": "Pause",
+        "download": "Diese Aufnahme herunterladen",
+        "fullscreen": "Vollbild",
+        "zoom_in": "Hineinzoomen",
+        "zoom_out": "Herauszoomen",
+        "previous_day": "Vorheriger Tag",
+        "next_day": "Nächster Tag",
+        "source": "Quelle",
+        "select_camera": "Wähle eine Kamera."
+      }
     }
   },
   "services": {

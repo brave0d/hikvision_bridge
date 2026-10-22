@@ -832,6 +832,44 @@
         "manual": "Ručně",
         "other": "Ostatní"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Živě",
+        "playback": "Přehrávání",
+        "quality": "Kvalita",
+        "auto": "Auto",
+        "low": "Nízká (rychlá)",
+        "high": "Vysoká",
+        "original": "Původní",
+        "compatible": "Kompatibilní (H.264)",
+        "cameras": "Kamery",
+        "no_cameras": "Nebyly nalezeny žádné kamery.",
+        "no_recordings": "Tento den nejsou žádné záznamy.",
+        "no_recording": "Od tohoto okamžiku není žádný záznam.",
+        "playback_encrypted": "Zařízení šifruje své záznamy; zde je nelze přehrát.",
+        "playback_busy": "Kamera už přehrává záznam jinde. Zkuste to za chvíli znovu.",
+        "playback_auth": "Zařízení odmítlo přihlašovací údaje.",
+        "playback_failed": "Přehrávání selhalo.",
+        "no_ffmpeg": "ffmpeg není v Home Assistant k dispozici.",
+        "live_unavailable": "Pro tuto kameru není živý přenos.",
+        "hevc_hint": "Tento prohlížeč neumí přehrát záznamy H.265; „Kompatibilní“ je převede (na malých počítačích pomalu).",
+        "today": "Dnes",
+        "previous_event": "Předchozí událost",
+        "next_event": "Další událost",
+        "back": "O 10 sekund zpět",
+        "forward": "O 10 sekund vpřed",
+        "play": "Přehrát",
+        "pause": "Pozastavit",
+        "download": "Stáhnout tento záznam",
+        "fullscreen": "Celá obrazovka",
+        "zoom_in": "Přiblížit",
+        "zoom_out": "Oddálit",
+        "previous_day": "Předchozí den",
+        "next_day": "Další den",
+        "source": "Zdroj",
+        "select_camera": "Vyberte kameru."
+      }
     }
   },
   "services": {

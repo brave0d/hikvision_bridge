@@ -832,6 +832,44 @@
         "manual": "Ręcznie",
         "other": "Inne"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Na żywo",
+        "playback": "Odtwarzanie",
+        "quality": "Jakość",
+        "auto": "Auto",
+        "low": "Niska (szybka)",
+        "high": "Wysoka",
+        "original": "Oryginalna",
+        "compatible": "Zgodna (H.264)",
+        "cameras": "Kamery",
+        "no_cameras": "Nie znaleziono kamer.",
+        "no_recordings": "Brak nagrań tego dnia.",
+        "no_recording": "Od tej chwili nie ma nagrania.",
+        "playback_encrypted": "Urządzenie szyfruje swoje nagrania; nie można ich tu odtworzyć.",
+        "playback_busy": "Kamera odtwarza już nagranie w innym miejscu. Spróbuj ponownie za chwilę.",
+        "playback_auth": "Urządzenie odrzuciło dane logowania.",
+        "playback_failed": "Odtwarzanie nie powiodło się.",
+        "no_ffmpeg": "ffmpeg nie jest dostępny w Home Assistant.",
+        "live_unavailable": "Brak transmisji na żywo z tej kamery.",
+        "hevc_hint": "Ta przeglądarka nie odtwarza nagrań H.265; „Zgodna” je konwertuje (wolno na małych komputerach).",
+        "today": "Dziś",
+        "previous_event": "Poprzednie zdarzenie",
+        "next_event": "Następne zdarzenie",
+        "back": "10 sekund wstecz",
+        "forward": "10 sekund naprzód",
+        "play": "Odtwórz",
+        "pause": "Pauza",
+        "download": "Pobierz to nagranie",
+        "fullscreen": "Pełny ekran",
+        "zoom_in": "Powiększ",
+        "zoom_out": "Pomniejsz",
+        "previous_day": "Poprzedni dzień",
+        "next_day": "Następny dzień",
+        "source": "Źródło",
+        "select_camera": "Wybierz kamerę."
+      }
     }
   },
   "services": {

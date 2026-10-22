@@ -832,6 +832,44 @@
         "manual": "수동",
         "other": "기타"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "실시간",
+        "playback": "재생",
+        "quality": "화질",
+        "auto": "자동",
+        "low": "낮음(빠름)",
+        "high": "높음",
+        "original": "원본",
+        "compatible": "호환(H.264)",
+        "cameras": "카메라",
+        "no_cameras": "카메라를 찾을 수 없습니다.",
+        "no_recordings": "이 날에는 녹화가 없습니다.",
+        "no_recording": "이 시점 이후로 녹화가 없습니다.",
+        "playback_encrypted": "장치가 녹화를 암호화하므로 여기서 재생할 수 없습니다.",
+        "playback_busy": "카메라가 이미 다른 곳에서 녹화를 재생하고 있습니다. 잠시 후 다시 시도하세요.",
+        "playback_auth": "장치가 로그인 정보를 거부했습니다.",
+        "playback_failed": "재생에 실패했습니다.",
+        "no_ffmpeg": "Home Assistant에서 ffmpeg를 사용할 수 없습니다.",
+        "live_unavailable": "이 카메라의 실시간 스트림이 없습니다.",
+        "hevc_hint": "이 브라우저는 H.265 녹화를 재생할 수 없습니다. '호환'은 변환합니다(작은 기기에서는 느림).",
+        "today": "오늘",
+        "previous_event": "이전 이벤트",
+        "next_event": "다음 이벤트",
+        "back": "10초 뒤로",
+        "forward": "10초 앞으로",
+        "play": "재생",
+        "pause": "일시정지",
+        "download": "이 녹화 다운로드",
+        "fullscreen": "전체 화면",
+        "zoom_in": "확대",
+        "zoom_out": "축소",
+        "previous_day": "이전 날",
+        "next_day": "다음 날",
+        "source": "소스",
+        "select_camera": "카메라를 선택하세요."
+      }
     }
   },
   "services": {

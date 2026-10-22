@@ -832,6 +832,44 @@
         "manual": "Manuell",
         "other": "Övrigt"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Live",
+        "playback": "Uppspelning",
+        "quality": "Kvalitet",
+        "auto": "Auto",
+        "low": "Låg (snabb)",
+        "high": "Hög",
+        "original": "Original",
+        "compatible": "Kompatibel (H.264)",
+        "cameras": "Kameror",
+        "no_cameras": "Inga kameror hittades.",
+        "no_recordings": "Inga inspelningar den här dagen.",
+        "no_recording": "Det finns ingen inspelning från den här tidpunkten.",
+        "playback_encrypted": "Enheten krypterar sina inspelningar; de kan inte spelas upp här.",
+        "playback_busy": "Kameran spelar redan upp en inspelning någon annanstans. Försök igen om en stund.",
+        "playback_auth": "Enheten avvisade inloggningsuppgifterna.",
+        "playback_failed": "Uppspelningen misslyckades.",
+        "no_ffmpeg": "ffmpeg är inte tillgängligt i Home Assistant.",
+        "live_unavailable": "Ingen livestream för den här kameran.",
+        "hevc_hint": "Den här webbläsaren kan inte spela upp H.265-inspelningar; ”Kompatibel” konverterar dem (långsamt på små datorer).",
+        "today": "Idag",
+        "previous_event": "Föregående händelse",
+        "next_event": "Nästa händelse",
+        "back": "10 sekunder bakåt",
+        "forward": "10 sekunder framåt",
+        "play": "Spela upp",
+        "pause": "Pausa",
+        "download": "Ladda ner den här inspelningen",
+        "fullscreen": "Helskärm",
+        "zoom_in": "Zooma in",
+        "zoom_out": "Zooma ut",
+        "previous_day": "Föregående dag",
+        "next_day": "Nästa dag",
+        "source": "Källa",
+        "select_camera": "Välj en kamera."
+      }
     }
   },
   "services": {

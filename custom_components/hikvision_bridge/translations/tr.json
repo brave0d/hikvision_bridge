@@ -832,6 +832,44 @@
         "manual": "Manuel",
         "other": "Diğer"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Canlı",
+        "playback": "Oynatma",
+        "quality": "Kalite",
+        "auto": "Otomatik",
+        "low": "Düşük (hızlı)",
+        "high": "Yüksek",
+        "original": "Orijinal",
+        "compatible": "Uyumlu (H.264)",
+        "cameras": "Kameralar",
+        "no_cameras": "Kamera bulunamadı.",
+        "no_recordings": "Bu günde kayıt yok.",
+        "no_recording": "Bu andan itibaren kayıt yok.",
+        "playback_encrypted": "Cihaz kayıtlarını şifreliyor; burada oynatılamazlar.",
+        "playback_busy": "Kamera zaten başka bir yerde kayıt oynatıyor. Birazdan tekrar deneyin.",
+        "playback_auth": "Cihaz oturum açma bilgilerini reddetti.",
+        "playback_failed": "Oynatma başarısız oldu.",
+        "no_ffmpeg": "ffmpeg Home Assistant'ta kullanılamıyor.",
+        "live_unavailable": "Bu kamera için canlı yayın yok.",
+        "hevc_hint": "Bu tarayıcı H.265 kayıtlarını oynatamıyor; 'Uyumlu' bunları dönüştürür (küçük makinelerde yavaş).",
+        "today": "Bugün",
+        "previous_event": "Önceki olay",
+        "next_event": "Sonraki olay",
+        "back": "10 saniye geri",
+        "forward": "10 saniye ileri",
+        "play": "Oynat",
+        "pause": "Duraklat",
+        "download": "Bu kaydı indir",
+        "fullscreen": "Tam ekran",
+        "zoom_in": "Yakınlaştır",
+        "zoom_out": "Uzaklaştır",
+        "previous_day": "Önceki gün",
+        "next_day": "Sonraki gün",
+        "source": "Kaynak",
+        "select_camera": "Bir kamera seçin."
+      }
     }
   },
   "services": {

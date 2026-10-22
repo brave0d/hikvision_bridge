@@ -832,6 +832,44 @@
         "manual": "Manual",
         "other": "Altele"
       }
+    },
+    "ui": {
+      "options": {
+        "live": "Live",
+        "playback": "Redare",
+        "quality": "Calitate",
+        "auto": "Auto",
+        "low": "Scăzută (rapidă)",
+        "high": "Ridicată",
+        "original": "Originală",
+        "compatible": "Compatibilă (H.264)",
+        "cameras": "Camere",
+        "no_cameras": "Nu s-au găsit camere.",
+        "no_recordings": "Nicio înregistrare în această zi.",
+        "no_recording": "Nu există înregistrare de la acest moment.",
+        "playback_encrypted": "Dispozitivul își criptează înregistrările; nu pot fi redate aici.",
+        "playback_busy": "Camera redă deja o înregistrare în altă parte. Încearcă din nou peste puțin timp.",
+        "playback_auth": "Dispozitivul a respins datele de autentificare.",
+        "playback_failed": "Redarea a eșuat.",
+        "no_ffmpeg": "ffmpeg nu este disponibil în Home Assistant.",
+        "live_unavailable": "Niciun flux live pentru această cameră.",
+        "hevc_hint": "Acest browser nu poate reda înregistrări H.265; „Compatibilă” le convertește (încet pe mașinile mici).",
+        "today": "Astăzi",
+        "previous_event": "Evenimentul anterior",
+        "next_event": "Evenimentul următor",
+        "back": "Înapoi 10 secunde",
+        "forward": "Înainte 10 secunde",
+        "play": "Redă",
+        "pause": "Pauză",
+        "download": "Descarcă această înregistrare",
+        "fullscreen": "Ecran complet",
+        "zoom_in": "Mărește",
+        "zoom_out": "Micșorează",
+        "previous_day": "Ziua anterioară",
+        "next_day": "Ziua următoare",
+        "source": "Sursă",
+        "select_camera": "Alege o cameră."
+      }
     }
   },
   "services": {
