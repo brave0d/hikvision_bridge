@@ -58,16 +58,25 @@ def parse_presets(document: XmlNode | None) -> dict[str, str]:
     return presets
 
 
-def parse_capabilities(caps: XmlNode | None, presets: XmlNode | None) -> PtzCapability | None:
+def parse_capabilities(
+    caps: XmlNode | None, presets: XmlNode | None, settings: XmlNode | None = None
+) -> PtzCapability | None:
     """None for channels without PTZ (fixed cameras usually refuse the capabilities).
 
-    NVRs describe a serial (RS-485) PTZ for fixed cameras too, but switched off.
+    Some fixed cameras describe a serial (RS-485) PTZ anyway: switched off (NVRs), or with
+    the axes the lens can't move marked unsupported in the channel settings.
     """
     if caps is None or caps.flag("enabled") is False:
         return None
+    if settings is not None and settings.flag("enabled") is False:
+        return None
+    can_pan = settings.flag("panSupport") if settings is not None else None
+    can_tilt = settings.flag("tiltSupport") if settings is not None else None
+    can_zoom = settings.flag("zoomSupport") if settings is not None else None
     found = PtzCapability(
-        pan_tilt=caps.first("ContinuousPanTiltSpace") is not None,
-        zoom=caps.first("ContinuousZoomSpace") is not None,
+        pan_tilt=caps.first("ContinuousPanTiltSpace") is not None
+        and not (can_pan is False and can_tilt is False),
+        zoom=caps.first("ContinuousZoomSpace") is not None and can_zoom is not False,
         presets=parse_presets(presets),
     )
     if not found.pan_tilt and not found.zoom and not found.presets:
@@ -80,8 +89,9 @@ async def read_capabilities(link: IsapiLink, channel_id: str) -> PtzCapability |
     caps = await link.read_xml(f"{base}/capabilities", optional=True)
     if caps is None:
         return None
+    settings = await link.read_xml(base, optional=True)
     presets = await link.read_xml(f"{base}/presets", optional=True)
-    return parse_capabilities(caps, presets)
+    return parse_capabilities(caps, presets, settings)
 
 
 async def move(

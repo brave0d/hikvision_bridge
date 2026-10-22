@@ -55,6 +55,25 @@ def test_switched_off_serial_ptz() -> None:
     assert ptz.parse_capabilities(caps, None) is None
 
 
+def test_fixed_lens_without_pan_and_tilt() -> None:
+    """A camera describes serial PTZ but its settings deny moving the lens sideways."""
+    settings = parse(
+        f"<PTZChannel {NS}><id>1</id><enabled>true</enabled><controlProtocol>PELCO-D"
+        "</controlProtocol><panSupport>false</panSupport><tiltSupport>false</tiltSupport>"
+        "<zoomSupport>true</zoomSupport></PTZChannel>"
+    )
+    found = ptz.parse_capabilities(parse(CAPS), None, settings)
+    assert found is not None
+    assert found.directions == ["zoom_in", "zoom_out"]
+    no_zoom = parse(
+        f"<PTZChannel {NS}><panSupport>false</panSupport><tiltSupport>false</tiltSupport>"
+        "<zoomSupport>false</zoomSupport></PTZChannel>"
+    )
+    assert ptz.parse_capabilities(parse(CAPS), None, no_zoom) is None
+    switched_off = parse(f"<PTZChannel {NS}><enabled>false</enabled></PTZChannel>")
+    assert ptz.parse_capabilities(parse(CAPS), None, switched_off) is None
+
+
 PARK = (
     f"<ParkAction {NS}><enabled>false</enabled><Parktime>30</Parktime>"
     "<Action><ActionType>preset</ActionType><ActionNum>1</ActionNum></Action></ParkAction>"
