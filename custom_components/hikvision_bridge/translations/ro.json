@@ -119,12 +119,14 @@
           "rtsp_port": "Port RTSP (opțional)",
           "rtsp_transport": "Transport RTSP",
           "target_sensors": "Senzori separați pentru persoane și vehicule",
-          "playback": "Redare în browserul media"
+          "playback": "Redare în browserul media",
+          "stream_key": "Cod de verificare (înregistrări criptate)"
         },
         "data_description": {
           "event_path": "Fluxul de evenimente nu necesită modificări pe dispozitiv. Webhook-ul necesită ca dispozitivul să trimită către Home Assistant.",
           "hold_seconds": "Dispozitivele raportează doar începutul multor detecții; senzorul rămâne activ atât timp după ultima raportare.",
-          "playback": "Înregistrările sunt H.265 sau H.264. „MP4 așa cum a fost înregistrat” pornește imediat, dar browserele redau H.265 doar cu suport hardware. „Convertire în H.264” funcționează oriunde și necesită mult procesor. „Flux de la dispozitiv” lasă dispozitivul să redea înregistrarea prin RTSP."
+          "playback": "Înregistrările sunt H.265 sau H.264. „MP4 așa cum a fost înregistrat” pornește imediat, dar browserele redau H.265 doar cu suport hardware. „Convertire în H.264” funcționează oriunde și necesită mult procesor. „Flux de la dispozitiv” lasă dispozitivul să redea înregistrarea prin RTSP.",
+          "stream_key": "Înregistrările făcute cu criptarea fluxului sunt decriptate cu codul de verificare al dispozitivului, citit de pe dispozitiv. Introdu-l aici doar dacă dispozitivul nu îl raportează, ca multe camere."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant nu are voie să scrie în folderul său media."
     },
     "recording_encrypted": {
-      "message": "Dispozitivul își criptează înregistrările (criptarea fluxului), deci nu pot fi redate sau convertite. Dezactivează criptarea fluxului sau folosește cardul de memorie al camerei."
+      "message": "Înregistrarea este criptată și codul de verificare nu se potrivește. Introdu codul de verificare al dispozitivului în opțiunile integrării."
     },
     "conversion_failed": {
       "message": "Înregistrarea nu a putut fi convertită."
@@ -847,7 +849,8 @@
         "no_cameras": "Nu s-au găsit camere.",
         "no_recordings": "Nicio înregistrare în această zi.",
         "no_recording": "Nu există înregistrare de la acest moment.",
-        "playback_encrypted": "Dispozitivul își criptează înregistrările; nu pot fi redate aici.",
+        "playback_encrypted": "Înregistrarea este criptată și codul de verificare nu se potrivește. Introdu-l în opțiunile integrării.",
+        "live_encrypted": "Fluxul live este criptat (criptarea fluxului Hik-Connect) și nu poate fi redat aici.",
         "playback_busy": "Camera redă deja o înregistrare în altă parte. Încearcă din nou peste puțin timp.",
         "playback_auth": "Dispozitivul a respins datele de autentificare.",
         "playback_failed": "Redarea a eșuat.",

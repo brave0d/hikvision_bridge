@@ -119,12 +119,14 @@
           "rtsp_port": "Cổng RTSP (tùy chọn)",
           "rtsp_transport": "Giao thức truyền RTSP",
           "target_sensors": "Cảm biến riêng cho người và phương tiện",
-          "playback": "Phát trong trình duyệt phương tiện"
+          "playback": "Phát trong trình duyệt phương tiện",
+          "stream_key": "Mã xác minh (bản ghi được mã hóa)"
         },
         "data_description": {
           "event_path": "Luồng sự kiện không cần thay đổi gì trên thiết bị. Webhook yêu cầu thiết bị gửi đến Home Assistant.",
           "hold_seconds": "Với nhiều loại phát hiện, thiết bị chỉ báo lúc bắt đầu; cảm biến giữ bật trong khoảng thời gian này sau lần báo cuối.",
-          "playback": "Bản ghi là H.265 hoặc H.264. 'MP4 như khi ghi' bắt đầu ngay, nhưng trình duyệt chỉ phát H.265 khi có hỗ trợ phần cứng. 'Chuyển sang H.264' phát được ở mọi nơi và tốn nhiều CPU. 'Phát trực tiếp từ thiết bị' để thiết bị phát bản ghi qua RTSP."
+          "playback": "Bản ghi là H.265 hoặc H.264. 'MP4 như khi ghi' bắt đầu ngay, nhưng trình duyệt chỉ phát H.265 khi có hỗ trợ phần cứng. 'Chuyển sang H.264' phát được ở mọi nơi và tốn nhiều CPU. 'Phát trực tiếp từ thiết bị' để thiết bị phát bản ghi qua RTSP.",
+          "stream_key": "Bản ghi được tạo khi bật mã hóa luồng sẽ được giải mã bằng mã xác minh của thiết bị, được đọc từ thiết bị. Chỉ nhập ở đây nếu thiết bị không cung cấp, như nhiều camera."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant không được phép ghi vào thư mục phương tiện của nó."
     },
     "recording_encrypted": {
-      "message": "Thiết bị mã hóa các bản ghi (mã hóa luồng), nên không thể phát hay chuyển đổi. Hãy tắt mã hóa luồng hoặc dùng thẻ nhớ của camera."
+      "message": "Bản ghi được mã hóa và mã xác minh không khớp. Hãy nhập mã xác minh của thiết bị trong tùy chọn của tích hợp."
     },
     "conversion_failed": {
       "message": "Không thể chuyển đổi bản ghi."
@@ -847,7 +849,8 @@
         "no_cameras": "Không tìm thấy camera.",
         "no_recordings": "Không có bản ghi trong ngày này.",
         "no_recording": "Không có bản ghi từ thời điểm này.",
-        "playback_encrypted": "Thiết bị mã hóa các bản ghi; không thể phát ở đây.",
+        "playback_encrypted": "Bản ghi được mã hóa và mã xác minh không khớp. Hãy nhập mã trong tùy chọn của tích hợp.",
+        "live_encrypted": "Luồng trực tiếp được mã hóa (mã hóa luồng Hik-Connect) và không thể phát tại đây.",
         "playback_busy": "Camera đang phát một bản ghi ở nơi khác. Hãy thử lại sau giây lát.",
         "playback_auth": "Thiết bị đã từ chối thông tin đăng nhập.",
         "playback_failed": "Phát lại thất bại.",

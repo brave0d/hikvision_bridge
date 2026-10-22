@@ -142,6 +142,11 @@ def test_inspect_head() -> None:
     assert recordings.inspect_head(program_stream(codec="h264")).codec == "h264"
     assert recordings.inspect_head(program_stream(scrambled=True)).scrambled
     assert recordings.strip_header(program_stream())[:4] == b"\x00\x00\x01\xba"
+    # Downloads by time put 24 more bytes before the header.
+    wrapped = b"\x00\x00\x00\x40" + bytes(16) + b"\x00\x00\x00\x28" + program_stream()
+    assert recordings.inspect_head(wrapped).header
+    assert recordings.strip_header(wrapped) == recordings.strip_header(program_stream())
+    assert recordings.strip_header(b"\x00\x00\x01\xba") == b"\x00\x00\x01\xba"
 
 
 def test_ffmpeg_args() -> None:

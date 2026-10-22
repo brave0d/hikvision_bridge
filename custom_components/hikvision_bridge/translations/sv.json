@@ -119,12 +119,14 @@
           "rtsp_port": "RTSP-port (valfritt)",
           "rtsp_transport": "RTSP-transport",
           "target_sensors": "Separata sensorer för personer och fordon",
-          "playback": "Uppspelning i mediabläddraren"
+          "playback": "Uppspelning i mediabläddraren",
+          "stream_key": "Verifieringskod (krypterade inspelningar)"
         },
         "data_description": {
           "event_path": "Händelseströmmen kräver ingen ändring på enheten. Webhooken kräver att enheten skickar till Home Assistant.",
           "hold_seconds": "Enheter rapporterar bara starten av många detekteringar; sensorn förblir på så här länge efter den senaste rapporten.",
-          "playback": "Inspelningar är H.265 eller H.264. ”MP4 som inspelat” startar direkt, men webbläsare spelar bara H.265 med hårdvarustöd. ”Konvertera till H.264” fungerar överallt och kräver mycket CPU. ”Strömma från enheten” låter enheten spela upp inspelningen via RTSP."
+          "playback": "Inspelningar är H.265 eller H.264. ”MP4 som inspelat” startar direkt, men webbläsare spelar bara H.265 med hårdvarustöd. ”Konvertera till H.264” fungerar överallt och kräver mycket CPU. ”Strömma från enheten” låter enheten spela upp inspelningen via RTSP.",
+          "stream_key": "Inspelningar gjorda med strömkryptering dekrypteras med enhetens verifieringskod, som läses från enheten. Ange den här endast om enheten inte rapporterar den, som många kameror inte gör."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant får inte skriva till sin mediamapp."
     },
     "recording_encrypted": {
-      "message": "Enheten krypterar sina inspelningar (strömkryptering), så de kan varken spelas upp eller konverteras. Stäng av strömkrypteringen eller använd kamerans minneskort."
+      "message": "Inspelningen är krypterad och verifieringskoden passar inte. Ange enhetens verifieringskod i integrationens alternativ."
     },
     "conversion_failed": {
       "message": "Inspelningen kunde inte konverteras."
@@ -847,7 +849,8 @@
         "no_cameras": "Inga kameror hittades.",
         "no_recordings": "Inga inspelningar den här dagen.",
         "no_recording": "Det finns ingen inspelning från den här tidpunkten.",
-        "playback_encrypted": "Enheten krypterar sina inspelningar; de kan inte spelas upp här.",
+        "playback_encrypted": "Inspelningen är krypterad och verifieringskoden passar inte. Ange den i integrationens alternativ.",
+        "live_encrypted": "Livestreamen är krypterad (Hik-Connect-strömkryptering) och kan inte spelas upp här.",
         "playback_busy": "Kameran spelar redan upp en inspelning någon annanstans. Försök igen om en stund.",
         "playback_auth": "Enheten avvisade inloggningsuppgifterna.",
         "playback_failed": "Uppspelningen misslyckades.",

@@ -119,12 +119,14 @@
           "rtsp_port": "RTSP 端口（可选）",
           "rtsp_transport": "RTSP 传输",
           "target_sensors": "为人员和车辆使用单独的传感器",
-          "playback": "在媒体浏览器中播放"
+          "playback": "在媒体浏览器中播放",
+          "stream_key": "验证码(加密录像)"
         },
         "data_description": {
           "event_path": "事件流无需更改设备。Webhook 需要设备向 Home Assistant 发送数据。",
           "hold_seconds": "许多检测设备只上报开始；传感器在最后一次上报后保持开启这么长时间。",
-          "playback": "录像为 H.265 或 H.264。“按录制的 MP4”会立即开始，但浏览器只有在硬件支持时才能播放 H.265。“转换为 H.264”到处可用，但需要大量 CPU。“从设备串流”让设备通过 RTSP 播放录像。"
+          "playback": "录像为 H.265 或 H.264。“按录制的 MP4”会立即开始，但浏览器只有在硬件支持时才能播放 H.265。“转换为 H.264”到处可用，但需要大量 CPU。“从设备串流”让设备通过 RTSP 播放录像。",
+          "stream_key": "开启码流加密时录制的录像会用设备的验证码解密,验证码从设备读取。仅当设备不提供验证码时(许多摄像机如此)才在此填写。"
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant 无权写入其媒体文件夹。"
     },
     "recording_encrypted": {
-      "message": "设备对录像进行了加密（码流加密），因此无法播放或转换。请关闭码流加密，或使用摄像机的存储卡。"
+      "message": "录像已加密,且验证码不匹配。请在集成选项中填写设备的验证码。"
     },
     "conversion_failed": {
       "message": "无法转换录像。"
@@ -847,7 +849,8 @@
         "no_cameras": "未找到摄像机。",
         "no_recordings": "这一天没有录像。",
         "no_recording": "从此时刻起没有录像。",
-        "playback_encrypted": "设备对录像进行了加密，无法在此播放。",
+        "playback_encrypted": "录像已加密,且验证码不匹配。请在集成选项中填写。",
+        "live_encrypted": "实时流已加密(Hik-Connect 码流加密),无法在此播放。",
         "playback_busy": "摄像机正在其他地方播放录像，请稍后重试。",
         "playback_auth": "设备拒绝了登录凭据。",
         "playback_failed": "播放失败。",

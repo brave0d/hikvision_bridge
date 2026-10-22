@@ -25,7 +25,8 @@ const TEXT = {
   no_cameras: "No cameras found.",
   no_recordings: "No recordings on this day.",
   no_recording: "No recording from this time on.",
-  playback_encrypted: "The device encrypts its recordings; they cannot be played here.",
+  playback_encrypted: "The recording is encrypted and the verification code does not fit. Enter it in the integration options.",
+  live_encrypted: "The live stream is encrypted (Hik-Connect stream encryption) and cannot be played here.",
   playback_busy: "The camera is already playing a recording elsewhere. Try again in a moment.",
   playback_auth: "The device rejected the login.",
   playback_failed: "Playback failed.",
@@ -443,6 +444,8 @@ class Player {
       } else {
         this.hls = new Hls({
           lowLatencyMode: this.mode === "live",
+          // Recordings: load the first segment while the video element is still being set up.
+          startFragPrefetch: this.mode === "playback",
           backBufferLength: 120,
           manifestLoadingMaxRetry: 6,
           levelLoadingMaxRetry: 6,
@@ -520,7 +523,7 @@ class Player {
       await this._attach(url, token);
       this.host.update();
     } catch (err) {
-      if (token === this.token) this.host.showError(err.code === "start_stream_failed" ? "playback_encrypted" : "live_unavailable");
+      if (token === this.token) this.host.showError(err.code === "start_stream_failed" ? "live_encrypted" : "live_unavailable");
     }
   }
 
@@ -578,13 +581,14 @@ class Player {
     return this.session.start + (video.currentTime - (this.base ?? 0)) * 1000;
   }
 
-  // Seek inside the running session if that part is loaded, else start a new one.
+  // Seek inside the running session if that part is prepared, else start a new one. The
+  // session keeps everything from its start and prepares a minute or more ahead.
   async seek(time) {
     if (this.mode === "playback" && this.session && this.base != null) {
       const video = this.video;
       const offset = (time - this.session.start) / 1000 + this.base;
-      for (let i = 0; i < video.buffered.length; i += 1) {
-        if (offset >= video.buffered.start(i) && offset <= video.buffered.end(i) - 0.5) {
+      for (let i = 0; i < video.seekable.length; i += 1) {
+        if (offset >= video.seekable.start(i) && offset <= video.seekable.end(i) - 0.5) {
           video.currentTime = offset;
           return;
         }
@@ -854,6 +858,12 @@ class Viewer {
   onEnded() {
     // End of a stretch of recordings: continue with the next one.
     if (this.mode !== "playback" || !this.player.session) return;
+    // A session ends early when the device broke off the download: carry on from there.
+    const position = this.player.position;
+    if (position != null && position < this.player.session.end - 5000) {
+      this.player.play(this.camera, this.source, position, this.quality);
+      return;
+    }
     const next = this.data.recordings.find((r) => r.start > this.player.session.end - 1000);
     if (next) this.player.play(this.camera, this.source, next.start, this.quality);
   }

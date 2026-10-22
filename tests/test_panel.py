@@ -11,13 +11,15 @@ from homeassistant.setup import async_setup_component
 import pytest
 
 from custom_components.hikvision_bridge.const import DOMAIN
+from custom_components.hikvision_bridge.model.discover import CLOUD_PATH
 from custom_components.hikvision_bridge.model.features import recordings
 from custom_components.hikvision_bridge.runtime import playback, sessions
 from custom_components.hikvision_bridge.wire.xmlview import parse
 from tests.conftest import device_entry
 from tests.fakedevice import FakeDevice
 from tests.model.test_recordings import CLIPS as MODEL_CLIPS, T0, result
-from tests.test_playback import START, recorded
+from tests.model.test_scrambling import CODE, recording
+from tests.test_playback import START, ezviz, recorded
 
 HLS = (
     '#!/bin/sh\nfor last; do :; done\necho "$@" > "$(dirname "$last")/args"\n'
@@ -25,6 +27,12 @@ HLS = (
     "printf '#EXTM3U\\n#EXTINF:2.0,\\nseg0.m4s\\n' > \"$last\"\nexec sleep 30\n"
 )
 BUSY = '#!/bin/sh\necho "method PLAY failed: 453 Not Enough Bandwidth" >&2\nexit 1\n'
+# Keeps what arrives on stdin, then writes one segment.
+HLS_PIPE = (
+    '#!/bin/sh\nfor last; do :; done\ndir="$(dirname "$last")"\necho "$@" > "$dir/args"\n'
+    'cat > "$dir/input"\nprintf x > "$dir/seg00000.m4s"\n'
+    "printf '#EXTM3U\\n#EXTINF:2.0,\\nseg00000.m4s\\n' > \"$last\"\nexec sleep 30\n"
+)
 
 
 def _script(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, body: str) -> None:
@@ -67,6 +75,24 @@ def test_hls_args(tmp_path: Path) -> None:
     compatible = sessions.hls_args("rtsp://x", sessions.QUALITY_COMPATIBLE, "H.265", tmp_path)
     assert compatible[compatible.index("-c:v") + 1] == "libx264"
     assert "hvc1" not in compatible
+    piped = sessions.hls_args(sessions.PIPE, sessions.QUALITY_ORIGINAL, "hevc", tmp_path)
+    assert piped[piped.index("-i") - 3 : piped.index("-i") + 2] == [
+        "mpeg",
+        "-analyzeduration",
+        "2000000",
+        "-i",
+        sessions.PIPE,
+    ]
+    assert "hvc1" in piped
+    assert "-rtsp_transport" not in piped
+    assert piped[piped.index("-hls_segment_filename") + 1] == str(tmp_path / "seg%05d.m4s")
+
+
+def test_played_seconds() -> None:
+    playlist = "#EXTM3U\n#EXTINF:4.0,\nseg00000.m4s\n#EXTINF:3.5,\nseg00001.m4s\n#EXTINF:4,\nseg00002.m4s\n"
+    assert sessions.played_seconds(playlist, -1) == 0
+    assert sessions.played_seconds(playlist, 1) == 7.5
+    assert sessions.played_seconds(playlist, 9) == 11.5
 
 
 @pytest.mark.parametrize(
@@ -82,9 +108,10 @@ def test_reason(errors: str, reason: str) -> None:
     assert sessions._reason(errors) == reason
 
 
-async def _setup(hass: HomeAssistant, serve):
+async def _setup(hass: HomeAssistant, serve, data: bytes = b""):
+    """Without data the device refuses nothing but sends no video: playback uses RTSP."""
     device = FakeDevice("camera_g3")
-    recorded(device, b"")
+    recorded(device, data)
     server = await serve(device)
     entry = device_entry(server, device)
     entry.add_to_hass(hass)
@@ -208,6 +235,54 @@ async def test_playback_session(
         }
     )
     assert (await client.receive_json())["error"]["code"] == "no_recording"
+
+
+async def test_playback_session_from_download(
+    hass: HomeAssistant,
+    serve,
+    hass_ws_client,
+    hass_client_no_auth,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The span is downloaded, decrypted with the device's code and fed to ffmpeg."""
+    device, entry = await _setup(hass, serve, recording(encrypted=True))
+    device.responders[CLOUD_PATH] = ezviz(CODE)
+    _script(tmp_path, monkeypatch, HLS_PIPE)
+    client = await hass_ws_client(hass)
+    moment = START + timedelta(minutes=5)
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/playback/start",
+            "entry_id": entry.entry_id,
+            "channel_id": "1",
+            "source": "auto",
+            "time": moment.isoformat(),
+        }
+    )
+    answer = await client.receive_json()
+    assert answer["success"], answer
+    started = answer["result"]
+    session = sessions.manager(hass).sessions[started["session_id"]]
+    args = await hass.async_add_executor_job((session.folder / "args").read_text)
+    assert "pipe:0" in args
+    assert "hvc1" in args
+    fed = await hass.async_add_executor_job((session.folder / "input").read_bytes)
+    assert fed == recordings.strip_header(recording(encrypted=False))
+    download = [w for w in device.writes if w[1] == recordings.DOWNLOAD_PATH][-1]
+    assert "starttime=" in download[2]
+    assert "name=" not in download[2]
+
+    web = await hass_client_no_auth()
+    segment = await web.get(started["url"].replace(sessions.PLAYLIST, "seg00000.m4s"))
+    assert await segment.read() == b"x"
+    assert session.fetched == 0
+
+    await client.send_json_auto_id(
+        {"type": f"{DOMAIN}/playback/stop", "session_id": started["session_id"]}
+    )
+    assert (await client.receive_json())["success"]
+    assert not sessions.manager(hass).sessions
 
 
 async def test_playback_busy(

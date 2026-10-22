@@ -119,12 +119,14 @@
           "rtsp_port": "RTSP-Port (optional)",
           "rtsp_transport": "RTSP-Transport",
           "target_sensors": "Eigene Sensoren für Personen und Fahrzeuge",
-          "playback": "Wiedergabe im Medienbrowser"
+          "playback": "Wiedergabe im Medienbrowser",
+          "stream_key": "Verifizierungscode (verschlüsselte Aufnahmen)"
         },
         "data_description": {
           "event_path": "Der Ereignis-Stream braucht keine Änderung am Gerät. Der Webhook setzt voraus, dass das Gerät an Home Assistant sendet.",
           "hold_seconds": "Viele Geräte melden nur den Beginn einer Erkennung; der Sensor bleibt so lange nach der letzten Meldung an.",
-          "playback": "Aufnahmen sind H.265 oder H.264. „MP4 wie aufgenommen“ startet sofort, Browser spielen H.265 aber nur mit Hardwareunterstützung. „In H.264 umwandeln“ läuft überall und braucht viel CPU. „Vom Gerät streamen“ lässt das Gerät die Aufnahme per RTSP abspielen."
+          "playback": "Aufnahmen sind H.265 oder H.264. „MP4 wie aufgenommen“ startet sofort, Browser spielen H.265 aber nur mit Hardwareunterstützung. „In H.264 umwandeln“ läuft überall und braucht viel CPU. „Vom Gerät streamen“ lässt das Gerät die Aufnahme per RTSP abspielen.",
+          "stream_key": "Mit Stream-Verschlüsselung aufgenommene Aufnahmen werden mit dem Verifizierungscode des Geräts entschlüsselt, der vom Gerät gelesen wird. Trage ihn hier nur ein, wenn das Gerät ihn nicht meldet, wie viele Kameras."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant darf nicht in seinen Medienordner schreiben."
     },
     "recording_encrypted": {
-      "message": "Das Gerät verschlüsselt seine Aufnahmen (Stream-Verschlüsselung), daher können sie weder abgespielt noch umgewandelt werden. Schalte die Stream-Verschlüsselung aus oder nutze die Speicherkarte der Kamera."
+      "message": "Die Aufnahme ist verschlüsselt und der Verifizierungscode passt nicht. Trage den Verifizierungscode des Geräts in den Optionen der Integration ein."
     },
     "conversion_failed": {
       "message": "Die Aufnahme konnte nicht umgewandelt werden."
@@ -847,7 +849,8 @@
         "no_cameras": "Keine Kameras gefunden.",
         "no_recordings": "Keine Aufnahmen an diesem Tag.",
         "no_recording": "Ab diesem Zeitpunkt gibt es keine Aufnahme.",
-        "playback_encrypted": "Das Gerät verschlüsselt seine Aufnahmen; sie können hier nicht abgespielt werden.",
+        "playback_encrypted": "Die Aufnahme ist verschlüsselt und der Verifizierungscode passt nicht. Trage ihn in den Optionen der Integration ein.",
+        "live_encrypted": "Der Livestream ist verschlüsselt (Hik-Connect-Stream-Verschlüsselung) und kann hier nicht abgespielt werden.",
         "playback_busy": "Die Kamera spielt bereits anderswo eine Aufnahme ab. Versuche es gleich noch einmal.",
         "playback_auth": "Das Gerät hat die Anmeldedaten abgelehnt.",
         "playback_failed": "Wiedergabe fehlgeschlagen.",

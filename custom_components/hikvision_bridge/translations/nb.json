@@ -119,12 +119,14 @@
           "rtsp_port": "RTSP-port (valgfritt)",
           "rtsp_transport": "RTSP-transport",
           "target_sensors": "Egne sensorer for personer og kjøretøy",
-          "playback": "Avspilling i medieleseren"
+          "playback": "Avspilling i medieleseren",
+          "stream_key": "Verifiseringskode (krypterte opptak)"
         },
         "data_description": {
           "event_path": "Hendelsesstrømmen krever ingen endring på enheten. Webhooken krever at enheten sender til Home Assistant.",
           "hold_seconds": "Enheter melder bare starten av mange deteksjoner; sensoren forblir på så lenge etter siste melding.",
-          "playback": "Opptak er H.265 eller H.264. «MP4 som tatt opp» starter med en gang, men nettlesere spiller bare H.265 med maskinvarestøtte. «Konverter til H.264» virker overalt og krever mye CPU. «Strøm fra enheten» lar enheten spille av opptaket via RTSP."
+          "playback": "Opptak er H.265 eller H.264. «MP4 som tatt opp» starter med en gang, men nettlesere spiller bare H.265 med maskinvarestøtte. «Konverter til H.264» virker overalt og krever mye CPU. «Strøm fra enheten» lar enheten spille av opptaket via RTSP.",
+          "stream_key": "Opptak gjort med strømkryptering dekrypteres med enhetens verifiseringskode, som leses fra enheten. Skriv den inn her bare hvis enheten ikke oppgir den, slik mange kameraer ikke gjør."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant har ikke lov til å skrive til mediemappen sin."
     },
     "recording_encrypted": {
-      "message": "Enheten krypterer opptakene sine (strømkryptering), så de kan verken spilles av eller konverteres. Slå av strømkrypteringen eller bruk kameraets minnekort."
+      "message": "Opptaket er kryptert, og verifiseringskoden passer ikke. Skriv inn enhetens verifiseringskode i integrasjonens alternativer."
     },
     "conversion_failed": {
       "message": "Opptaket kunne ikke konverteres."
@@ -847,7 +849,8 @@
         "no_cameras": "Fant ingen kameraer.",
         "no_recordings": "Ingen opptak denne dagen.",
         "no_recording": "Det finnes ikke noe opptak fra dette tidspunktet.",
-        "playback_encrypted": "Enheten krypterer opptakene sine; de kan ikke spilles av her.",
+        "playback_encrypted": "Opptaket er kryptert, og verifiseringskoden passer ikke. Skriv den inn i integrasjonens alternativer.",
+        "live_encrypted": "Direktestrømmen er kryptert (Hik-Connect-strømkryptering) og kan ikke spilles av her.",
         "playback_busy": "Kameraet spiller allerede av et opptak et annet sted. Prøv igjen om litt.",
         "playback_auth": "Enheten avviste påloggingsopplysningene.",
         "playback_failed": "Avspillingen mislyktes.",

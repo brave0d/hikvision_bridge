@@ -49,6 +49,7 @@ from .const import (
     OPT_PLAYBACK,
     OPT_RTSP_PORT,
     OPT_RTSP_TRANSPORT,
+    OPT_STREAM_KEY,
     OPT_TARGET_SENSORS,
     OPT_WEBHOOK_ID,
     PLAYBACK_H264,
@@ -456,6 +457,8 @@ class BridgeOptionsFlow(OptionsFlow):
         options = dict(self.config_entry.options)
         if user_input is not None:
             options.update(user_input)
+            if not user_input.get(OPT_STREAM_KEY):
+                options.pop(OPT_STREAM_KEY, None)
             if options.get(OPT_EVENT_PATH) in (EVENT_PATH_WEBHOOK, EVENT_PATH_BOTH):
                 options.setdefault(OPT_WEBHOOK_ID, secrets.token_hex(16))
                 self._options = options
@@ -494,6 +497,11 @@ class BridgeOptionsFlow(OptionsFlow):
                         options=[PLAYBACK_MP4, PLAYBACK_H264, PLAYBACK_STREAM],
                         translation_key="playback",
                     )
+                ),
+                vol.Optional(
+                    OPT_STREAM_KEY, description={"suggested_value": options.get(OPT_STREAM_KEY)}
+                ): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
                 ),
             }
         )

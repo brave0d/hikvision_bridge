@@ -26,8 +26,10 @@ from custom_components.hikvision_bridge.const import (
     DOMAIN,
     EVENT_SOURCE_RECORDER,
     OPT_PLAYBACK,
+    OPT_STREAM_KEY,
     SUBENTRY_CHANNEL_LINK,
 )
+from custom_components.hikvision_bridge.model.discover import CLOUD_PATH
 from custom_components.hikvision_bridge.model.features import recordings
 from custom_components.hikvision_bridge.runtime import playback
 from custom_components.hikvision_bridge.views import recording_url
@@ -35,6 +37,7 @@ from custom_components.hikvision_bridge.wire.xmlview import parse
 from tests.conftest import device_entry
 from tests.fakedevice import FakeDevice
 from tests.model.test_recordings import match, program_stream, result, searcher
+from tests.model.test_scrambling import CODE, recording
 
 NOW = dt_util.utcnow().replace(microsecond=0)
 START = NOW - timedelta(hours=2)
@@ -47,6 +50,15 @@ def recorded(device: FakeDevice, data: bytes) -> None:
         body=data, content_type="application/binary"
     )
     device.responders["/ISAPI/ContentMgmt/record/tracks/101/dailyDistribution"] = days
+
+
+def ezviz(code: str):
+    """Platform access settings that report a verification code."""
+    text = (
+        '<EZVIZ version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">'
+        f"<enabled>true</enabled><verificationCode>{code}</verificationCode></EZVIZ>"
+    )
+    return lambda _m, _b: web.Response(text=text, content_type="application/xml")
 
 
 def days(_method: str, body: str) -> web.Response:
@@ -169,6 +181,33 @@ async def test_encrypted_recording(hass: HomeAssistant, serve, hass_client, tmp_
             blocking=True,
         )
     assert err.value.translation_key == "recording_encrypted"
+
+
+@pytest.mark.parametrize(
+    ("device_code", "options", "status"),
+    [
+        (CODE, {}, 200),  # read from the device
+        ("", {OPT_STREAM_KEY: CODE}, 200),  # cameras leave it blank; entered in the options
+        ("WRONG1", {OPT_STREAM_KEY: "WRONG2"}, 409),
+    ],
+)
+async def test_encrypted_recording_is_decrypted(
+    hass: HomeAssistant,
+    serve,
+    hass_client,
+    fake_ffmpeg: Path,
+    device_code: str,
+    options: dict,
+    status: int,
+) -> None:
+    device, entry = await _setup(hass, serve, recording(encrypted=True), **options)
+    device.responders[CLOUD_PATH] = ezviz(device_code)
+    uri = recordings.parse_results(parse(result(CLIPS, "OK")), "101")[0][0].playback_uri
+    client = await hass_client()
+    answer = await client.get(recording_url(entry.entry_id, "1", "card", "mp4", uri))
+    assert answer.status == status
+    if status == 200:
+        assert await answer.read() == recordings.strip_header(recording(encrypted=False))
 
 
 async def test_download_recording(

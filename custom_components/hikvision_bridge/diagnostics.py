@@ -16,6 +16,7 @@ from .const import (
     CONF_ENTRY_KIND,
     CONF_SERIAL,
     KIND_CLOUD,
+    OPT_STREAM_KEY,
     OPT_WEBHOOK_ID,
 )
 from .wire.scrub import MASK, scrub_text
@@ -29,6 +30,7 @@ TO_REDACT = {
     CONF_CAMERA_SERIAL,
     CONF_ACCOUNT,
     OPT_WEBHOOK_ID,
+    OPT_STREAM_KEY,
     "serial",
     "mac",
     "camera_serial",

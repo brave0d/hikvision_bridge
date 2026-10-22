@@ -119,12 +119,14 @@
           "rtsp_port": "RTSP-portti (valinnainen)",
           "rtsp_transport": "RTSP-siirto",
           "target_sensors": "Erilliset anturit ihmisille ja ajoneuvoille",
-          "playback": "Toisto mediaselaimessa"
+          "playback": "Toisto mediaselaimessa",
+          "stream_key": "Vahvistuskoodi (salatut tallenteet)"
         },
         "data_description": {
           "event_path": "Tapahtumavirta ei vaadi muutoksia laitteeseen. Webhook edellyttää, että laite lähettää Home Assistantiin.",
           "hold_seconds": "Laitteet ilmoittavat monista tunnistuksista vain alun; anturi pysyy päällä näin kauan viimeisen ilmoituksen jälkeen.",
-          "playback": "Tallenteet ovat H.265- tai H.264-muodossa. ”MP4 tallennettuna” alkaa heti, mutta selaimet toistavat H.265:tä vain laitteistotuella. ”Muunna H.264:ksi” toimii kaikkialla ja vaatii paljon suoritinta. ”Suoratoista laitteelta” antaa laitteen toistaa tallenteen RTSP:n kautta."
+          "playback": "Tallenteet ovat H.265- tai H.264-muodossa. ”MP4 tallennettuna” alkaa heti, mutta selaimet toistavat H.265:tä vain laitteistotuella. ”Muunna H.264:ksi” toimii kaikkialla ja vaatii paljon suoritinta. ”Suoratoista laitteelta” antaa laitteen toistaa tallenteen RTSP:n kautta.",
+          "stream_key": "Virran salauksella tehdyt tallenteet puretaan laitteen vahvistuskoodilla, joka luetaan laitteesta. Syötä se tähän vain, jos laite ei ilmoita sitä, kuten moni kamera."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant ei saa kirjoittaa mediakansioonsa."
     },
     "recording_encrypted": {
-      "message": "Laite salaa tallenteensa (suoratoiston salaus), joten niitä ei voi toistaa eikä muuntaa. Poista suoratoiston salaus käytöstä tai käytä kameran muistikorttia."
+      "message": "Tallenne on salattu, eikä vahvistuskoodi sovi. Syötä laitteen vahvistuskoodi integraation asetuksiin."
     },
     "conversion_failed": {
       "message": "Tallennetta ei voitu muuntaa."
@@ -847,7 +849,8 @@
         "no_cameras": "Kameroita ei löytynyt.",
         "no_recordings": "Tältä päivältä ei ole tallenteita.",
         "no_recording": "Tästä hetkestä eteenpäin ei ole tallennetta.",
-        "playback_encrypted": "Laite salaa tallenteensa; niitä ei voi toistaa täällä.",
+        "playback_encrypted": "Tallenne on salattu, eikä vahvistuskoodi sovi. Syötä se integraation asetuksiin.",
+        "live_encrypted": "Suora lähetys on salattu (Hik-Connectin virran salaus), eikä sitä voi toistaa täällä.",
         "playback_busy": "Kamera toistaa jo tallennetta muualla. Yritä hetken päästä uudelleen.",
         "playback_auth": "Laite hylkäsi kirjautumistiedot.",
         "playback_failed": "Toisto epäonnistui.",

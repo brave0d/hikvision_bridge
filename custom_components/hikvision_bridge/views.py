@@ -135,7 +135,7 @@ class RecordingView(HomeAssistantView):
             await response.write(data)
 
         try:
-            async with open_recording(playback.link, uri) as (head, chunks):
+            async with open_recording(playback, uri) as (head, chunks):
                 if fmt == FORMAT_ORIGINAL:
                     async for chunk in chunks:
                         await send(chunk)
@@ -146,7 +146,7 @@ class RecordingView(HomeAssistantView):
                 await response.prepare(request)
             await response.write_eof()
         except RecordingEncrypted:
-            return web.Response(status=409, text="The device encrypts its recordings.")
+            return web.Response(status=409, text="Encrypted recording; no verification code fits.")
         except NoRecording:
             if not response.prepared:
                 return web.Response(status=502, text="No video in this recording.")
@@ -187,7 +187,7 @@ class ThumbnailView(HomeAssistantView):
             return web.Response(status=404)
         _, playback = found
         try:
-            async with self._gate, open_recording(playback.link, uri) as (_, chunks):
+            async with self._gate, open_recording(playback, uri) as (_, chunks):
                 image = await run_ffmpeg(
                     playback_module.ffmpeg_binary(hass), thumbnail_args(), chunks
                 )
@@ -216,8 +216,10 @@ class SessionView(HomeAssistantView):
     requires_auth = False
 
     async def get(self, request: web.Request, session_id: str, name: str) -> web.StreamResponse:
-        session = sessions.manager(request.app[KEY_HASS]).get(session_id)
-        if session is None or not sessions.FILE_NAME.match(name):
+        if not sessions.FILE_NAME.match(name):
+            return web.Response(status=404)
+        session = sessions.manager(request.app[KEY_HASS]).get(session_id, name)
+        if session is None:
             return web.Response(status=404)
         path = session.folder / name
         if not await request.app[KEY_HASS].async_add_executor_job(path.is_file):

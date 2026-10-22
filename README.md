@@ -126,11 +126,11 @@ data:
   source: auto       # auto (recorder first), recorder, card
 ```
 
-**Encrypted recordings.** With *stream encryption* on, the device encrypts the video it records. Such files
-cannot be played or converted; the integration recognises them and says so instead of returning a
-broken file. Switch stream encryption off (*Network → Platform Access*, on the recorder and on cameras
-behind it) or use the camera's memory card through a direct camera connection. Files recorded while it
-was on stay encrypted.
+**Encrypted recordings.** With *stream encryption* on (*Network → Platform Access*), the device encrypts
+the video it records, and files recorded while it was on stay encrypted. The integration decrypts them
+with the device's verification code, which it reads from the device. Many cameras do not report the
+code; enter it in the integration options (*Verification code*) then. If no code fits, playback says so
+instead of returning a broken file. The media browser mode *Stream from the device* cannot decrypt.
 
 ### Recordings panel and card
 
@@ -163,10 +163,12 @@ type: custom:hikvision-bridge-card
 camera_entity: camera.front_yard_main   # a camera entity of the channel
 ```
 
-Playback asks the device to play from the chosen moment over RTSP; Home Assistant passes it to the
-browser as HLS. Cameras serve one playback at a time, so a second viewer of the same camera's
-recordings replaces the first. Recordings of devices with stream encryption cannot be played (see
-[encrypted recordings](#recordings)).
+Playback downloads the recordings from the chosen moment on, decrypts them if needed (see
+[encrypted recordings](#recordings)) and passes them to the browser as HLS. The download is much faster
+than real time, so playback starts within about a second and seeking within the loaded part is
+instant; it stays about a minute ahead of the player. Devices that do not offer such downloads play
+over RTSP instead (real time, no decryption). A second viewer of the same camera's recordings replaces
+the first.
 
 ## Installation
 
@@ -371,8 +373,8 @@ Other ISAPI devices should work; please report models that do or do not.
   *Notify surveillance center* is missing or no area is drawn.
 * **Camera shows no video, snapshots work**: Hik-Connect stream encryption (see above), or use a direct camera connection.
 * **Main stream does not play in the browser**: 4K H.265 streams need a browser with H.265 support; use the sub stream otherwise.
-* **A recording does not play**: *“The device encrypts its recordings”* means stream encryption (see
-  [Recordings](#recordings)). A black or missing picture with H.265 means the browser cannot decode it;
+* **A recording does not play**: *“The recording is encrypted and the verification code does not fit”*
+  means stream encryption with an unknown code; enter the code in the options (see [Recordings](#recordings)). A black or missing picture with H.265 means the browser cannot decode it;
   choose *Convert to H.264* in the options. Converting needs Home Assistant's ffmpeg.
 * **Events late**: compare the *Event delay* sensor; large values usually mean a wrong device clock.
 * **A setting is unavailable**: it belongs to a mode that is not active (see image settings).
@@ -395,7 +397,7 @@ Logged requests never contain passwords; still check the log before attaching it
 * Door opening for intercoms through Hik-Connect is implemented but not yet verified on real hardware.
 * Session login (cookie based) is not implemented; Digest and Basic authentication are.
 * Holiday schedules are not exposed.
-* Encrypted Hik-Connect streams and recordings cannot be decoded; this needs the manufacturer's player.
+* Encrypted Hik-Connect live streams cannot be decoded (recordings can, see [Recordings](#recordings)).
 * In the media browser, converted playback starts at the beginning of the recorded file and cannot seek; the Hikvision panel can.
 * Cameras play one recording at a time; recordings exist only in main stream quality.
 

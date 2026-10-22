@@ -119,12 +119,14 @@
           "rtsp_port": "RTSP bağlantı noktası (isteğe bağlı)",
           "rtsp_transport": "RTSP aktarımı",
           "target_sensors": "Kişiler ve araçlar için ayrı sensörler",
-          "playback": "Medya tarayıcısında oynatma"
+          "playback": "Medya tarayıcısında oynatma",
+          "stream_key": "Doğrulama kodu (şifreli kayıtlar)"
         },
         "data_description": {
           "event_path": "Olay akışı cihazda değişiklik gerektirmez. Webhook, cihazın Home Assistant'a göndermesini gerektirir.",
           "hold_seconds": "Cihazlar birçok algılamada yalnızca başlangıcı bildirir; sensör son bildirimden sonra bu süre kadar açık kalır.",
-          "playback": "Kayıtlar H.265 veya H.264'tür. 'Kaydedildiği gibi MP4' hemen başlar, ancak tarayıcılar H.265'i yalnızca donanım desteğiyle oynatır. 'H.264'e dönüştür' her yerde çalışır ve çok işlemci gerektirir. 'Cihazdan akış' kaydı cihazın RTSP üzerinden oynatmasını sağlar."
+          "playback": "Kayıtlar H.265 veya H.264'tür. 'Kaydedildiği gibi MP4' hemen başlar, ancak tarayıcılar H.265'i yalnızca donanım desteğiyle oynatır. 'H.264'e dönüştür' her yerde çalışır ve çok işlemci gerektirir. 'Cihazdan akış' kaydı cihazın RTSP üzerinden oynatmasını sağlar.",
+          "stream_key": "Akış şifrelemesiyle yapılan kayıtlar, cihazdan okunan doğrulama koduyla çözülür. Kodu buraya yalnızca cihaz bildirmiyorsa girin; birçok kamera bildirmez."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant medya klasörüne yazamıyor."
     },
     "recording_encrypted": {
-      "message": "Cihaz kayıtlarını şifreliyor (akış şifrelemesi), bu yüzden oynatılamıyor veya dönüştürülemiyor. Akış şifrelemesini kapatın veya kameranın hafıza kartını kullanın."
+      "message": "Kayıt şifreli ve doğrulama kodu uymuyor. Cihazın doğrulama kodunu entegrasyon seçeneklerine girin."
     },
     "conversion_failed": {
       "message": "Kayıt dönüştürülemedi."
@@ -847,7 +849,8 @@
         "no_cameras": "Kamera bulunamadı.",
         "no_recordings": "Bu günde kayıt yok.",
         "no_recording": "Bu andan itibaren kayıt yok.",
-        "playback_encrypted": "Cihaz kayıtlarını şifreliyor; burada oynatılamazlar.",
+        "playback_encrypted": "Kayıt şifreli ve doğrulama kodu uymuyor. Kodu entegrasyon seçeneklerine girin.",
+        "live_encrypted": "Canlı yayın şifreli (Hik-Connect akış şifrelemesi) ve burada oynatılamaz.",
         "playback_busy": "Kamera zaten başka bir yerde kayıt oynatıyor. Birazdan tekrar deneyin.",
         "playback_auth": "Cihaz oturum açma bilgilerini reddetti.",
         "playback_failed": "Oynatma başarısız oldu.",

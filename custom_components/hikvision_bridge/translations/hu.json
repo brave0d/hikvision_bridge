@@ -119,12 +119,14 @@
           "rtsp_port": "RTSP-port (nem kötelező)",
           "rtsp_transport": "RTSP-átvitel",
           "target_sensors": "Külön érzékelők személyekhez és járművekhez",
-          "playback": "Lejátszás a médiaböngészőben"
+          "playback": "Lejátszás a médiaböngészőben",
+          "stream_key": "Ellenőrző kód (titkosított felvételek)"
         },
         "data_description": {
           "event_path": "Az eseményfolyam nem igényel módosítást az eszközön. A webhookhoz az eszköznek a Home Assistantnak kell küldenie.",
           "hold_seconds": "Az eszközök sok észlelésnél csak a kezdetet jelentik; az érzékelő ennyi ideig bekapcsolva marad az utolsó jelzés után.",
-          "playback": "A felvételek H.265 vagy H.264 formátumúak. Az „MP4 felvett formában” azonnal indul, de a böngészők a H.265-öt csak hardveres támogatással játsszák le. Az „Átalakítás H.264-re” mindenhol működik, és sok processzort igényel. A „Streamelés az eszközről” az eszközzel játszatja le a felvételt RTSP-n keresztül."
+          "playback": "A felvételek H.265 vagy H.264 formátumúak. Az „MP4 felvett formában” azonnal indul, de a böngészők a H.265-öt csak hardveres támogatással játsszák le. Az „Átalakítás H.264-re” mindenhol működik, és sok processzort igényel. A „Streamelés az eszközről” az eszközzel játszatja le a felvételt RTSP-n keresztül.",
+          "stream_key": "A streamtitkosítással készült felvételeket az eszköz ellenőrző kódjával fejtjük vissza, amelyet az eszközről olvasunk ki. Csak akkor add meg itt, ha az eszköz nem közli, ahogy sok kamera sem."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "A Home Assistant nem írhat a médiamappájába."
     },
     "recording_encrypted": {
-      "message": "Az eszköz titkosítja a felvételeit (stream titkosítás), ezért nem játszhatók le és nem alakíthatók át. Kapcsold ki a stream titkosítást, vagy használd a kamera memóriakártyáját."
+      "message": "A felvétel titkosított, és az ellenőrző kód nem illik hozzá. Add meg az eszköz ellenőrző kódját az integráció beállításaiban."
     },
     "conversion_failed": {
       "message": "A felvételt nem sikerült átalakítani."
@@ -847,7 +849,8 @@
         "no_cameras": "Nem található kamera.",
         "no_recordings": "Ezen a napon nincs felvétel.",
         "no_recording": "Ettől az időponttól nincs felvétel.",
-        "playback_encrypted": "Az eszköz titkosítja a felvételeit; itt nem játszhatók le.",
+        "playback_encrypted": "A felvétel titkosított, és az ellenőrző kód nem illik hozzá. Add meg az integráció beállításaiban.",
+        "live_encrypted": "Az élő adás titkosított (Hik-Connect streamtitkosítás), ezért itt nem játszható le.",
         "playback_busy": "A kamera már máshol játszik le felvételt. Próbáld újra egy kicsit később.",
         "playback_auth": "Az eszköz elutasította a bejelentkezési adatokat.",
         "playback_failed": "A lejátszás sikertelen.",

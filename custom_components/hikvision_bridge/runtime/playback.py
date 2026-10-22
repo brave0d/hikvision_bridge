@@ -2,7 +2,8 @@
 
 Downloads are streamed: recorded files are often hundreds of megabytes. Conversion runs
 ffmpeg with the download on stdin; copying the video into MP4 or MPEG-TS costs almost
-nothing, converting it to H.264 decodes and encodes every frame.
+nothing, converting it to H.264 decodes and encodes every frame. Recordings made with
+stream encryption on are decrypted on the way, with the device's verification code.
 """
 
 from __future__ import annotations
@@ -13,21 +14,27 @@ from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
 from datetime import datetime
 from urllib.parse import quote, urlsplit
+from weakref import WeakKeyDictionary
 
+from aiohttp import ClientResponse
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from ..const import (
     OPT_RTSP_PORT,
+    OPT_STREAM_KEY,
     PLAYBACK_H264,
     PLAYBACK_MP4,
     RTSP_PORT_DEFAULT,
     SUBENTRY_CHANNEL_LINK,
 )
-from ..model.features import recordings
+from ..model.discover import CLOUD_PATH
+from ..model.features import recordings, scrambling
 from ..model.features.recordings import MediaHead, Recording
+from ..model.features.scrambling import ProgramStream
+from ..wire.faults import BridgeFault
 from ..wire.link import IsapiLink
-from ..wire.scrub import scrubbed_logger
+from ..wire.scrub import LOG_SCRUBBER, scrubbed_logger
 from .bridge import DeviceBridge
 
 _LOGGER = scrubbed_logger(__name__)
@@ -56,7 +63,7 @@ THUMBNAIL_WIDTH = 320
 
 
 class RecordingEncrypted(Exception):
-    """The device encrypts its recordings; they cannot be played here."""
+    """The recording is encrypted and no known verification code fits."""
 
 
 class NoRecording(Exception):
@@ -72,6 +79,8 @@ class PlaybackSource:
     track: str
     credentials: dict
     rtsp_port: int
+    # Verification code entered in the options, tried before the one the device reports.
+    code: str | None = None
 
 
 def sources(bridge: DeviceBridge, channel_id: str) -> list[PlaybackSource]:
@@ -82,6 +91,7 @@ def sources(bridge: DeviceBridge, channel_id: str) -> list[PlaybackSource]:
     main_port = int(
         bridge.entry.options.get(OPT_RTSP_PORT) or profile.rtsp_port or RTSP_PORT_DEFAULT
     )
+    code = bridge.entry.options.get(OPT_STREAM_KEY) or None
     if profile.shape.records:
         found.append(
             PlaybackSource(
@@ -90,6 +100,7 @@ def sources(bridge: DeviceBridge, channel_id: str) -> list[PlaybackSource]:
                 recordings.track_of(channel_id),
                 entry_data,
                 main_port,
+                code,
             )
         )
         route = bridge.routes.get(channel_id)
@@ -114,6 +125,7 @@ def sources(bridge: DeviceBridge, channel_id: str) -> list[PlaybackSource]:
                 recordings.track_of(channel_id),
                 entry_data,
                 main_port,
+                code,
             )
         )
     return found
@@ -207,40 +219,97 @@ def thumbnail_args() -> list[str]:
     ]
 
 
-@asynccontextmanager
-async def open_recording(
-    link: IsapiLink, playback_uri: str
-) -> AsyncIterator[tuple[MediaHead, AsyncIterator[bytes]]]:
-    """Download one recorded file: what its start looks like, and all of its bytes.
+_codes: WeakKeyDictionary[IsapiLink, str | None] = WeakKeyDictionary()
 
-    Raises RecordingEncrypted before any data is handed out if the device scrambles it.
+
+async def device_code(link: IsapiLink, *, fresh: bool = False) -> str | None:
+    """The verification code the device reports; cameras often leave it blank."""
+    if not fresh and link in _codes:
+        return _codes[link]
+    try:
+        reply = await link.call("GET", CLOUD_PATH)
+        code = (reply.xml().text("verificationCode") or "").strip() or None
+    except BridgeFault:
+        code = None
+    if code:
+        LOG_SCRUBBER.remember(code)
+    _codes[link] = code
+    return code
+
+
+async def unscrambler(source: PlaybackSource, head: bytes, codec: str | None) -> ProgramStream:
+    """A pass-through decrypting with the first verification code that fits the recording.
+
+    The code is checked on the first encrypted parameter set in ``head``; one that cannot be
+    checked there is used as it is. Raises RecordingEncrypted if none fits.
     """
-    async with recordings.open_download(link, playback_uri) as response:
-        head = b""
-        while len(head) < HEAD_BYTES:
-            chunk = await response.content.read(HEAD_BYTES - len(head))
-            if not chunk:
-                break
-            head += chunk
-        info = recordings.inspect_head(head)
-        if info.scrambled:
-            raise RecordingEncrypted
-        if info.codec is None and b"\x00\x00\x01\xba" not in head[:4096]:
-            raise NoRecording
-
-        async def chunks() -> AsyncIterator[bytes]:
-            yield head
-            async for chunk in response.content.iter_chunked(CHUNK):
-                yield chunk
-
-        yield info, chunks()
+    tried: set[str] = set()
+    for fresh in (False, True):
+        for code in (source.code, await device_code(source.link, fresh=fresh)):
+            if not code or code in tried:
+                continue
+            tried.add(code)
+            key = scrambling.cipher_key(code)
+            probe = ProgramStream(key, codec)
+            probe.feed(head)
+            if probe.key_fits is not False:
+                return ProgramStream(key, codec)
+    raise RecordingEncrypted
 
 
-async def _strip(chunks: AsyncIterator[bytes]) -> AsyncIterator[bytes]:
+async def read_head(response: ClientResponse) -> bytes:
+    head = b""
+    while len(head) < HEAD_BYTES:
+        chunk = await response.content.read(HEAD_BYTES - len(head))
+        if not chunk:
+            break
+        head += chunk
+    return head
+
+
+async def prepare(source: PlaybackSource, head: bytes) -> tuple[MediaHead, ProgramStream]:
+    """What a download is, and the pass-through for its bytes (decrypting if needed)."""
+    info = recordings.inspect_head(head)
+    if info.codec is None and recordings.PACK_START not in head[:4096]:
+        raise NoRecording
+    if info.scrambled:
+        return info, await unscrambler(source, head, info.codec)
+    return info, ProgramStream(codec=info.codec)
+
+
+async def passed(
+    stream: ProgramStream, head: bytes, response: ClientResponse
+) -> AsyncIterator[bytes]:
+    """All bytes of a download through ``stream``."""
+    yield stream.feed(head)
+    async for chunk in response.content.iter_chunked(CHUNK):
+        if data := stream.feed(chunk):
+            yield data
+    if data := stream.flush():
+        yield data
+
+
+async def stripped(chunks: AsyncIterator[bytes]) -> AsyncIterator[bytes]:
+    """``chunks`` without the file header, which ffmpeg does not know."""
     first = True
     async for chunk in chunks:
         yield recordings.strip_header(chunk) if first else chunk
         first = False
+
+
+@asynccontextmanager
+async def open_recording(
+    source: PlaybackSource, playback_uri: str
+) -> AsyncIterator[tuple[MediaHead, AsyncIterator[bytes]]]:
+    """Download one recorded file: what its start looks like, and all of its bytes.
+
+    Raises RecordingEncrypted before any data is handed out if the recording is encrypted
+    and no verification code fits.
+    """
+    async with recordings.open_download(source.link, playback_uri) as response:
+        head = await read_head(response)
+        info, stream = await prepare(source, head)
+        yield info, passed(stream, head, response)
 
 
 async def run_ffmpeg(
@@ -267,7 +336,7 @@ async def run_ffmpeg(
 
     async def feed() -> None:
         try:
-            async for chunk in _strip(chunks):
+            async for chunk in stripped(chunks):
                 process.stdin.write(chunk)
                 await process.stdin.drain()
         except (BrokenPipeError, ConnectionResetError):

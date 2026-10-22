@@ -30,7 +30,7 @@ PAGE_SIZE = 50
 # A day of ten-minute files on one track stays far below this; it only stops runaway paging.
 MAX_RESULTS = 2000
 HEADER_MAGIC = b"IMKH"
-HEADER_SIZE = 40
+PACK_START = b"\x00\x00\x01\xba"
 
 KIND_CONTINUOUS = "continuous"
 KIND_MOTION = "motion"
@@ -253,10 +253,10 @@ class MediaHead:
 def inspect_head(data: bytes) -> MediaHead:
     """Look at the first video packets: codec and whether the payload is scrambled.
 
-    Devices with stream encryption on set the PES scrambling bits; such recordings
-    cannot be played or converted without the device's encryption key.
+    Devices with stream encryption on set the PES scrambling bits of encrypted packets;
+    ``scrambling`` undoes it with the device's verification code.
     """
-    header = data[:4] == HEADER_MAGIC
+    header = HEADER_MAGIC in data[:64]
     codec = None
     scrambled = False
     position = data.find(b"\x00\x00\x01\xe0")
@@ -280,4 +280,6 @@ def inspect_head(data: bytes) -> MediaHead:
 
 
 def strip_header(data: bytes) -> bytes:
-    return data[HEADER_SIZE:] if data[:4] == HEADER_MAGIC else data
+    """Drop the file header; downloads by time put another 24 bytes in front of it."""
+    first_pack = data.find(PACK_START, 0, 1024)
+    return data[first_pack:] if first_pack > 0 and HEADER_MAGIC in data[:64] else data

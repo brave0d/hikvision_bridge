@@ -119,12 +119,14 @@
           "rtsp_port": "Porta RTSP (opcional)",
           "rtsp_transport": "Transporte RTSP",
           "target_sensors": "Sensores separados para pessoas e veículos",
-          "playback": "Reprodução no navegador de mídia"
+          "playback": "Reprodução no navegador de mídia",
+          "stream_key": "Código de verificação (gravações criptografadas)"
         },
         "data_description": {
           "event_path": "O fluxo de eventos não exige mudanças no dispositivo. O webhook exige que o dispositivo envie para o Home Assistant.",
           "hold_seconds": "Os dispositivos só informam o início de muitas detecções; o sensor fica ativo por este tempo após o último aviso.",
-          "playback": "As gravações são H.265 ou H.264. \"MP4 como gravado\" começa na hora, mas os navegadores só reproduzem H.265 com suporte de hardware. \"Converter para H.264\" funciona em qualquer lugar e exige muita CPU. \"Transmitir do dispositivo\" deixa o dispositivo reproduzir a gravação via RTSP."
+          "playback": "As gravações são H.265 ou H.264. \"MP4 como gravado\" começa na hora, mas os navegadores só reproduzem H.265 com suporte de hardware. \"Converter para H.264\" funciona em qualquer lugar e exige muita CPU. \"Transmitir do dispositivo\" deixa o dispositivo reproduzir a gravação via RTSP.",
+          "stream_key": "As gravações feitas com criptografia de stream são descriptografadas com o código de verificação do dispositivo, lido do próprio dispositivo. Informe-o aqui apenas se o dispositivo não o fornecer, como acontece com muitas câmeras."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "O Home Assistant não pode gravar na sua pasta de mídia."
     },
     "recording_encrypted": {
-      "message": "O dispositivo criptografa suas gravações (criptografia do stream), então elas não podem ser reproduzidas nem convertidas. Desative a criptografia do stream ou use o cartão de memória da câmera."
+      "message": "A gravação está criptografada e o código de verificação não confere. Informe o código de verificação do dispositivo nas opções da integração."
     },
     "conversion_failed": {
       "message": "Não foi possível converter a gravação."
@@ -847,7 +849,8 @@
         "no_cameras": "Nenhuma câmera encontrada.",
         "no_recordings": "Nenhuma gravação neste dia.",
         "no_recording": "Não há gravação a partir deste momento.",
-        "playback_encrypted": "O dispositivo criptografa suas gravações; elas não podem ser reproduzidas aqui.",
+        "playback_encrypted": "A gravação está criptografada e o código de verificação não confere. Informe-o nas opções da integração.",
+        "live_encrypted": "A transmissão ao vivo está criptografada (criptografia de stream do Hik-Connect) e não pode ser reproduzida aqui.",
         "playback_busy": "A câmera já está reproduzindo uma gravação em outro lugar. Tente de novo em instantes.",
         "playback_auth": "O dispositivo rejeitou as credenciais.",
         "playback_failed": "A reprodução falhou.",

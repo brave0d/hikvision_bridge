@@ -262,7 +262,7 @@ async def _download_recording(call: ServiceCall) -> ServiceResponse:
             playback.trim(recording, start, end) if call.data[FIELD_TRIM] else (None, None)
         )
         try:
-            async with playback.open_recording(source.link, recording.playback_uri) as (
+            async with playback.open_recording(source, recording.playback_uri) as (
                 head,
                 chunks,
             ):

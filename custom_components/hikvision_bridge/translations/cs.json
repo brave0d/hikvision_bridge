@@ -119,12 +119,14 @@
           "rtsp_port": "Port RTSP (volitelný)",
           "rtsp_transport": "Přenos RTSP",
           "target_sensors": "Samostatné senzory pro osoby a vozidla",
-          "playback": "Přehrávání v prohlížeči médií"
+          "playback": "Přehrávání v prohlížeči médií",
+          "stream_key": "Ověřovací kód (šifrované záznamy)"
         },
         "data_description": {
           "event_path": "Stream událostí nevyžaduje žádnou změnu v zařízení. Webhook vyžaduje, aby zařízení odesílalo do Home Assistant.",
           "hold_seconds": "Zařízení u mnoha detekcí hlásí jen začátek; senzor zůstane zapnutý tak dlouho po posledním hlášení.",
-          "playback": "Záznamy jsou v H.265 nebo H.264. „MP4 jak bylo nahráno“ začne hned, ale prohlížeče přehrávají H.265 jen s hardwarovou podporou. „Převést na H.264“ funguje všude a hodně zatěžuje procesor. „Streamovat ze zařízení“ nechá zařízení přehrát záznam přes RTSP."
+          "playback": "Záznamy jsou v H.265 nebo H.264. „MP4 jak bylo nahráno“ začne hned, ale prohlížeče přehrávají H.265 jen s hardwarovou podporou. „Převést na H.264“ funguje všude a hodně zatěžuje procesor. „Streamovat ze zařízení“ nechá zařízení přehrát záznam přes RTSP.",
+          "stream_key": "Záznamy pořízené se šifrováním streamu se dešifrují ověřovacím kódem zařízení, který se čte ze zařízení. Zadejte ho sem jen tehdy, když ho zařízení neuvádí, jako mnoho kamer."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant nesmí zapisovat do své složky médií."
     },
     "recording_encrypted": {
-      "message": "Zařízení šifruje své záznamy (šifrování streamu), takže je nelze přehrát ani převést. Vypněte šifrování streamu nebo použijte paměťovou kartu kamery."
+      "message": "Záznam je šifrovaný a ověřovací kód nesedí. Zadejte ověřovací kód zařízení v možnostech integrace."
     },
     "conversion_failed": {
       "message": "Záznam se nepodařilo převést."
@@ -847,7 +849,8 @@
         "no_cameras": "Nebyly nalezeny žádné kamery.",
         "no_recordings": "Tento den nejsou žádné záznamy.",
         "no_recording": "Od tohoto okamžiku není žádný záznam.",
-        "playback_encrypted": "Zařízení šifruje své záznamy; zde je nelze přehrát.",
+        "playback_encrypted": "Záznam je šifrovaný a ověřovací kód nesedí. Zadejte ho v možnostech integrace.",
+        "live_encrypted": "Živý přenos je šifrovaný (šifrování streamu Hik-Connect) a nelze ho zde přehrát.",
         "playback_busy": "Kamera už přehrává záznam jinde. Zkuste to za chvíli znovu.",
         "playback_auth": "Zařízení odmítlo přihlašovací údaje.",
         "playback_failed": "Přehrávání selhalo.",

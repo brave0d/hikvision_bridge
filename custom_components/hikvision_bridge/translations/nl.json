@@ -119,12 +119,14 @@
           "rtsp_port": "RTSP-poort (optioneel)",
           "rtsp_transport": "RTSP-transport",
           "target_sensors": "Aparte sensoren voor personen en voertuigen",
-          "playback": "Afspelen in de mediabrowser"
+          "playback": "Afspelen in de mediabrowser",
+          "stream_key": "Verificatiecode (versleutelde opnamen)"
         },
         "data_description": {
           "event_path": "De gebeurtenisstream vereist geen wijziging op het apparaat. De webhook vereist dat het apparaat naar Home Assistant stuurt.",
           "hold_seconds": "Apparaten melden bij veel detecties alleen het begin; de sensor blijft zo lang aan na de laatste melding.",
-          "playback": "Opnames zijn H.265 of H.264. 'MP4 zoals opgenomen' start meteen, maar browsers spelen H.265 alleen af met hardwareondersteuning. 'Omzetten naar H.264' werkt overal en vraagt veel CPU. 'Streamen vanaf het apparaat' laat het apparaat de opname via RTSP afspelen."
+          "playback": "Opnames zijn H.265 of H.264. 'MP4 zoals opgenomen' start meteen, maar browsers spelen H.265 alleen af met hardwareondersteuning. 'Omzetten naar H.264' werkt overal en vraagt veel CPU. 'Streamen vanaf het apparaat' laat het apparaat de opname via RTSP afspelen.",
+          "stream_key": "Opnamen die met streamversleuteling zijn gemaakt, worden ontsleuteld met de verificatiecode van het apparaat, die van het apparaat wordt gelezen. Vul hem hier alleen in als het apparaat hem niet doorgeeft, zoals bij veel camera's."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant mag niet naar zijn mediamap schrijven."
     },
     "recording_encrypted": {
-      "message": "Het apparaat versleutelt zijn opnames (streamversleuteling), dus ze kunnen niet worden afgespeeld of omgezet. Zet de streamversleuteling uit of gebruik de geheugenkaart van de camera."
+      "message": "De opname is versleuteld en de verificatiecode past niet. Vul de verificatiecode van het apparaat in bij de opties van de integratie."
     },
     "conversion_failed": {
       "message": "De opname kon niet worden omgezet."
@@ -847,7 +849,8 @@
         "no_cameras": "Geen camera's gevonden.",
         "no_recordings": "Geen opnames op deze dag.",
         "no_recording": "Vanaf dit moment is er geen opname.",
-        "playback_encrypted": "Het apparaat versleutelt zijn opnames; ze kunnen hier niet worden afgespeeld.",
+        "playback_encrypted": "De opname is versleuteld en de verificatiecode past niet. Vul hem in bij de opties van de integratie.",
+        "live_encrypted": "De livestream is versleuteld (Hik-Connect-streamversleuteling) en kan hier niet worden afgespeeld.",
         "playback_busy": "De camera speelt al ergens anders een opname af. Probeer het zo opnieuw.",
         "playback_auth": "Het apparaat heeft de inloggegevens geweigerd.",
         "playback_failed": "Afspelen mislukt.",

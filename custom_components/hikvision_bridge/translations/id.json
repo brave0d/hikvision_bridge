@@ -119,12 +119,14 @@
           "rtsp_port": "Port RTSP (opsional)",
           "rtsp_transport": "Transport RTSP",
           "target_sensors": "Sensor terpisah untuk orang dan kendaraan",
-          "playback": "Pemutaran di peramban media"
+          "playback": "Pemutaran di peramban media",
+          "stream_key": "Kode verifikasi (rekaman terenkripsi)"
         },
         "data_description": {
           "event_path": "Aliran peristiwa tidak memerlukan perubahan pada perangkat. Webhook mengharuskan perangkat mengirim ke Home Assistant.",
           "hold_seconds": "Perangkat hanya melaporkan awal dari banyak deteksi; sensor tetap aktif selama ini setelah laporan terakhir.",
-          "playback": "Rekaman berformat H.265 atau H.264. 'MP4 sesuai rekaman' langsung dimulai, tetapi peramban hanya memutar H.265 dengan dukungan perangkat keras. 'Ubah ke H.264' bisa diputar di mana saja dan butuh banyak CPU. 'Streaming dari perangkat' membiarkan perangkat memutar rekaman melalui RTSP."
+          "playback": "Rekaman berformat H.265 atau H.264. 'MP4 sesuai rekaman' langsung dimulai, tetapi peramban hanya memutar H.265 dengan dukungan perangkat keras. 'Ubah ke H.264' bisa diputar di mana saja dan butuh banyak CPU. 'Streaming dari perangkat' membiarkan perangkat memutar rekaman melalui RTSP.",
+          "stream_key": "Rekaman yang dibuat dengan enkripsi stream didekripsi dengan kode verifikasi perangkat, yang dibaca dari perangkat. Masukkan di sini hanya jika perangkat tidak melaporkannya, seperti banyak kamera."
         }
       },
       "webhook": {
@@ -764,7 +766,7 @@
       "message": "Home Assistant tidak boleh menulis ke folder medianya."
     },
     "recording_encrypted": {
-      "message": "Perangkat mengenkripsi rekamannya (enkripsi stream), sehingga tidak dapat diputar atau diubah. Matikan enkripsi stream atau gunakan kartu memori kamera."
+      "message": "Rekaman terenkripsi dan kode verifikasi tidak cocok. Masukkan kode verifikasi perangkat di opsi integrasi."
     },
     "conversion_failed": {
       "message": "Rekaman tidak dapat diubah."
@@ -847,7 +849,8 @@
         "no_cameras": "Tidak ada kamera.",
         "no_recordings": "Tidak ada rekaman pada hari ini.",
         "no_recording": "Tidak ada rekaman sejak saat ini.",
-        "playback_encrypted": "Perangkat mengenkripsi rekamannya; tidak dapat diputar di sini.",
+        "playback_encrypted": "Rekaman terenkripsi dan kode verifikasi tidak cocok. Masukkan di opsi integrasi.",
+        "live_encrypted": "Siaran langsung terenkripsi (enkripsi stream Hik-Connect) dan tidak dapat diputar di sini.",
         "playback_busy": "Kamera sedang memutar rekaman di tempat lain. Coba lagi sebentar lagi.",
         "playback_auth": "Perangkat menolak kredensial login.",
         "playback_failed": "Pemutaran gagal.",
