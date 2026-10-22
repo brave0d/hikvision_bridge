@@ -10,6 +10,7 @@ from .vocabulary import Kind
 
 if TYPE_CHECKING:
     from .features.image import ImageCapability
+    from .features.ptz import PtzCapability
 
 
 class DeviceShape(StrEnum):
@@ -77,6 +78,7 @@ class ChannelProfile:
     switchable: set[Kind] = field(default_factory=set)
     # Adjustable settings (image, strobe, siren, speaker) by key.
     image: dict[str, ImageCapability] = field(default_factory=dict)
+    ptz: PtzCapability | None = None
     # Read over a direct camera connection: memory card, status, armable inputs.
     storage: list[StorageUnit] = field(default_factory=list)
     health: bool = False

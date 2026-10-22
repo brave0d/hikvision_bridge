@@ -44,8 +44,9 @@
 | Image settings | Day/night, supplement light, colour, WDR and more per channel (see below) |
 | Deterrence and audio | Strobe light duration and frequency, siren sound, volume and repeats, speaker and microphone volume (cameras that have them) |
 | Cameras | Main/sub stream per channel, snapshots, codec and resolution as attributes |
+| PTZ | Pan/tilt/zoom step buttons and a preset select per PTZ channel (also through a recorder); motorised zoom lenses get the zoom buttons only |
 | Recorder | One HA device per channel below the recorder, channel connected, recording per channel, storage status/free/capacity, alarm inputs |
-| Health | Event connection, event delay, stream encryption, IP address, repairs for misconfigured devices (see below); uptime/last boot, CPU, memory and reboot count (diagnostic, disabled by default); memory card of directly connected cameras |
+| Health | Event connection, event delay, stream encryption, IP address, repairs for misconfigured devices (see below); uptime/last boot, CPU, memory and reboot count (diagnostic, disabled by default; firmware that reports a timestamp instead of a count shows it as the `reported_timestamp` attribute); memory card of directly connected cameras |
 | Hik-Connect (optional) | Cloud connection per device, stream-encryption status, connection change events, door opening for intercoms (unverified, see limits) |
 | Actions | `add_center_links`, `isapi_request` (read-only unless confirmed), `ptz_move`, `ptz_preset`, `set_notification_host` |
 
@@ -150,7 +151,7 @@ integration: some devices invalidate a login when another client of the same use
 | Discovery, sensors, events | Remote: Parameters settings (read), Notify surveillance center / alarm |
 | Live view, snapshots | Remote: Live view |
 | Detection switches, image settings, alarm outputs, repairs that tick linkage | Remote: Parameters settings |
-| PTZ actions | Remote: PTZ control |
+| PTZ buttons, preset select and actions | Remote: PTZ control |
 | Restart button (disabled by default) | Remote: Shutdown/Reboot |
 
 ## Example automations
@@ -217,6 +218,9 @@ actions:
 | Camera | DS-2CD20126G3-IUY (G3) | V5.8.3 |
 | Camera | DS-2CD2387G2P-LSU/SL (ColorVu G2) | V5.7.20 |
 | Camera | DS-2CD2T87G2-L (ColorVu G2) | V5.7.23 |
+| Camera | DS-2DE5425IW-AE(T5)(B) | V5.8.13 build 260402 |
+| Camera | DS-2CD2023G2-IU | V5.7.0 build 241023 |
+| Camera | DS-I253M(C) | V5.7.3 build 260403 |
 
 Other ISAPI devices should work; please report models that do or do not.
 

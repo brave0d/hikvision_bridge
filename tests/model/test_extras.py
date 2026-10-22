@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from custom_components.hikvision_bridge.model.features import adjust, health, io, signals, speaker
 from custom_components.hikvision_bridge.wire.xmlview import parse
 
@@ -124,6 +126,25 @@ def test_recorder_status() -> None:
     assert camera is not None
     assert camera.memory_percent is None
     assert health.parse_status(parse(f"<DeviceStatus {NS}/>"), memory_in_mb=True) is None
+    timestamp = health.parse_status(
+        parse(
+            f"<DeviceStatus {NS}><deviceUpTime>3600</deviceUpTime>"
+            "<totalRebootCount>1650480027</totalRebootCount></DeviceStatus>"
+        ),
+        memory_in_mb=False,
+    )
+    assert timestamp == health.DeviceHealth(
+        uptime_seconds=3600,
+        reboots_timestamp=datetime(2022, 4, 20, 18, 40, 27, tzinfo=UTC),
+    )
+    nonsense = health.parse_status(
+        parse(
+            f"<DeviceStatus {NS}><deviceUpTime>3600</deviceUpTime>"
+            "<totalRebootCount>500000</totalRebootCount></DeviceStatus>"
+        ),
+        memory_in_mb=False,
+    )
+    assert nonsense == health.DeviceHealth(uptime_seconds=3600)
 
 
 def test_recording_per_channel() -> None:

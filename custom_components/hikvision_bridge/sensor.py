@@ -220,6 +220,14 @@ class Reboots(_HealthBase):
         health = self._health
         return health.reboots if health else None
 
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        # Firmware that reports a timestamp instead of a count: show it, leave the count empty.
+        health = self._health
+        if health is None or health.reboots_timestamp is None:
+            return None
+        return {"reported_timestamp": health.reboots_timestamp.isoformat()}
+
 
 class NetworkAddress(PolledEntity, SensorEntity):
     """The address Home Assistant reaches the device (or the channel's camera) at."""

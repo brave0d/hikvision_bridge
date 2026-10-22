@@ -392,7 +392,12 @@
         "name": "Speicherauslastung"
       },
       "reboots": {
-        "name": "Neustarts"
+        "name": "Neustarts",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "Gemeldeter Zeitstempel"
+          }
+        }
       },
       "network_address": {
         "name": "IP-Adresse"
@@ -407,9 +412,30 @@
       },
       "cloud_unlock": {
         "name": "Tür öffnen (Cloud)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ nach links schwenken"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ nach rechts schwenken"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ nach oben neigen"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ nach unten neigen"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ hineinzoomen"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ herauszoomen"
       }
     },
     "select": {
+      "ptz_preset": {
+        "name": "PTZ-Preset"
+      },
       "day_night": {
         "name": "Tag/Nacht-Modus",
         "state": {

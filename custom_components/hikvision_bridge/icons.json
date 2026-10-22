@@ -45,13 +45,20 @@
     },
     "button": {
       "rescan": { "default": "mdi:magnify-scan" },
-      "cloud_unlock": { "default": "mdi:door-open" }
+      "cloud_unlock": { "default": "mdi:door-open" },
+      "ptz_pan_left": { "default": "mdi:pan-left" },
+      "ptz_pan_right": { "default": "mdi:pan-right" },
+      "ptz_tilt_up": { "default": "mdi:pan-up" },
+      "ptz_tilt_down": { "default": "mdi:pan-down" },
+      "ptz_zoom_in": { "default": "mdi:magnify-plus-outline" },
+      "ptz_zoom_out": { "default": "mdi:magnify-minus-outline" }
     },
     "event": {
       "detection": { "default": "mdi:cctv" },
       "cloud_connection": { "default": "mdi:cloud-sync-outline" }
     },
     "select": {
+      "ptz_preset": { "default": "mdi:map-marker-radius-outline" },
       "day_night": { "default": "mdi:theme-light-dark" },
       "supplement_light": { "default": "mdi:lightbulb-on-outline" },
       "light_brightness_control": { "default": "mdi:brightness-auto" },

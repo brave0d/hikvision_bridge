@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-import contextlib
 from typing import Any
 
 from homeassistant.const import ATTR_DEVICE_ID
@@ -15,7 +13,7 @@ import voluptuous as vol
 from yarl import URL
 
 from .const import DOMAIN, OPT_WEBHOOK_ID
-from .model.features import linkage, patch_and_verify
+from .model.features import linkage, patch_and_verify, ptz
 from .model.vocabulary import Kind
 from .wire.faults import BridgeFault
 from .wire.scrub import scrub_text
@@ -113,19 +111,17 @@ async def _ptz_move(call: ServiceCall) -> None:
     if channel is None:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="channel_needed")
     link, remote = bridge.route(channel)
-    path = f"/ISAPI/PTZCtrl/channels/{remote}/continuous"
-    move = "<PTZData><pan>{p}</pan><tilt>{t}</tilt><zoom>{z}</zoom></PTZData>"
     try:
-        await link.write_xml(
-            path,
-            move.format(p=call.data[FIELD_PAN], t=call.data[FIELD_TILT], z=call.data[FIELD_ZOOM]),
+        await ptz.move(
+            link,
+            remote,
+            call.data[FIELD_PAN],
+            call.data[FIELD_TILT],
+            call.data[FIELD_ZOOM],
+            call.data[FIELD_DURATION],
         )
-        await asyncio.sleep(call.data[FIELD_DURATION])
     except BridgeFault as err:
         raise _fail(err) from err
-    finally:
-        with contextlib.suppress(BridgeFault):
-            await link.write_xml(path, move.format(p=0, t=0, z=0))
 
 
 async def _ptz_preset(call: ServiceCall) -> None:
@@ -134,9 +130,7 @@ async def _ptz_preset(call: ServiceCall) -> None:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="channel_needed")
     link, remote = bridge.route(channel)
     try:
-        await link.write_xml(
-            f"/ISAPI/PTZCtrl/channels/{remote}/presets/{call.data[FIELD_PRESET]}/goto", ""
-        )
+        await ptz.goto_preset(link, remote, str(call.data[FIELD_PRESET]))
     except BridgeFault as err:
         raise _fail(err) from err
 

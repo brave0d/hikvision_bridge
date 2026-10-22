@@ -1,4 +1,4 @@
-"""Buttons: device restart and capability rescan."""
+"""Buttons: device restart, capability rescan and PTZ steps."""
 
 from __future__ import annotations
 
@@ -10,7 +10,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_ENTRY_KIND, DOMAIN, KIND_CLOUD
-from .entity import BridgeEntity
+from .entity import BridgeEntity, add_entities
+from .model.features import ptz
 from .runtime.bridge import DeviceBridge
 from .wire.faults import BridgeFault
 
@@ -26,7 +27,22 @@ async def async_setup_entry(
         await async_setup_cloud_buttons(hass, entry, async_add_entities)
         return
     bridge: DeviceBridge = entry.runtime_data
-    async_add_entities([RestartButton(bridge), RescanButton(bridge)])
+    entities: list[BridgeEntity] = [RestartButton(bridge), RescanButton(bridge)]
+    entities.extend(
+        PtzButton(bridge, channel.channel_id, direction)
+        for channel in bridge.profile.channels.values()
+        if channel.ptz is not None
+        for direction in channel.ptz.directions
+    )
+    add_entities(bridge, async_add_entities, entities)
+
+
+def _fail(err: BridgeFault) -> HomeAssistantError:
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="write_failed",
+        translation_placeholders={"reason": type(err).__name__},
+    )
 
 
 class RestartButton(BridgeEntity, ButtonEntity):
@@ -42,11 +58,7 @@ class RestartButton(BridgeEntity, ButtonEntity):
         try:
             await self.bridge.link.write_xml("/ISAPI/System/reboot", "")
         except BridgeFault as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="write_failed",
-                translation_placeholders={"reason": type(err).__name__},
-            ) from err
+            raise _fail(err) from err
 
 
 class RescanButton(BridgeEntity, ButtonEntity):
@@ -58,3 +70,19 @@ class RescanButton(BridgeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         self.hass.config_entries.async_schedule_reload(self.bridge.entry.entry_id)
+
+
+class PtzButton(BridgeEntity, ButtonEntity):
+    """Moves a PTZ channel a short step in one direction."""
+
+    def __init__(self, bridge: DeviceBridge, channel_id: str, direction: str) -> None:
+        super().__init__(bridge, channel_id, f"ptz_{direction}")
+        self.direction = direction
+        self._attr_translation_key = f"ptz_{direction}"
+
+    async def async_press(self) -> None:
+        link, remote = self.bridge.route(self.channel_id)
+        try:
+            await ptz.step(link, remote, self.direction)
+        except BridgeFault as err:
+            raise _fail(err) from err

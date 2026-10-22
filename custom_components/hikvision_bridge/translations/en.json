@@ -392,7 +392,12 @@
         "name": "Memory use"
       },
       "reboots": {
-        "name": "Reboots"
+        "name": "Reboots",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "Reported timestamp"
+          }
+        }
       },
       "network_address": {
         "name": "IP address"
@@ -407,9 +412,30 @@
       },
       "cloud_unlock": {
         "name": "Open door (cloud)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ pan left"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ pan right"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ tilt up"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ tilt down"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ zoom in"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ zoom out"
       }
     },
     "select": {
+      "ptz_preset": {
+        "name": "PTZ preset"
+      },
       "day_night": {
         "name": "Day/night mode",
         "state": {

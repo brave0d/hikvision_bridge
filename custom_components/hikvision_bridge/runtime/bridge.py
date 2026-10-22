@@ -31,7 +31,7 @@ from ..const import (
 )
 from ..model import audit
 from ..model.discover import read_identity_only
-from ..model.features import adjust, detection, health, io, storage
+from ..model.features import adjust, detection, health, io, ptz, storage
 from ..model.inventory import CloudLinkState, DeviceProfile
 from ..model.vocabulary import Kind
 from ..wire.faults import BadCredentials, BridgeFault, LockedOut
@@ -166,7 +166,7 @@ class DeviceBridge:
                 )
 
     async def async_probe_extras(self) -> None:
-        """Find adjustable settings, status, recording and armable inputs (GET only).
+        """Find adjustable settings, PTZ, status, recording and armable inputs (GET only).
 
         Camera-side resources are read over a direct connection where one exists. Faults of a
         direct connection are reported and skipped; refused logins on the main link raise.
@@ -191,6 +191,7 @@ class DeviceBridge:
                         continue
                     found.update(await source.read_capabilities(link, remote))
                 channel.image = found
+                channel.ptz = await ptz.read_capabilities(link, remote)
                 if link is not self.link:
                     status = await health.read_status(link, memory_in_mb=False)
                     channel.health = status is not None
