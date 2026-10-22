@@ -44,6 +44,17 @@ def test_no_ptz() -> None:
     assert ptz.parse_capabilities(parse(f"<PTZChanelCap {NS}/>"), None) is None
 
 
+def test_switched_off_serial_ptz() -> None:
+    """An NVR offers RS-485 PTZ for a fixed camera, switched off."""
+    caps = parse(
+        f'<PTZChannelCap {NS}><id min="1" max="8">2</id><enabled opt="true,false">false</enabled>'
+        '<controlProtocol opt="PELCO-P,PELCO-D">HIKVISION</controlProtocol>'
+        "<ContinuousPanTiltSpace><XRange><Min>-100</Min><Max>100</Max></XRange>"
+        "</ContinuousPanTiltSpace></PTZChannelCap>"
+    )
+    assert ptz.parse_capabilities(caps, None) is None
+
+
 PARK = (
     f"<ParkAction {NS}><enabled>false</enabled><Parktime>30</Parktime>"
     "<Action><ActionType>preset</ActionType><ActionNum>1</ActionNum></Action></ParkAction>"

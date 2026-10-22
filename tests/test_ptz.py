@@ -69,6 +69,36 @@ async def test_fixed_camera_has_no_ptz(hass: HomeAssistant, serve) -> None:
     await hass.async_block_till_done()
 
 
+async def test_ptz_buttons_go_when_ptz_is_off(hass: HomeAssistant, serve) -> None:
+    """Buttons made from a switched-off serial PTZ are removed once that is recognised."""
+    device = FakeDevice("camera_g3")
+    device.documents["/ISAPI/PTZCtrl/channels/1/capabilities"] = CAPS
+    server = await serve(device)
+    entry = device_entry(server, device)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    registry = er.async_get(hass)
+
+    def ptz_buttons() -> list[er.RegistryEntry]:
+        return [
+            e
+            for e in er.async_entries_for_config_entry(registry, entry.entry_id)
+            if e.domain == "button" and "_ptz_" in e.unique_id
+        ]
+
+    assert len(ptz_buttons()) == 6
+
+    device.documents["/ISAPI/PTZCtrl/channels/1/capabilities"] = CAPS.replace(
+        "<ContinuousPanTiltSpace>", "<enabled>false</enabled><ContinuousPanTiltSpace>", 1
+    )
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert ptz_buttons() == []
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_park_action_entities(hass: HomeAssistant, serve) -> None:
     device = FakeDevice("camera_g3")
     device.documents["/ISAPI/PTZCtrl/channels/1/parkaction"] = PARK

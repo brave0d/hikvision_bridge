@@ -488,38 +488,45 @@ class Timeline {
       ctx.fillRect(a, recY, Math.max(2, b - a), recH);
     }
 
-    // Detections on the recordings: a coloured stretch each, people and vehicles on top.
+    // Detections colour their part of the recordings, people and vehicles on top.
     const events = this.events
       .filter((ev) => x(ev.end) >= 0 && x(ev.start) <= width)
       .sort((a, b) => eventRank(a.kind) - eventRank(b.kind));
-    const bandY = recY + Math.round(recH * 0.55);
     for (const ev of events) {
       const a = Math.floor(x(ev.start));
       const b = Math.ceil(x(ev.end));
       ctx.fillStyle = EVENT_COLORS[ev.kind] || accent;
-      ctx.fillRect(a, bandY, Math.max(3, b - a), recY + recH - bandY);
+      ctx.fillRect(a, recY, Math.max(3, b - a), recH);
     }
-    // A symbol per detection where there is room, the most specific kinds first.
-    const radius = Math.max(6, Math.min(10, Math.floor(recH * 0.3)));
+    // Their symbol on that colour where there is room, the most specific kinds first; a
+    // part too narrow for it carries a round badge of its colour instead.
+    const size = Math.max(12, Math.min(18, Math.floor(recH * 0.6)));
+    const cy = recY + recH / 2;
     const placed = [];
     for (const ev of [...events].reverse()) {
-      const cx = Math.max(radius, Math.min(width - radius, (x(ev.start) + x(ev.end)) / 2));
-      if (placed.some((p) => Math.abs(p - cx) < radius * 2 + 2)) continue;
+      const a = x(ev.start);
+      const b = x(ev.end);
+      const cx = Math.max(size / 2 + 1, Math.min(width - size / 2 - 1, (a + b) / 2));
+      if (placed.some((p) => Math.abs(p - cx) < size + 2)) continue;
       placed.push(cx);
-      const cy = recY + Math.round(recH * 0.55) - radius + 1;
-      ctx.fillStyle = EVENT_COLORS[ev.kind] || accent;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = "rgba(0,0,0,.35)";
-      ctx.stroke();
-      ctx.lineWidth = 1;
-      const size = radius * 1.5;
+      if (b - a < size + 4) {
+        const radius = size / 2 + 2;
+        ctx.fillStyle = EVENT_COLORS[ev.kind] || accent;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "rgba(0,0,0,.35)";
+        ctx.stroke();
+        ctx.lineWidth = 1;
+      }
+      const glyph = size * 0.8;
       ctx.save();
-      ctx.translate(cx - size / 2, cy - size / 2);
-      ctx.scale(size / 24, size / 24);
+      ctx.translate(cx - glyph / 2, cy - glyph / 2);
+      ctx.scale(glyph / 24, glyph / 24);
       ctx.fillStyle = "#fff";
+      ctx.shadowColor = "rgba(0,0,0,.45)";
+      ctx.shadowBlur = 2;
       ctx.fill(new Path2D(eventSymbol(ev.kind)), "evenodd");
       ctx.restore();
     }
@@ -1176,6 +1183,7 @@ class Viewer {
 
   async goLive() {
     this.mode = "live";
+    this._target = null;
     this._qualityOptions();
     this.clearMessage();
     if (isoDay(this.day) !== isoDay(new Date())) this.setDay(new Date());
@@ -1193,10 +1201,18 @@ class Viewer {
       this._qualityOptions();
     }
     this.clearMessage();
-    this.timeline.playhead = date.getTime();
+    // Until the video shows the chosen moment, the playhead stays there: the player still
+    // reports live time or the previous session meanwhile.
+    const target = { time: date.getTime(), done: false };
+    this._target = target;
+    this.timeline.playhead = target.time;
     this.timeline.draw();
-    if (wasLive || !this.player.session) await this.player.play(this.camera, this.source, date.getTime(), this.quality);
-    else await this.player.seek(date.getTime());
+    try {
+      if (wasLive || !this.player.session) await this.player.play(this.camera, this.source, target.time, this.quality);
+      else await this.player.seek(target.time);
+    } finally {
+      target.done = true;
+    }
     this.update();
   }
 
@@ -1352,6 +1368,13 @@ class Viewer {
   }
 
   _frame() {
+    const target = this._target;
+    if (target && (!target.done || this.player.base == null || this.video.seeking)) {
+      this.timeline.playhead = target.time;
+      this.timeline.draw();
+      return;
+    }
+    this._target = null;
     const position = this.player.position;
     if (position != null && this.camera) {
       if (this.mode === "playback" || isoDay(this.day) === isoDay(new Date())) {

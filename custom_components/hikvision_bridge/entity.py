@@ -6,8 +6,9 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 
 from homeassistant.const import EntityCategory
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -120,6 +121,18 @@ def add_entities(
         groups[bridge.subentry_of(entity.channel_id)].append(entity)
     for subentry_id, group in groups.items():
         async_add_entities(group, config_subentry_id=subentry_id)
+
+
+@callback
+def drop_entities(
+    hass: HomeAssistant, bridge: DeviceBridge, platform: str, features: Iterable[tuple[str, str]]
+) -> None:
+    """Remove entities of features a channel turned out not to have (channel, feature)."""
+    registry = er.async_get(hass)
+    for channel_id, feature in features:
+        uid = identity.entity_uid(bridge.profile, channel_id, feature)
+        if entity_id := registry.async_get_entity_id(platform, DOMAIN, uid):
+            registry.async_remove(entity_id)
 
 
 def image_entities[T](

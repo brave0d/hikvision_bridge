@@ -59,8 +59,11 @@ def parse_presets(document: XmlNode | None) -> dict[str, str]:
 
 
 def parse_capabilities(caps: XmlNode | None, presets: XmlNode | None) -> PtzCapability | None:
-    """None for channels without PTZ (fixed cameras usually refuse the capabilities)."""
-    if caps is None:
+    """None for channels without PTZ (fixed cameras usually refuse the capabilities).
+
+    NVRs describe a serial (RS-485) PTZ for fixed cameras too, but switched off.
+    """
+    if caps is None or caps.flag("enabled") is False:
         return None
     found = PtzCapability(
         pan_tilt=caps.first("ContinuousPanTiltSpace") is not None,

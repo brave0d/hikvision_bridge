@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_ENTRY_KIND, DOMAIN, KIND_CLOUD
-from .entity import BridgeEntity, add_entities
+from .entity import BridgeEntity, add_entities, drop_entities
 from .model.features import ptz
 from .runtime.bridge import DeviceBridge
 from .wire.faults import BridgeFault
@@ -35,6 +35,19 @@ async def async_setup_entry(
         for direction in channel.ptz.directions
     )
     add_entities(bridge, async_add_entities, entities)
+    # Buttons of earlier versions on channels that turned out to have no such move.
+    drop_entities(
+        hass,
+        bridge,
+        "button",
+        (
+            (channel.channel_id, f"ptz_{direction}")
+            for channel in bridge.profile.channels.values()
+            if channel.online is not False
+            for direction in ptz.DIRECTIONS
+            if channel.ptz is None or direction not in channel.ptz.directions
+        ),
+    )
 
 
 def _fail(err: BridgeFault) -> HomeAssistantError:
