@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "مقامی نیٹ ورک میں کیمرا یا ریکارڈر",
+          "cloud": "Hik-Connect اکاؤنٹ (کلاؤڈ)"
+        }
+      },
+      "device": {
+        "title": "آلہ منسلک کریں",
+        "description": "سیٹ اپ کے دوران صرف پڑھنے کی رسائی استعمال ہوتی ہے۔",
+        "data": {
+          "host": "ہوسٹ",
+          "port": "پورٹ (اختیاری)",
+          "connection": "کنکشن",
+          "verify_tls": "HTTPS سرٹیفکیٹ کی تصدیق کریں",
+          "username": "صارف نام",
+          "password": "پاس ورڈ"
+        },
+        "data_description": {
+          "host": "کیمرے یا ریکارڈر کا IP پتہ یا ہوسٹ نام۔",
+          "port": "80 (HTTP) یا 443 (HTTPS) کے لیے خالی چھوڑیں۔",
+          "connection": "خودکار پہلے HTTPS آزماتا ہے اور صرف تب HTTP پر جاتا ہے جب HTTPS سے رابطہ نہ ہو سکے۔",
+          "username": "ہر آلہ اپنا صارف استعمال کر سکتا ہے۔ ایک الگ آپریٹر صارف کی سفارش کی جاتی ہے۔"
+        }
+      },
+      "duplicate": {
+        "title": "کیمرا پہلے سے معلوم ہے",
+        "description": "یہ کیمرا پہلے سے {recorder} کے ذریعے چینل {channel} پر دکھایا جا رہا ہے۔ اسے اس چینل سے جوڑیں (ایک آلہ، کیمرے سے براہ راست اسٹریم) یا الگ آلے کے طور پر شامل کریں؟",
+        "menu_options": {
+          "link_to_channel": "ریکارڈر چینل سے جوڑیں",
+          "keep_separate": "الگ آلے کے طور پر شامل کریں"
+        }
+      },
+      "reauth_confirm": {
+        "title": "لاگ ان ناکام",
+        "description": "{device} ({host}) نے محفوظ کردہ اسناد مسترد کر دیں۔ موجودہ اسناد درج کریں۔",
+        "data": {
+          "username": "صارف نام",
+          "password": "پاس ورڈ"
+        }
+      },
+      "reconfigure": {
+        "title": "کنکشن تبدیل کریں",
+        "description": "نیا پتہ اسی آلے تک پہنچنا چاہیے۔",
+        "data": {
+          "host": "ہوسٹ",
+          "port": "پورٹ (اختیاری)",
+          "connection": "کنکشن",
+          "verify_tls": "HTTPS سرٹیفکیٹ کی تصدیق کریں",
+          "username": "صارف نام",
+          "password": "پاس ورڈ"
+        },
+        "data_description": {
+          "host": "کیمرے یا ریکارڈر کا IP پتہ یا ہوسٹ نام۔",
+          "port": "80 (HTTP) یا 443 (HTTPS) کے لیے خالی چھوڑیں۔",
+          "connection": "خودکار پہلے HTTPS آزماتا ہے اور صرف تب HTTP پر جاتا ہے جب HTTPS سے رابطہ نہ ہو سکے۔",
+          "username": "ہر آلہ اپنا صارف استعمال کر سکتا ہے۔ ایک الگ آپریٹر صارف کی سفارش کی جاتی ہے۔"
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect کے پاس تیسرے فریق کے لیے کوئی سرکاری انٹرفیس نہیں ہے۔ انٹیگریشن صرف آلات کی فہرست اور حالت پڑھتی ہے؛ پاس ورڈ Home Assistant میں محفوظ ہوتا ہے۔",
+        "data": {
+          "account": "Hik-Connect اکاؤنٹ (ای میل یا فون)",
+          "password": "پاس ورڈ"
+        }
+      },
+      "cloud_captcha": {
+        "title": "تصدیقی کوڈ",
+        "description": "یہاں دکھایا گیا کوڈ درج کریں: {image}",
+        "data": {
+          "captcha": "کوڈ"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Hik-Connect لاگ ان",
+        "description": "{account} کا پاس ورڈ درج کریں۔",
+        "data": {
+          "password": "پاس ورڈ",
+          "captcha": "تصدیقی کوڈ (صرف مانگے جانے پر)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "صارف نام یا پاس ورڈ مسترد ہو گیا۔ لاک ہونے سے بچنے کے لیے مزید کوشش نہیں کی جائے گی۔",
+      "locked_out": "ناکام لاگ ان کے بعد آلہ یا اکاؤنٹ عارضی طور پر لاک ہے۔ دوبارہ کوشش سے پہلے انتظار کریں۔",
+      "name_not_resolved": "ہوسٹ نام حل نہیں ہو سکا۔",
+      "tls_untrusted": "HTTPS سرٹیفکیٹ قابل اعتماد نہیں ہے۔ سرٹیفکیٹ کی تصدیق بند کریں یا HTTP استعمال کریں۔",
+      "cannot_connect": "رابطہ نہیں ہو سکا۔",
+      "not_isapi": "پتہ جواب دیتا ہے، لیکن Hikvision ISAPI آلے کی طرح نہیں۔",
+      "forbidden": "صارف کے پاس مطلوبہ اختیارات نہیں ہیں۔",
+      "unknown": "غیر متوقع خرابی۔",
+      "wrong_camera": "یہ پتہ منتخب چینل والے کیمرے کے بجائے کسی دوسرے کیمرے کا ہے۔",
+      "captcha_required": "Hik-Connect تصدیقی کوڈ مانگ رہا ہے۔",
+      "cloud_unavailable": "Hik-Connect اس وقت دستیاب نہیں ہے۔",
+      "cloud_changed": "Hik-Connect نے غیر متوقع فارمیٹ میں جواب دیا۔",
+      "cloud_rejected": "Hik-Connect نے درخواست مسترد کر دی۔"
+    },
+    "abort": {
+      "already_configured": "یہ آلہ یا اکاؤنٹ پہلے سے سیٹ اپ ہے۔",
+      "reauth_successful": "اسناد اپ ڈیٹ ہو گئیں۔",
+      "reconfigure_successful": "کنکشن اپ ڈیٹ ہو گیا۔",
+      "other_device": "یہ پتہ کسی دوسرے آلے کا ہے۔ اس کے بجائے اسے نئے آلے کے طور پر شامل کریں۔",
+      "channel_already_linked": "اس ریکارڈر چینل کا پہلے سے براہ راست کنکشن ہے۔",
+      "linked_to_channel": "کیمرا ریکارڈر چینل سے جوڑ دیا گیا۔"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "اختیارات",
+        "data": {
+          "event_path": "واقعات کیسے پہنچتے ہیں",
+          "hold_seconds": "شناخت کو آن رکھنے کا دورانیہ (سیکنڈ)",
+          "rtsp_port": "RTSP پورٹ (اختیاری)",
+          "rtsp_transport": "RTSP ٹرانسپورٹ",
+          "target_sensors": "افراد اور گاڑیوں کے لیے الگ سینسر",
+          "playback": "میڈیا براؤزر میں چلانا"
+        },
+        "data_description": {
+          "event_path": "واقعات کی اسٹریم کے لیے آلے میں کوئی تبدیلی درکار نہیں۔ ویب ہک کے لیے آلے کو Home Assistant کو بھیجنا ہوتا ہے۔",
+          "hold_seconds": "بہت سی شناختوں میں آلات صرف آغاز کی اطلاع دیتے ہیں؛ آخری اطلاع کے بعد سینسر اتنی دیر آن رہتا ہے۔",
+          "playback": "ریکارڈنگز H.265 یا H.264 میں ہوتی ہیں۔ 'ریکارڈ شدہ حالت میں MP4' فوراً شروع ہوتا ہے، لیکن براؤزر H.265 صرف ہارڈویئر سپورٹ کے ساتھ چلاتے ہیں۔ 'H.264 میں تبدیل کریں' ہر جگہ چلتا ہے اور بہت CPU لیتا ہے۔ 'ڈیوائس سے اسٹریم' ڈیوائس کو RTSP کے ذریعے ریکارڈنگ چلانے دیتا ہے۔"
+        }
+      },
+      "webhook": {
+        "title": "ویب ہک",
+        "description": "اطلاعات {path} پر قبول کی جاتی ہیں (صرف مقامی نیٹ ورک)۔ آلے کو وہاں بھیجنے کے لیے 'اطلاعی ہوسٹ مقرر کریں' کارروائی یا آلے کا ویب انٹرفیس استعمال کریں۔"
+      }
+    },
+    "abort": {
+      "no_options": "Hik-Connect اکاؤنٹ کے کوئی اختیارات نہیں ہیں۔"
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "کیمرا براہ راست منسلک کریں"
+      },
+      "entry_type": "براہ راست کیمرا کنکشن",
+      "step": {
+        "user": {
+          "title": "براہ راست کیمرا کنکشن",
+          "description": "ریکارڈر چینل کے کیمرے کو اس کے اپنے پتے اور اسناد کے ساتھ براہ راست منسلک کرتا ہے۔ تب لائیو اسٹریم کیمرے سے آتی ہے، جو ریکارڈر کی اسٹریم خفیہ ہونے کی صورت میں بھی مدد کرتا ہے۔",
+          "data": {
+            "channel_id": "ریکارڈر چینل",
+            "host": "ہوسٹ",
+            "port": "پورٹ (اختیاری)",
+            "connection": "کنکشن",
+            "verify_tls": "HTTPS سرٹیفکیٹ کی تصدیق کریں",
+            "username": "صارف نام",
+            "password": "پاس ورڈ",
+            "reuse_recorder_credentials": "ریکارڈر کا صارف نام اور پاس ورڈ استعمال کریں",
+            "event_source": "شناخت یہاں سے لیں"
+          },
+          "data_description": {
+            "host": "وہ پتہ جس پر Home Assistant کیمرے تک براہ راست پہنچتا ہے (مثلاً ریکارڈر کے PoE سب نیٹ میں، اگر روٹ کیا گیا ہو)۔",
+            "reuse_recorder_credentials": "اگر کیمرے کی اپنی اسناد ہوں تو بند رہنے دیں۔"
+          }
+        },
+        "reconfigure": {
+          "title": "براہ راست کیمرا کنکشن تبدیل کریں",
+          "description": "ریکارڈر چینل کے کیمرے کو اس کے اپنے پتے اور اسناد کے ساتھ براہ راست منسلک کرتا ہے۔ تب لائیو اسٹریم کیمرے سے آتی ہے، جو ریکارڈر کی اسٹریم خفیہ ہونے کی صورت میں بھی مدد کرتا ہے۔",
+          "data": {
+            "channel_id": "ریکارڈر چینل",
+            "host": "ہوسٹ",
+            "port": "پورٹ (اختیاری)",
+            "connection": "کنکشن",
+            "verify_tls": "HTTPS سرٹیفکیٹ کی تصدیق کریں",
+            "username": "صارف نام",
+            "password": "پاس ورڈ",
+            "reuse_recorder_credentials": "ریکارڈر کا صارف نام اور پاس ورڈ استعمال کریں",
+            "event_source": "شناخت یہاں سے لیں"
+          },
+          "data_description": {
+            "host": "وہ پتہ جس پر Home Assistant کیمرے تک براہ راست پہنچتا ہے (مثلاً ریکارڈر کے PoE سب نیٹ میں، اگر روٹ کیا گیا ہو)۔",
+            "reuse_recorder_credentials": "اگر کیمرے کی اپنی اسناد ہوں تو بند رہنے دیں۔"
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "صارف نام یا پاس ورڈ مسترد ہو گیا۔ لاک ہونے سے بچنے کے لیے مزید کوشش نہیں کی جائے گی۔",
+        "locked_out": "ناکام لاگ ان کے بعد آلہ یا اکاؤنٹ عارضی طور پر لاک ہے۔ دوبارہ کوشش سے پہلے انتظار کریں۔",
+        "name_not_resolved": "ہوسٹ نام حل نہیں ہو سکا۔",
+        "tls_untrusted": "HTTPS سرٹیفکیٹ قابل اعتماد نہیں ہے۔ سرٹیفکیٹ کی تصدیق بند کریں یا HTTP استعمال کریں۔",
+        "cannot_connect": "رابطہ نہیں ہو سکا۔",
+        "not_isapi": "پتہ جواب دیتا ہے، لیکن Hikvision ISAPI آلے کی طرح نہیں۔",
+        "forbidden": "صارف کے پاس مطلوبہ اختیارات نہیں ہیں۔",
+        "unknown": "غیر متوقع خرابی۔",
+        "wrong_camera": "یہ پتہ منتخب چینل والے کیمرے کے بجائے کسی دوسرے کیمرے کا ہے۔",
+        "captcha_required": "Hik-Connect تصدیقی کوڈ مانگ رہا ہے۔",
+        "cloud_unavailable": "Hik-Connect اس وقت دستیاب نہیں ہے۔",
+        "cloud_changed": "Hik-Connect نے غیر متوقع فارمیٹ میں جواب دیا۔",
+        "cloud_rejected": "Hik-Connect نے درخواست مسترد کر دی۔"
+      },
+      "abort": {
+        "not_loaded": "پہلے ریکارڈر لوڈ ہونا چاہیے۔",
+        "not_a_recorder": "صرف ریکارڈرز کے پاس جوڑنے کے لیے چینل ہوتے ہیں۔",
+        "no_free_channel": "ہر چینل کا پہلے سے براہ راست کنکشن ہے۔",
+        "reconfigure_successful": "براہ راست کنکشن اپ ڈیٹ ہو گیا۔"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "حرکت"
+      },
+      "tamper": {
+        "name": "چھیڑ چھاڑ"
+      },
+      "video_loss": {
+        "name": "ویڈیو کا نقصان"
+      },
+      "scene_change": {
+        "name": "منظر کی تبدیلی"
+      },
+      "intrusion": {
+        "name": "دراندازی"
+      },
+      "line_crossing": {
+        "name": "لائن عبور"
+      },
+      "region_entrance": {
+        "name": "علاقے میں داخلہ"
+      },
+      "region_exiting": {
+        "name": "علاقے سے اخراج"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "فوکس کا نقصان"
+      },
+      "audio_exception": {
+        "name": "آڈیو بے ضابطگی"
+      },
+      "target_human": {
+        "name": "فرد"
+      },
+      "target_vehicle": {
+        "name": "گاڑی"
+      },
+      "alarm_input": {
+        "name": "الارم ان پٹ {port}"
+      },
+      "channel_online": {
+        "name": "کیمرا منسلک"
+      },
+      "storage_problem": {
+        "name": "اسٹوریج مسئلہ"
+      },
+      "event_link": {
+        "name": "واقعات کا کنکشن"
+      },
+      "stream_encryption": {
+        "name": "اسٹریم انکرپشن"
+      },
+      "cloud_online": {
+        "name": "کلاؤڈ کنکشن"
+      },
+      "cloud_stream_encryption": {
+        "name": "اسٹریم انکرپشن"
+      },
+      "recording": {
+        "name": "ریکارڈنگ"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "حرکت کی شناخت"
+      },
+      "tamper_detection": {
+        "name": "چھیڑ چھاڑ کی شناخت"
+      },
+      "scene_change_detection": {
+        "name": "منظر کی تبدیلی کی شناخت"
+      },
+      "intrusion_detection": {
+        "name": "دراندازی کی شناخت"
+      },
+      "line_crossing_detection": {
+        "name": "لائن عبور کی شناخت"
+      },
+      "region_entrance_detection": {
+        "name": "علاقے میں داخلے کی شناخت"
+      },
+      "region_exiting_detection": {
+        "name": "علاقے سے اخراج کی شناخت"
+      },
+      "alarm_output": {
+        "name": "الارم آؤٹ پٹ {port}"
+      },
+      "blc": {
+        "name": "بیک لائٹ کمپنسیشن"
+      },
+      "hlc": {
+        "name": "ہائی لائٹ کمپنسیشن"
+      },
+      "overexposure_suppression": {
+        "name": "اوور ایکسپوژر دباؤ"
+      },
+      "image_flip": {
+        "name": "تصویر پلٹیں"
+      },
+      "stabilization": {
+        "name": "تصویر کا استحکام"
+      },
+      "lens_correction": {
+        "name": "لینس کی بگاڑ کی درستی"
+      },
+      "video_loss_detection": {
+        "name": "ویڈیو کے نقصان کی شناخت"
+      },
+      "input_armed": {
+        "name": "الارم ان پٹ {port} مسلح"
+      },
+      "park_action": {
+        "name": "پارک کارروائی"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "مرکزی اسٹریم"
+      },
+      "sub_stream": {
+        "name": "ذیلی اسٹریم"
+      },
+      "third_stream": {
+        "name": "تیسری اسٹریم"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "شناخت",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "حرکت",
+              "intrusion": "دراندازی",
+              "line_crossing": "لائن عبور",
+              "region_entrance": "علاقے میں داخلہ",
+              "region_exiting": "علاقے سے اخراج",
+              "face": "چہرہ",
+              "anpr": "نمبر پلیٹ"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "کلاؤڈ کنکشن میں تبدیلی",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "آن لائن",
+              "went_offline": "آف لائن"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "اسٹوریج {unit}",
+        "state": {
+          "ok": "ٹھیک",
+          "unformatted": "فارمیٹ نہیں",
+          "error": "خرابی",
+          "idle": "بے کار",
+          "sleeping": "سلیپ",
+          "abnormal": "غیر معمولی",
+          "full": "بھرا ہوا",
+          "unknown": "نامعلوم"
+        }
+      },
+      "storage_free": {
+        "name": "اسٹوریج {unit} خالی"
+      },
+      "storage_capacity": {
+        "name": "اسٹوریج {unit} گنجائش"
+      },
+      "event_latency": {
+        "name": "واقعات میں تاخیر"
+      },
+      "boot_time": {
+        "name": "آخری بوٹ"
+      },
+      "cpu_load": {
+        "name": "CPU لوڈ"
+      },
+      "memory_use": {
+        "name": "میموری کا استعمال"
+      },
+      "reboots": {
+        "name": "ری بوٹس",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "رپورٹ شدہ ٹائم اسٹیمپ"
+          }
+        }
+      },
+      "network_address": {
+        "name": "IP پتہ"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "ری اسٹارٹ"
+      },
+      "rescan": {
+        "name": "صلاحیتیں دوبارہ پڑھیں"
+      },
+      "cloud_unlock": {
+        "name": "دروازہ کھولیں (کلاؤڈ)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ بائیں پین"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ دائیں پین"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ اوپر ٹلٹ"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ نیچے ٹلٹ"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ زوم ان"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ زوم آؤٹ"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "PTZ پری سیٹ"
+      },
+      "day_night": {
+        "name": "دن/رات موڈ",
+        "state": {
+          "day": "دن",
+          "night": "رات",
+          "auto": "خودکار",
+          "schedule": "شیڈول",
+          "eventtrigger": "واقعہ سے متحرک"
+        }
+      },
+      "supplement_light": {
+        "name": "اضافی روشنی",
+        "state": {
+          "eventintelligence": "اسمارٹ (واقعہ)",
+          "colorvuwhitelight": "سفید روشنی",
+          "irlight": "IR روشنی",
+          "close": "بند"
+        }
+      },
+      "light_brightness_control": {
+        "name": "روشنی کی چمک کا کنٹرول",
+        "state": {
+          "auto": "خودکار",
+          "manual": "دستی"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "بند",
+          "open": "آن",
+          "auto": "خودکار"
+        }
+      },
+      "blc_area": {
+        "name": "بیک لائٹ کمپنسیشن علاقہ",
+        "state": {
+          "close": "بند",
+          "up": "اوپر",
+          "down": "نیچے",
+          "left": "بائیں",
+          "right": "دائیں",
+          "center": "مرکز",
+          "region": "اپنی مرضی کا علاقہ",
+          "auto": "خودکار"
+        }
+      },
+      "noise_reduction": {
+        "name": "شور میں کمی",
+        "state": {
+          "close": "بند",
+          "general": "عام",
+          "advanced": "ماہر"
+        }
+      },
+      "defog": {
+        "name": "دھند ہٹائیں",
+        "state": {
+          "close": "بند",
+          "open": "آن",
+          "auto": "خودکار"
+        }
+      },
+      "white_balance": {
+        "name": "وائٹ بیلنس",
+        "state": {
+          "manual": "دستی",
+          "auto1": "خودکار 1",
+          "auto2": "خودکار 2",
+          "locked": "مقفل",
+          "daylightlamp": "فلوروسینٹ لیمپ",
+          "incandescentlight": "تاپدیپت لیمپ",
+          "warmlight": "گرم روشنی",
+          "naturallight": "قدرتی روشنی"
+        }
+      },
+      "exposure_mode": {
+        "name": "ایکسپوژر موڈ",
+        "state": {
+          "auto": "خودکار",
+          "manual": "دستی"
+        }
+      },
+      "shutter": {
+        "name": "شٹر"
+      },
+      "power_line_frequency": {
+        "name": "بجلی کی لائن کی فریکوئنسی",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "پلٹنے کی سمت",
+        "state": {
+          "leftright": "بائیں/دائیں",
+          "updown": "اوپر/نیچے",
+          "center": "مرکز"
+        }
+      },
+      "strobe_frequency": {
+        "name": "اسٹروب لائٹ فریکوئنسی",
+        "state": {
+          "high": "زیادہ",
+          "medium": "درمیانہ",
+          "low": "کم",
+          "normallyon": "مسلسل آن"
+        }
+      },
+      "siren_sound": {
+        "name": "سائرن کی آواز"
+      },
+      "park_action_type": {
+        "name": "پارک کارروائی کی قسم",
+        "state": {
+          "autoscan": "خودکار اسکین",
+          "framescan": "فریم اسکین",
+          "randomscan": "بے ترتیب اسکین",
+          "patrol": "گشت",
+          "pattern": "پیٹرن",
+          "preset": "پری سیٹ",
+          "panoramascan": "پینوراما اسکین",
+          "tiltscan": "ٹلٹ اسکین"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "دن/رات حساسیت"
+      },
+      "day_night_delay": {
+        "name": "دن/رات تاخیر"
+      },
+      "white_light_brightness": {
+        "name": "سفید روشنی کی چمک"
+      },
+      "ir_light_brightness": {
+        "name": "IR روشنی کی چمک"
+      },
+      "white_light_duration": {
+        "name": "سفید روشنی کا دورانیہ"
+      },
+      "brightness": {
+        "name": "چمک"
+      },
+      "contrast": {
+        "name": "کنٹراسٹ"
+      },
+      "saturation": {
+        "name": "سیچوریشن"
+      },
+      "sharpness": {
+        "name": "تیزی"
+      },
+      "wdr_level": {
+        "name": "WDR سطح"
+      },
+      "hlc_level": {
+        "name": "ہائی لائٹ کمپنسیشن سطح"
+      },
+      "noise_reduction_level": {
+        "name": "شور میں کمی کی سطح"
+      },
+      "defog_level": {
+        "name": "دھند ہٹانے کی سطح"
+      },
+      "white_balance_red": {
+        "name": "وائٹ بیلنس سرخ"
+      },
+      "white_balance_blue": {
+        "name": "وائٹ بیلنس نیلا"
+      },
+      "gain_limit": {
+        "name": "گین کی حد"
+      },
+      "strobe_duration": {
+        "name": "اسٹروب لائٹ کا دورانیہ"
+      },
+      "siren_volume": {
+        "name": "سائرن کا والیوم"
+      },
+      "siren_repeats": {
+        "name": "سائرن کی تکرار"
+      },
+      "speaker_volume": {
+        "name": "اسپیکر کا والیوم"
+      },
+      "microphone_volume": {
+        "name": "مائیکروفون کا والیوم"
+      },
+      "park_time": {
+        "name": "پارک کا وقت"
+      },
+      "park_action_number": {
+        "name": "پارک کارروائی نمبر"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: لاگ ان لاک",
+      "description": "ناکام کوششوں کے بعد آلے نے لاگ ان لاک کر دیا۔ انٹیگریشن تقریباً {minutes} منٹ رکتی ہے اور اس سے پہلے دوبارہ کوشش نہیں کرتی۔"
+    },
+    "channel_link_auth": {
+      "title": "{device}: {channel} سے براہ راست کنکشن مسترد",
+      "description": "کیمرے نے براہ راست کنکشن کی اسناد مسترد کر دیں۔ اس کے بجائے ریکارڈر استعمال ہوتا ہے۔ اس چینل کا براہ راست کنکشن اپ ڈیٹ کریں۔"
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: {channel} پر دوسرا کیمرا",
+      "description": "اس چینل کا براہ راست کنکشن اس کیمرے سے مختلف کیمرے تک جاتا ہے جو اب ریکارڈر سے منسلک ہے۔ درست ہونے تک یہ استعمال نہیں ہوتا۔"
+    },
+    "center_link_missing": {
+      "title": "{device}: {channel} پر {kind} رپورٹ نہیں ہو رہا",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "رپورٹنگ فعال کریں",
+            "description": "آلہ {kind} کی شناخت کرتا ہے لیکن اسے واقعات کی اسٹریم میں نہیں بھیجتا، کیونکہ لنکیج 'نگرانی مرکز کو مطلع کریں' بند ہے۔ صرف وہی لنکیج آن کرنے کے لیے تصدیق کریں (ٹرگر {trigger})؛ اور کچھ نہیں بدلتا۔ {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "آلے نے تبدیلی قبول نہیں کی۔"
+        },
+        "abort": {
+          "not_loaded": "آلہ لوڈ نہیں ہے۔"
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: {channel} پر {kind} کے لیے کوئی علاقہ نہیں بنایا گیا",
+      "description": "شناخت آن ہے، لیکن کوئی لائن یا علاقہ نہیں بنایا گیا، اس لیے یہ متحرک نہیں ہو سکتی۔ اسے آلے کے ویب انٹرفیس میں بنائیں۔"
+    },
+    "detection_off": {
+      "title": "{device}: {channel} پر {kind} بند ہے",
+      "description": "یہ شناخت معاون ہے لیکن بند ہے۔ استعمال کرنا ہو تو اس کے سوئچ اینٹیٹی سے آن کریں۔"
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {channel} پر {kind} صرف {detail} کے لیے",
+      "description": "ریکارڈر یہ شناخت صرف درج شدہ ہدف کی اقسام کے لیے رپورٹ کرتا ہے۔ دوسری حرکت سے یہ متحرک نہیں ہوگی۔"
+    },
+    "stream_encrypted": {
+      "title": "{device}: ویڈیو اسٹریم Hik-Connect سے خفیہ",
+      "description": "Hik-Connect کے لیے اسٹریم انکرپشن آن ہے۔ Home Assistant اس اسٹریم کو ڈی کوڈ نہیں کر سکتا؛ اسنیپ شاٹس اور واقعات کام کرتے رہتے ہیں۔ آلے کی پلیٹ فارم رسائی کی ترتیبات میں 'اسٹریم انکرپشن' بند کریں، یا متاثرہ کیمروں کو براہ راست منسلک کریں (براہ راست کیمرا کنکشن)۔"
+    },
+    "default_password": {
+      "title": "{device}: کمزور یا ڈیفالٹ پاس ورڈ",
+      "description": "آلہ بتاتا ہے کہ اس کا پاس ورڈ کمزور ہے یا اب بھی ڈیفالٹ ہے۔ اسے آلے پر تبدیل کریں۔"
+    },
+    "basic_over_http": {
+      "title": "{device}: پاس ورڈ بغیر حفاظت کے بھیجا جاتا ہے",
+      "description": "آلہ صرف HTTP پر Basic تصدیق قبول کرتا ہے، اس لیے پاس ورڈ سادہ متن میں جاتا ہے۔ آلے پر Digest تصدیق یا HTTPS فعال کریں۔"
+    },
+    "clock_skew": {
+      "title": "{device}: گھڑی {detail} سیکنڈ مختلف",
+      "description": "آلے کی گھڑی Home Assistant سے نمایاں طور پر مختلف ہے۔ واقعات کے اوقات درست کیے جاتے ہیں، لیکن ریکارڈنگز میں غلط وقت ہوتا ہے۔ آلے پر NTP ترتیب دیں۔"
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "آلے نے اسناد مسترد کر دیں۔"
+    },
+    "locked_out": {
+      "message": "آلے نے لاگ ان لاک کر دیا ہے۔ لاک کو طویل ہونے سے بچانے کے لیے سیٹ اپ روک دیا گیا ہے۔"
+    },
+    "not_isapi": {
+      "message": "آلہ Hikvision ISAPI آلے کی طرح جواب نہیں دیتا۔"
+    },
+    "unreachable": {
+      "message": "{host} تک رسائی نہیں ہو سکتی۔"
+    },
+    "other_device": {
+      "message": "{host} پر اب کوئی دوسرا آلہ جواب دیتا ہے۔ 'دوبارہ ترتیب دیں' استعمال کریں یا اسے نئے آلے کے طور پر شامل کریں۔"
+    },
+    "write_failed": {
+      "message": "آلے نے تبدیلی قبول نہیں کی ({reason})۔"
+    },
+    "unknown_device": {
+      "message": "منتخب آلہ Hikvision Bridge سے تعلق نہیں رکھتا۔"
+    },
+    "channel_needed": {
+      "message": "کوئی کیمرا یا چینل آلہ منتخب کریں۔"
+    },
+    "confirm_needed": {
+      "message": "یہ کارروائی آلے کو تبدیل کرتی ہے۔ چلانے کے لیے 'تبدیلی کی تصدیق کریں' آن کریں۔"
+    },
+    "bad_path": {
+      "message": "صرف /ISAPI/ کے نیچے کے راستوں کی اجازت ہے۔"
+    },
+    "webhook_off": {
+      "message": "پہلے اختیارات میں ویب ہک فعال کریں۔"
+    },
+    "no_url": {
+      "message": "Home Assistant میں کوئی مقامی URL ترتیب نہیں دیا گیا۔"
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect نے لاگ ان مسترد کر دیا۔"
+    },
+    "cloud_failed": {
+      "message": "Hik-Connect درخواست ناکام ({reason})۔"
+    },
+    "cloud_gone": {
+      "message": "آلہ اب Hik-Connect اکاؤنٹ میں نہیں ہے۔"
+    },
+    "setting_inactive": {
+      "message": "یہ ترتیب کیمرے کے موجودہ موڈ میں فعال نہیں ہے۔"
+    },
+    "read_failed": {
+      "message": "ڈیوائس نے درخواست کا جواب نہیں دیا ({reason})۔"
+    },
+    "bad_period": {
+      "message": "اختتام آغاز کے بعد اور زیادہ سے زیادہ ایک دن بعد ہونا چاہیے۔"
+    },
+    "no_recordings": {
+      "message": "اس مدت کے لیے کوئی ریکارڈنگ نہیں ملی۔"
+    },
+    "too_many_recordings": {
+      "message": "اس مدت میں {count} ریکارڈنگز ہیں؛ ایک وقت میں زیادہ سے زیادہ {limit} محفوظ کی جا سکتی ہیں۔"
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant اپنے میڈیا فولڈر میں نہیں لکھ سکتا۔"
+    },
+    "recording_encrypted": {
+      "message": "ڈیوائس اپنی ریکارڈنگز کو انکرپٹ کرتی ہے (اسٹریم انکرپشن)، اس لیے انہیں نہ چلایا جا سکتا ہے نہ تبدیل کیا جا سکتا ہے۔ اسٹریم انکرپشن بند کریں یا کیمرے کا میموری کارڈ استعمال کریں۔"
+    },
+    "conversion_failed": {
+      "message": "ریکارڈنگ تبدیل نہیں ہو سکی۔"
+    },
+    "no_ffmpeg": {
+      "message": "Home Assistant میں ffmpeg دستیاب نہیں ہے۔"
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "خودکار",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "واقعات کی اسٹریم (تجویز کردہ)",
+        "webhook": "ویب ہک",
+        "both": "دونوں"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "ریکارڈر",
+        "camera": "کیمرا"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "ریکارڈ شدہ حالت میں MP4 (تجویز کردہ)",
+        "h264": "H.264 میں تبدیل کریں (ہر جگہ چلتا ہے، زیادہ CPU بوجھ)",
+        "stream": "ڈیوائس سے اسٹریم (RTSP سے HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "خودکار",
+        "recorder": "ریکارڈر",
+        "card": "میموری کارڈ"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "ریکارڈ شدہ حالت میں MP4",
+        "h264": "H.264 میں تبدیل شدہ MP4",
+        "ts": "ریکارڈ شدہ حالت میں MPEG-TS",
+        "original": "اصل فائل (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "سب",
+        "continuous": "مسلسل",
+        "motion": "حرکت",
+        "alarm": "الارم ان پٹ",
+        "event": "اسمارٹ ایونٹ",
+        "manual": "دستی",
+        "other": "دیگر"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "واقعات کی رپورٹنگ فعال کریں",
+      "description": "جن شناختوں میں لنکیج 'نگرانی مرکز کو مطلع کریں' نہیں ہے ان کے لیے اسے آن کرتا ہے۔ جب تک 'صرف پیش نظارہ' بند نہ ہو، پیش نظارہ کے طور پر چلتا ہے۔",
+      "fields": {
+        "device_id": {
+          "name": "آلہ",
+          "description": "کیمرا، چینل یا ریکارڈر۔"
+        },
+        "dry_run": {
+          "name": "صرف پیش نظارہ",
+          "description": "صرف وہ درج کریں جو بدلے گا۔"
+        },
+        "kinds": {
+          "name": "شناختیں",
+          "description": "ان اقسام تک محدود کریں؛ خالی کا مطلب سب۔"
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "ISAPI درخواست",
+      "description": "ایک ISAPI درخواست بھیجتا ہے اور راز ہٹا کر جواب واپس کرتا ہے۔ تبدیلی کرنے والے طریقوں کے لیے تصدیق درکار ہے۔",
+      "fields": {
+        "device_id": {
+          "name": "آلہ",
+          "description": "کیمرا، چینل یا ریکارڈر۔"
+        },
+        "method": {
+          "name": "طریقہ",
+          "description": "HTTP طریقہ۔"
+        },
+        "path": {
+          "name": "راستہ",
+          "description": "/ISAPI/ سے شروع ہونے والا راستہ۔"
+        },
+        "body": {
+          "name": "باڈی",
+          "description": "تبدیلی کرنے والے طریقوں کے لیے XML یا JSON باڈی۔"
+        },
+        "confirm_write": {
+          "name": "تبدیلی کی تصدیق کریں",
+          "description": "آلے کو تبدیل کرنے والی ہر چیز کے لیے ضروری۔"
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "PTZ حرکت",
+      "description": "PTZ کیمرے کو تھوڑی دیر کے لیے حرکت دیتا ہے۔",
+      "fields": {
+        "device_id": {
+          "name": "آلہ",
+          "description": "کیمرا، چینل یا ریکارڈر۔"
+        },
+        "pan": {
+          "name": "پین",
+          "description": "رفتار، منفی بائیں ہے۔"
+        },
+        "tilt": {
+          "name": "ٹلٹ",
+          "description": "رفتار، منفی نیچے ہے۔"
+        },
+        "zoom": {
+          "name": "زوم",
+          "description": "رفتار، منفی زوم آؤٹ کرتا ہے۔"
+        },
+        "duration": {
+          "name": "دورانیہ",
+          "description": "رکنے سے پہلے کے سیکنڈ۔"
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ پری سیٹ",
+      "description": "PTZ کیمرے کو محفوظ پری سیٹ پر لے جاتا ہے۔",
+      "fields": {
+        "device_id": {
+          "name": "آلہ",
+          "description": "کیمرا، چینل یا ریکارڈر۔"
+        },
+        "preset": {
+          "name": "پری سیٹ",
+          "description": "پری سیٹ نمبر۔"
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "اطلاعی ہوسٹ مقرر کریں",
+      "description": "آلے کے ایک اطلاعی ہوسٹ سلاٹ کو اس Home Assistant ویب ہک کی طرف اشارہ کرتا ہے۔",
+      "fields": {
+        "device_id": {
+          "name": "آلہ",
+          "description": "کیمرا، چینل یا ریکارڈر۔"
+        },
+        "slot": {
+          "name": "سلاٹ",
+          "description": "آلے پر اطلاعی ہوسٹ نمبر۔"
+        },
+        "confirm_write": {
+          "name": "تبدیلی کی تصدیق کریں",
+          "description": "آلے کو تبدیل کرنے والی ہر چیز کے لیے ضروری۔"
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "ریکارڈنگز تلاش کریں",
+      "description": "کسی کیمرے یا چینل کی ایک مدت کی ریکارڈ شدہ فائلیں دکھاتا ہے۔",
+      "fields": {
+        "device_id": {
+          "name": "آلہ",
+          "description": "کیمرا یا چینل۔"
+        },
+        "start": {
+          "name": "آغاز",
+          "description": "مدت کا آغاز۔"
+        },
+        "end": {
+          "name": "اختتام",
+          "description": "مدت کا اختتام، آغاز کے زیادہ سے زیادہ ایک دن بعد۔"
+        },
+        "source": {
+          "name": "ماخذ",
+          "description": "ریکارڈر یا کیمرے کا میموری کارڈ؛ خودکار پہلے ریکارڈر آزماتا ہے۔"
+        }
+      }
+    },
+    "download_recording": {
+      "name": "ریکارڈنگ محفوظ کریں",
+      "description": "ایک مدت کی ریکارڈنگز کو میڈیا فولڈر 'hikvision_bridge' میں محفوظ کرتا ہے۔",
+      "fields": {
+        "device_id": {
+          "name": "آلہ",
+          "description": "کیمرا یا چینل۔"
+        },
+        "start": {
+          "name": "آغاز",
+          "description": "مدت کا آغاز۔"
+        },
+        "end": {
+          "name": "اختتام",
+          "description": "مدت کا اختتام، آغاز کے زیادہ سے زیادہ ایک دن بعد۔"
+        },
+        "source": {
+          "name": "ماخذ",
+          "description": "ریکارڈر یا کیمرے کا میموری کارڈ؛ خودکار پہلے ریکارڈر آزماتا ہے۔"
+        },
+        "format": {
+          "name": "فارمیٹ",
+          "description": "MP4 اور MPEG-TS ریکارڈ شدہ ویڈیو کو جوں کا توں رکھتے ہیں؛ H.264 اسے تبدیل کرتا ہے، جس میں چھوٹی مشینوں پر دیر لگتی ہے۔"
+        },
+        "trim": {
+          "name": "مدت تک کاٹیں",
+          "description": "فائلوں کو مدت تک کاٹتا ہے؛ اصل فائل کبھی نہیں کاٹی جاتی۔"
+        }
+      }
+    }
+  }
+}

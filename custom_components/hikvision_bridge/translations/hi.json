@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "लोकल नेटवर्क में कैमरा या रिकॉर्डर",
+          "cloud": "Hik-Connect खाता (क्लाउड)"
+        }
+      },
+      "device": {
+        "title": "डिवाइस कनेक्ट करें",
+        "description": "सेटअप के दौरान केवल पढ़ने की अनुमति का उपयोग होता है।",
+        "data": {
+          "host": "होस्ट",
+          "port": "पोर्ट (वैकल्पिक)",
+          "connection": "कनेक्शन",
+          "verify_tls": "HTTPS प्रमाणपत्र सत्यापित करें",
+          "username": "उपयोगकर्ता नाम",
+          "password": "पासवर्ड"
+        },
+        "data_description": {
+          "host": "कैमरा या रिकॉर्डर का IP पता या होस्ट नाम।",
+          "port": "80 (HTTP) या 443 (HTTPS) के लिए खाली छोड़ें।",
+          "connection": "स्वचालित पहले HTTPS आज़माता है और केवल तभी HTTP पर जाता है जब HTTPS कनेक्ट न हो सके।",
+          "username": "हर डिवाइस का अपना उपयोगकर्ता हो सकता है। एक अलग ऑपरेटर उपयोगकर्ता की सलाह दी जाती है।"
+        }
+      },
+      "duplicate": {
+        "title": "कैमरा पहले से ज्ञात है",
+        "description": "यह कैमरा पहले से {recorder} द्वारा चैनल {channel} पर दिखाया जा रहा है। इसे उस चैनल से जोड़ें (एक डिवाइस, कैमरे से सीधी स्ट्रीम) या अलग डिवाइस के रूप में जोड़ें?",
+        "menu_options": {
+          "link_to_channel": "रिकॉर्डर चैनल से जोड़ें",
+          "keep_separate": "अलग डिवाइस के रूप में जोड़ें"
+        }
+      },
+      "reauth_confirm": {
+        "title": "लॉगिन विफल",
+        "description": "{device} ({host}) ने सहेजे गए क्रेडेंशियल अस्वीकार कर दिए। मौजूदा क्रेडेंशियल दर्ज करें।",
+        "data": {
+          "username": "उपयोगकर्ता नाम",
+          "password": "पासवर्ड"
+        }
+      },
+      "reconfigure": {
+        "title": "कनेक्शन बदलें",
+        "description": "नया पता उसी डिवाइस तक ले जाना चाहिए।",
+        "data": {
+          "host": "होस्ट",
+          "port": "पोर्ट (वैकल्पिक)",
+          "connection": "कनेक्शन",
+          "verify_tls": "HTTPS प्रमाणपत्र सत्यापित करें",
+          "username": "उपयोगकर्ता नाम",
+          "password": "पासवर्ड"
+        },
+        "data_description": {
+          "host": "कैमरा या रिकॉर्डर का IP पता या होस्ट नाम।",
+          "port": "80 (HTTP) या 443 (HTTPS) के लिए खाली छोड़ें।",
+          "connection": "स्वचालित पहले HTTPS आज़माता है और केवल तभी HTTP पर जाता है जब HTTPS कनेक्ट न हो सके।",
+          "username": "हर डिवाइस का अपना उपयोगकर्ता हो सकता है। एक अलग ऑपरेटर उपयोगकर्ता की सलाह दी जाती है।"
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect में तृतीय पक्षों के लिए कोई आधिकारिक इंटरफ़ेस नहीं है। इंटीग्रेशन केवल डिवाइस सूची और स्थिति पढ़ता है; पासवर्ड Home Assistant में संग्रहीत होता है।",
+        "data": {
+          "account": "Hik-Connect खाता (ई-मेल या फ़ोन)",
+          "password": "पासवर्ड"
+        }
+      },
+      "cloud_captcha": {
+        "title": "सत्यापन कोड",
+        "description": "यहाँ दिखाया गया कोड दर्ज करें: {image}",
+        "data": {
+          "captcha": "कोड"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Hik-Connect लॉगिन",
+        "description": "{account} का पासवर्ड दर्ज करें।",
+        "data": {
+          "password": "पासवर्ड",
+          "captcha": "सत्यापन कोड (केवल माँगे जाने पर)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "उपयोगकर्ता नाम या पासवर्ड अस्वीकार हुआ। लॉकआउट से बचने के लिए आगे कोई प्रयास नहीं किया जाएगा।",
+      "locked_out": "विफल लॉगिन के बाद डिवाइस या खाता अस्थायी रूप से लॉक है। फिर से प्रयास करने से पहले प्रतीक्षा करें।",
+      "name_not_resolved": "होस्ट नाम हल नहीं किया जा सका।",
+      "tls_untrusted": "HTTPS प्रमाणपत्र विश्वसनीय नहीं है। प्रमाणपत्र सत्यापन बंद करें या HTTP का उपयोग करें।",
+      "cannot_connect": "कनेक्ट नहीं हो सकता।",
+      "not_isapi": "पता उत्तर देता है, लेकिन Hikvision ISAPI डिवाइस की तरह नहीं।",
+      "forbidden": "उपयोगकर्ता के पास आवश्यक अधिकार नहीं हैं।",
+      "unknown": "अप्रत्याशित त्रुटि।",
+      "wrong_camera": "यह पता चुने गए चैनल वाले कैमरे के बजाय किसी दूसरे कैमरे का है।",
+      "captcha_required": "Hik-Connect सत्यापन कोड माँग रहा है।",
+      "cloud_unavailable": "Hik-Connect अभी उपलब्ध नहीं है।",
+      "cloud_changed": "Hik-Connect ने अप्रत्याशित प्रारूप में उत्तर दिया।",
+      "cloud_rejected": "Hik-Connect ने अनुरोध अस्वीकार कर दिया।"
+    },
+    "abort": {
+      "already_configured": "यह डिवाइस या खाता पहले से सेट है।",
+      "reauth_successful": "क्रेडेंशियल अपडेट हो गए।",
+      "reconfigure_successful": "कनेक्शन अपडेट हो गया।",
+      "other_device": "यह पता किसी दूसरे डिवाइस का है। इसके बजाय इसे नए डिवाइस के रूप में जोड़ें।",
+      "channel_already_linked": "इस रिकॉर्डर चैनल का पहले से सीधा कनेक्शन है।",
+      "linked_to_channel": "कैमरा रिकॉर्डर चैनल से जोड़ दिया गया।"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "विकल्प",
+        "data": {
+          "event_path": "इवेंट कैसे पहुँचते हैं",
+          "hold_seconds": "डिटेक्शन चालू रखें (सेकंड)",
+          "rtsp_port": "RTSP पोर्ट (वैकल्पिक)",
+          "rtsp_transport": "RTSP ट्रांसपोर्ट",
+          "target_sensors": "लोगों और वाहनों के लिए अलग सेंसर",
+          "playback": "मीडिया ब्राउज़र में चलाना"
+        },
+        "data_description": {
+          "event_path": "इवेंट स्ट्रीम के लिए डिवाइस में कोई बदलाव नहीं चाहिए। वेबहुक के लिए डिवाइस को Home Assistant पर भेजना होगा।",
+          "hold_seconds": "कई डिटेक्शन में डिवाइस केवल शुरुआत की सूचना देते हैं; अंतिम सूचना के बाद सेंसर इतनी देर चालू रहता है।",
+          "playback": "रिकॉर्डिंग H.265 या H.264 में होती हैं। 'रिकॉर्ड किए अनुसार MP4' तुरंत शुरू होता है, लेकिन ब्राउज़र H.265 केवल हार्डवेयर समर्थन होने पर चलाते हैं। 'H.264 में बदलें' हर जगह चलता है और बहुत CPU लेता है। 'डिवाइस से स्ट्रीम' डिवाइस को RTSP पर रिकॉर्डिंग चलाने देता है।"
+        }
+      },
+      "webhook": {
+        "title": "वेबहुक",
+        "description": "सूचनाएँ {path} पर स्वीकार की जाती हैं (केवल लोकल नेटवर्क)। डिवाइस को वहाँ भेजने के लिए 'सूचना होस्ट सेट करें' क्रिया या डिवाइस के वेब इंटरफ़ेस का उपयोग करें।"
+      }
+    },
+    "abort": {
+      "no_options": "Hik-Connect खाते के कोई विकल्प नहीं हैं।"
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "कैमरा सीधे कनेक्ट करें"
+      },
+      "entry_type": "सीधा कैमरा कनेक्शन",
+      "step": {
+        "user": {
+          "title": "सीधा कैमरा कनेक्शन",
+          "description": "रिकॉर्डर चैनल के कैमरे को उसके अपने पते और क्रेडेंशियल के साथ सीधे कनेक्ट करता है। तब लाइव स्ट्रीम कैमरे से आती है, जो रिकॉर्डर की स्ट्रीम एन्क्रिप्टेड होने पर भी मदद करता है।",
+          "data": {
+            "channel_id": "रिकॉर्डर चैनल",
+            "host": "होस्ट",
+            "port": "पोर्ट (वैकल्पिक)",
+            "connection": "कनेक्शन",
+            "verify_tls": "HTTPS प्रमाणपत्र सत्यापित करें",
+            "username": "उपयोगकर्ता नाम",
+            "password": "पासवर्ड",
+            "reuse_recorder_credentials": "रिकॉर्डर का उपयोगकर्ता नाम और पासवर्ड उपयोग करें",
+            "event_source": "डिटेक्शन यहाँ से लें"
+          },
+          "data_description": {
+            "host": "वह पता जिस पर Home Assistant कैमरे तक सीधे पहुँचता है (उदाहरण के लिए रिकॉर्डर के PoE सबनेट में, यदि रूट किया गया हो)।",
+            "reuse_recorder_credentials": "यदि कैमरे के अपने क्रेडेंशियल हैं तो बंद रहने दें।"
+          }
+        },
+        "reconfigure": {
+          "title": "सीधा कैमरा कनेक्शन बदलें",
+          "description": "रिकॉर्डर चैनल के कैमरे को उसके अपने पते और क्रेडेंशियल के साथ सीधे कनेक्ट करता है। तब लाइव स्ट्रीम कैमरे से आती है, जो रिकॉर्डर की स्ट्रीम एन्क्रिप्टेड होने पर भी मदद करता है।",
+          "data": {
+            "channel_id": "रिकॉर्डर चैनल",
+            "host": "होस्ट",
+            "port": "पोर्ट (वैकल्पिक)",
+            "connection": "कनेक्शन",
+            "verify_tls": "HTTPS प्रमाणपत्र सत्यापित करें",
+            "username": "उपयोगकर्ता नाम",
+            "password": "पासवर्ड",
+            "reuse_recorder_credentials": "रिकॉर्डर का उपयोगकर्ता नाम और पासवर्ड उपयोग करें",
+            "event_source": "डिटेक्शन यहाँ से लें"
+          },
+          "data_description": {
+            "host": "वह पता जिस पर Home Assistant कैमरे तक सीधे पहुँचता है (उदाहरण के लिए रिकॉर्डर के PoE सबनेट में, यदि रूट किया गया हो)।",
+            "reuse_recorder_credentials": "यदि कैमरे के अपने क्रेडेंशियल हैं तो बंद रहने दें।"
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "उपयोगकर्ता नाम या पासवर्ड अस्वीकार हुआ। लॉकआउट से बचने के लिए आगे कोई प्रयास नहीं किया जाएगा।",
+        "locked_out": "विफल लॉगिन के बाद डिवाइस या खाता अस्थायी रूप से लॉक है। फिर से प्रयास करने से पहले प्रतीक्षा करें।",
+        "name_not_resolved": "होस्ट नाम हल नहीं किया जा सका।",
+        "tls_untrusted": "HTTPS प्रमाणपत्र विश्वसनीय नहीं है। प्रमाणपत्र सत्यापन बंद करें या HTTP का उपयोग करें।",
+        "cannot_connect": "कनेक्ट नहीं हो सकता।",
+        "not_isapi": "पता उत्तर देता है, लेकिन Hikvision ISAPI डिवाइस की तरह नहीं।",
+        "forbidden": "उपयोगकर्ता के पास आवश्यक अधिकार नहीं हैं।",
+        "unknown": "अप्रत्याशित त्रुटि।",
+        "wrong_camera": "यह पता चुने गए चैनल वाले कैमरे के बजाय किसी दूसरे कैमरे का है।",
+        "captcha_required": "Hik-Connect सत्यापन कोड माँग रहा है।",
+        "cloud_unavailable": "Hik-Connect अभी उपलब्ध नहीं है।",
+        "cloud_changed": "Hik-Connect ने अप्रत्याशित प्रारूप में उत्तर दिया।",
+        "cloud_rejected": "Hik-Connect ने अनुरोध अस्वीकार कर दिया।"
+      },
+      "abort": {
+        "not_loaded": "पहले रिकॉर्डर लोड होना चाहिए।",
+        "not_a_recorder": "केवल रिकॉर्डर में जोड़ने के लिए चैनल होते हैं।",
+        "no_free_channel": "हर चैनल का पहले से सीधा कनेक्शन है।",
+        "reconfigure_successful": "सीधा कनेक्शन अपडेट हो गया।"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "गति"
+      },
+      "tamper": {
+        "name": "छेड़छाड़"
+      },
+      "video_loss": {
+        "name": "वीडियो लॉस"
+      },
+      "scene_change": {
+        "name": "दृश्य परिवर्तन"
+      },
+      "intrusion": {
+        "name": "घुसपैठ"
+      },
+      "line_crossing": {
+        "name": "लाइन क्रॉसिंग"
+      },
+      "region_entrance": {
+        "name": "क्षेत्र में प्रवेश"
+      },
+      "region_exiting": {
+        "name": "क्षेत्र से निकास"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "डीफ़ोकस"
+      },
+      "audio_exception": {
+        "name": "ऑडियो विसंगति"
+      },
+      "target_human": {
+        "name": "व्यक्ति"
+      },
+      "target_vehicle": {
+        "name": "वाहन"
+      },
+      "alarm_input": {
+        "name": "अलार्म इनपुट {port}"
+      },
+      "channel_online": {
+        "name": "कैमरा कनेक्टेड"
+      },
+      "storage_problem": {
+        "name": "स्टोरेज समस्या"
+      },
+      "event_link": {
+        "name": "इवेंट कनेक्शन"
+      },
+      "stream_encryption": {
+        "name": "स्ट्रीम एन्क्रिप्शन"
+      },
+      "cloud_online": {
+        "name": "क्लाउड कनेक्शन"
+      },
+      "cloud_stream_encryption": {
+        "name": "स्ट्रीम एन्क्रिप्शन"
+      },
+      "recording": {
+        "name": "रिकॉर्डिंग"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "गति पहचान"
+      },
+      "tamper_detection": {
+        "name": "छेड़छाड़ पहचान"
+      },
+      "scene_change_detection": {
+        "name": "दृश्य परिवर्तन पहचान"
+      },
+      "intrusion_detection": {
+        "name": "घुसपैठ पहचान"
+      },
+      "line_crossing_detection": {
+        "name": "लाइन क्रॉसिंग पहचान"
+      },
+      "region_entrance_detection": {
+        "name": "क्षेत्र प्रवेश पहचान"
+      },
+      "region_exiting_detection": {
+        "name": "क्षेत्र निकास पहचान"
+      },
+      "alarm_output": {
+        "name": "अलार्म आउटपुट {port}"
+      },
+      "blc": {
+        "name": "बैकलाइट क्षतिपूर्ति"
+      },
+      "hlc": {
+        "name": "हाइलाइट क्षतिपूर्ति"
+      },
+      "overexposure_suppression": {
+        "name": "ओवरएक्सपोज़र दमन"
+      },
+      "image_flip": {
+        "name": "इमेज फ़्लिप"
+      },
+      "stabilization": {
+        "name": "इमेज स्थिरीकरण"
+      },
+      "lens_correction": {
+        "name": "लेंस विकृति सुधार"
+      },
+      "video_loss_detection": {
+        "name": "वीडियो लॉस पहचान"
+      },
+      "input_armed": {
+        "name": "अलार्म इनपुट {port} सशस्त्र"
+      },
+      "park_action": {
+        "name": "पार्क क्रिया"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "मुख्य स्ट्रीम"
+      },
+      "sub_stream": {
+        "name": "सब स्ट्रीम"
+      },
+      "third_stream": {
+        "name": "तीसरी स्ट्रीम"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "डिटेक्शन",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "गति",
+              "intrusion": "घुसपैठ",
+              "line_crossing": "लाइन क्रॉसिंग",
+              "region_entrance": "क्षेत्र में प्रवेश",
+              "region_exiting": "क्षेत्र से निकास",
+              "face": "चेहरा",
+              "anpr": "नंबर प्लेट"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "क्लाउड कनेक्शन परिवर्तन",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "ऑनलाइन",
+              "went_offline": "ऑफ़लाइन"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "स्टोरेज {unit}",
+        "state": {
+          "ok": "ठीक",
+          "unformatted": "फ़ॉर्मेट नहीं",
+          "error": "त्रुटि",
+          "idle": "निष्क्रिय",
+          "sleeping": "स्लीप",
+          "abnormal": "असामान्य",
+          "full": "भरा हुआ",
+          "unknown": "अज्ञात"
+        }
+      },
+      "storage_free": {
+        "name": "स्टोरेज {unit} खाली"
+      },
+      "storage_capacity": {
+        "name": "स्टोरेज {unit} क्षमता"
+      },
+      "event_latency": {
+        "name": "इवेंट विलंब"
+      },
+      "boot_time": {
+        "name": "अंतिम बूट"
+      },
+      "cpu_load": {
+        "name": "CPU लोड"
+      },
+      "memory_use": {
+        "name": "मेमोरी उपयोग"
+      },
+      "reboots": {
+        "name": "रीबूट",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "रिपोर्ट किया गया टाइमस्टैम्प"
+          }
+        }
+      },
+      "network_address": {
+        "name": "IP पता"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "रीस्टार्ट"
+      },
+      "rescan": {
+        "name": "क्षमताएँ फिर से पढ़ें"
+      },
+      "cloud_unlock": {
+        "name": "दरवाज़ा खोलें (क्लाउड)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ बाएँ पैन"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ दाएँ पैन"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ ऊपर टिल्ट"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ नीचे टिल्ट"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ ज़ूम इन"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ ज़ूम आउट"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "PTZ प्रीसेट"
+      },
+      "day_night": {
+        "name": "दिन/रात मोड",
+        "state": {
+          "day": "दिन",
+          "night": "रात",
+          "auto": "ऑटो",
+          "schedule": "शेड्यूल",
+          "eventtrigger": "इवेंट ट्रिगर"
+        }
+      },
+      "supplement_light": {
+        "name": "सहायक प्रकाश",
+        "state": {
+          "eventintelligence": "स्मार्ट (इवेंट)",
+          "colorvuwhitelight": "सफ़ेद रोशनी",
+          "irlight": "IR रोशनी",
+          "close": "बंद"
+        }
+      },
+      "light_brightness_control": {
+        "name": "प्रकाश चमक नियंत्रण",
+        "state": {
+          "auto": "ऑटो",
+          "manual": "मैनुअल"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "बंद",
+          "open": "चालू",
+          "auto": "ऑटो"
+        }
+      },
+      "blc_area": {
+        "name": "बैकलाइट क्षतिपूर्ति क्षेत्र",
+        "state": {
+          "close": "बंद",
+          "up": "ऊपर",
+          "down": "नीचे",
+          "left": "बाएँ",
+          "right": "दाएँ",
+          "center": "केंद्र",
+          "region": "कस्टम क्षेत्र",
+          "auto": "ऑटो"
+        }
+      },
+      "noise_reduction": {
+        "name": "शोर कमी",
+        "state": {
+          "close": "बंद",
+          "general": "सामान्य",
+          "advanced": "विशेषज्ञ"
+        }
+      },
+      "defog": {
+        "name": "डीफ़ॉग",
+        "state": {
+          "close": "बंद",
+          "open": "चालू",
+          "auto": "ऑटो"
+        }
+      },
+      "white_balance": {
+        "name": "व्हाइट बैलेंस",
+        "state": {
+          "manual": "मैनुअल",
+          "auto1": "ऑटो 1",
+          "auto2": "ऑटो 2",
+          "locked": "लॉक",
+          "daylightlamp": "फ़्लोरेसेंट लैंप",
+          "incandescentlight": "इनकैंडेसेंट लैंप",
+          "warmlight": "गर्म रोशनी",
+          "naturallight": "प्राकृतिक रोशनी"
+        }
+      },
+      "exposure_mode": {
+        "name": "एक्सपोज़र मोड",
+        "state": {
+          "auto": "ऑटो",
+          "manual": "मैनुअल"
+        }
+      },
+      "shutter": {
+        "name": "शटर"
+      },
+      "power_line_frequency": {
+        "name": "पावर लाइन आवृत्ति",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "फ़्लिप दिशा",
+        "state": {
+          "leftright": "बाएँ/दाएँ",
+          "updown": "ऊपर/नीचे",
+          "center": "केंद्र"
+        }
+      },
+      "strobe_frequency": {
+        "name": "स्ट्रोब लाइट आवृत्ति",
+        "state": {
+          "high": "उच्च",
+          "medium": "मध्यम",
+          "low": "निम्न",
+          "normallyon": "लगातार चालू"
+        }
+      },
+      "siren_sound": {
+        "name": "सायरन ध्वनि"
+      },
+      "park_action_type": {
+        "name": "पार्क क्रिया प्रकार",
+        "state": {
+          "autoscan": "ऑटो स्कैन",
+          "framescan": "फ़्रेम स्कैन",
+          "randomscan": "रैंडम स्कैन",
+          "patrol": "पेट्रोल",
+          "pattern": "पैटर्न",
+          "preset": "प्रीसेट",
+          "panoramascan": "पैनोरमा स्कैन",
+          "tiltscan": "टिल्ट स्कैन"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "दिन/रात संवेदनशीलता"
+      },
+      "day_night_delay": {
+        "name": "दिन/रात विलंब"
+      },
+      "white_light_brightness": {
+        "name": "सफ़ेद रोशनी की चमक"
+      },
+      "ir_light_brightness": {
+        "name": "IR रोशनी की चमक"
+      },
+      "white_light_duration": {
+        "name": "सफ़ेद रोशनी की अवधि"
+      },
+      "brightness": {
+        "name": "चमक"
+      },
+      "contrast": {
+        "name": "कंट्रास्ट"
+      },
+      "saturation": {
+        "name": "संतृप्ति"
+      },
+      "sharpness": {
+        "name": "शार्पनेस"
+      },
+      "wdr_level": {
+        "name": "WDR स्तर"
+      },
+      "hlc_level": {
+        "name": "हाइलाइट क्षतिपूर्ति स्तर"
+      },
+      "noise_reduction_level": {
+        "name": "शोर कमी स्तर"
+      },
+      "defog_level": {
+        "name": "डीफ़ॉग स्तर"
+      },
+      "white_balance_red": {
+        "name": "व्हाइट बैलेंस लाल"
+      },
+      "white_balance_blue": {
+        "name": "व्हाइट बैलेंस नीला"
+      },
+      "gain_limit": {
+        "name": "गेन सीमा"
+      },
+      "strobe_duration": {
+        "name": "स्ट्रोब लाइट अवधि"
+      },
+      "siren_volume": {
+        "name": "सायरन वॉल्यूम"
+      },
+      "siren_repeats": {
+        "name": "सायरन दोहराव"
+      },
+      "speaker_volume": {
+        "name": "स्पीकर वॉल्यूम"
+      },
+      "microphone_volume": {
+        "name": "माइक्रोफ़ोन वॉल्यूम"
+      },
+      "park_time": {
+        "name": "पार्क समय"
+      },
+      "park_action_number": {
+        "name": "पार्क क्रिया संख्या"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: लॉगिन लॉक",
+      "description": "विफल प्रयासों के बाद डिवाइस ने लॉगिन लॉक कर दिया। इंटीग्रेशन लगभग {minutes} मिनट रुकता है और उससे पहले फिर प्रयास नहीं करता।"
+    },
+    "channel_link_auth": {
+      "title": "{device}: {channel} से सीधा कनेक्शन अस्वीकार",
+      "description": "कैमरे ने सीधे कनेक्शन के क्रेडेंशियल अस्वीकार कर दिए। इसके बजाय रिकॉर्डर का उपयोग होता है। इस चैनल का सीधा कनेक्शन अपडेट करें।"
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: {channel} पर दूसरा कैमरा",
+      "description": "इस चैनल का सीधा कनेक्शन उस कैमरे से अलग कैमरे तक ले जाता है जो अब रिकॉर्डर से जुड़ा है। ठीक होने तक इसका उपयोग नहीं होता।"
+    },
+    "center_link_missing": {
+      "title": "{device}: {channel} पर {kind} रिपोर्ट नहीं हो रहा",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "रिपोर्टिंग चालू करें",
+            "description": "डिवाइस {kind} पहचानता है लेकिन इसे इवेंट स्ट्रीम में नहीं भेजता, क्योंकि लिंकेज 'निगरानी केंद्र को सूचित करें' बंद है। केवल वह लिंकेज चालू करने के लिए पुष्टि करें (ट्रिगर {trigger}); और कुछ नहीं बदलता। {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "डिवाइस ने बदलाव स्वीकार नहीं किया।"
+        },
+        "abort": {
+          "not_loaded": "डिवाइस लोड नहीं है।"
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: {channel} पर {kind} के लिए कोई क्षेत्र नहीं बनाया गया",
+      "description": "डिटेक्शन चालू है, लेकिन कोई लाइन या क्षेत्र नहीं बनाया गया, इसलिए यह ट्रिगर नहीं हो सकता। इसे डिवाइस के वेब इंटरफ़ेस में बनाएँ।"
+    },
+    "detection_off": {
+      "title": "{device}: {channel} पर {kind} बंद है",
+      "description": "यह डिटेक्शन समर्थित है लेकिन बंद है। उपयोग करना हो तो इसकी स्विच एंटिटी से चालू करें।"
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {channel} पर {kind} केवल {detail} के लिए",
+      "description": "रिकॉर्डर यह डिटेक्शन केवल सूचीबद्ध लक्ष्य प्रकारों के लिए रिपोर्ट करता है। अन्य गतिविधि से यह ट्रिगर नहीं होगा।"
+    },
+    "stream_encrypted": {
+      "title": "{device}: वीडियो स्ट्रीम Hik-Connect द्वारा एन्क्रिप्टेड",
+      "description": "Hik-Connect के लिए स्ट्रीम एन्क्रिप्शन चालू है। Home Assistant इस स्ट्रीम को डिकोड नहीं कर सकता; स्नैपशॉट और इवेंट काम करते रहते हैं। डिवाइस की प्लेटफ़ॉर्म एक्सेस सेटिंग्स में 'स्ट्रीम एन्क्रिप्शन' बंद करें, या प्रभावित कैमरों को सीधे कनेक्ट करें (सीधा कैमरा कनेक्शन)।"
+    },
+    "default_password": {
+      "title": "{device}: कमज़ोर या डिफ़ॉल्ट पासवर्ड",
+      "description": "डिवाइस बताता है कि उसका पासवर्ड कमज़ोर है या अभी भी डिफ़ॉल्ट है। इसे डिवाइस पर बदलें।"
+    },
+    "basic_over_http": {
+      "title": "{device}: पासवर्ड बिना सुरक्षा के भेजा जाता है",
+      "description": "डिवाइस केवल HTTP पर Basic प्रमाणीकरण स्वीकार करता है, इसलिए पासवर्ड सादे टेक्स्ट में जाता है। डिवाइस पर Digest प्रमाणीकरण या HTTPS चालू करें।"
+    },
+    "clock_skew": {
+      "title": "{device}: घड़ी {detail} s आगे-पीछे",
+      "description": "डिवाइस की घड़ी Home Assistant से काफ़ी अलग है। इवेंट समय सुधारे जाते हैं, लेकिन रिकॉर्डिंग में गलत समय आता है। डिवाइस पर NTP कॉन्फ़िगर करें।"
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "डिवाइस ने क्रेडेंशियल अस्वीकार कर दिए।"
+    },
+    "locked_out": {
+      "message": "डिवाइस ने लॉगिन लॉक कर दिया है। लॉक को बढ़ने से रोकने के लिए सेटअप रोका गया है।"
+    },
+    "not_isapi": {
+      "message": "डिवाइस Hikvision ISAPI डिवाइस की तरह उत्तर नहीं देता।"
+    },
+    "unreachable": {
+      "message": "{host} तक नहीं पहुँचा जा सकता।"
+    },
+    "other_device": {
+      "message": "{host} पर अब कोई दूसरा डिवाइस उत्तर देता है। 'पुनः कॉन्फ़िगर करें' का उपयोग करें या इसे नए डिवाइस के रूप में जोड़ें।"
+    },
+    "write_failed": {
+      "message": "डिवाइस ने बदलाव स्वीकार नहीं किया ({reason})।"
+    },
+    "unknown_device": {
+      "message": "चुना गया डिवाइस Hikvision Bridge का नहीं है।"
+    },
+    "channel_needed": {
+      "message": "कोई कैमरा या चैनल डिवाइस चुनें।"
+    },
+    "confirm_needed": {
+      "message": "यह क्रिया डिवाइस को बदलती है। इसे चलाने के लिए 'बदलाव की पुष्टि करें' चालू करें।"
+    },
+    "bad_path": {
+      "message": "केवल /ISAPI/ के नीचे के पथ की अनुमति है।"
+    },
+    "webhook_off": {
+      "message": "पहले विकल्पों में वेबहुक चालू करें।"
+    },
+    "no_url": {
+      "message": "Home Assistant में कोई लोकल URL कॉन्फ़िगर नहीं है।"
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect ने लॉगिन अस्वीकार कर दिया।"
+    },
+    "cloud_failed": {
+      "message": "Hik-Connect अनुरोध विफल ({reason})।"
+    },
+    "cloud_gone": {
+      "message": "डिवाइस अब Hik-Connect खाते में नहीं है।"
+    },
+    "setting_inactive": {
+      "message": "यह सेटिंग कैमरे के वर्तमान मोड में सक्रिय नहीं है।"
+    },
+    "read_failed": {
+      "message": "डिवाइस ने अनुरोध का उत्तर नहीं दिया ({reason})।"
+    },
+    "bad_period": {
+      "message": "अंत, शुरुआत के बाद और अधिकतम एक दिन बाद होना चाहिए।"
+    },
+    "no_recordings": {
+      "message": "इस अवधि के लिए कोई रिकॉर्डिंग नहीं मिली।"
+    },
+    "too_many_recordings": {
+      "message": "इस अवधि में {count} रिकॉर्डिंग हैं; एक बार में अधिकतम {limit} सहेजी जा सकती हैं।"
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant अपने मीडिया फ़ोल्डर में नहीं लिख सकता।"
+    },
+    "recording_encrypted": {
+      "message": "डिवाइस अपनी रिकॉर्डिंग एन्क्रिप्ट करता है (स्ट्रीम एन्क्रिप्शन), इसलिए उन्हें न चलाया जा सकता है न बदला जा सकता है। स्ट्रीम एन्क्रिप्शन बंद करें या कैमरे का मेमोरी कार्ड इस्तेमाल करें।"
+    },
+    "conversion_failed": {
+      "message": "रिकॉर्डिंग को बदला नहीं जा सका।"
+    },
+    "no_ffmpeg": {
+      "message": "Home Assistant में ffmpeg उपलब्ध नहीं है।"
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "स्वचालित",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "इवेंट स्ट्रीम (अनुशंसित)",
+        "webhook": "वेबहुक",
+        "both": "दोनों"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "रिकॉर्डर",
+        "camera": "कैमरा"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "रिकॉर्ड किए अनुसार MP4 (अनुशंसित)",
+        "h264": "H.264 में बदलें (हर जगह चलता है, उच्च CPU भार)",
+        "stream": "डिवाइस से स्ट्रीम (RTSP से HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "स्वचालित",
+        "recorder": "रिकॉर्डर",
+        "card": "मेमोरी कार्ड"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "रिकॉर्ड किए अनुसार MP4",
+        "h264": "H.264 में बदला गया MP4",
+        "ts": "रिकॉर्ड किए अनुसार MPEG-TS",
+        "original": "मूल फ़ाइल (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "सभी",
+        "continuous": "लगातार",
+        "motion": "गति",
+        "alarm": "अलार्म इनपुट",
+        "event": "स्मार्ट इवेंट",
+        "manual": "मैनुअल",
+        "other": "अन्य"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "इवेंट रिपोर्टिंग चालू करें",
+      "description": "जिन डिटेक्शन में लिंकेज 'निगरानी केंद्र को सूचित करें' नहीं है, उनके लिए इसे चालू करता है। 'केवल पूर्वावलोकन' बंद न हो तो पूर्वावलोकन के रूप में चलता है।",
+      "fields": {
+        "device_id": {
+          "name": "डिवाइस",
+          "description": "कैमरा, चैनल या रिकॉर्डर।"
+        },
+        "dry_run": {
+          "name": "केवल पूर्वावलोकन",
+          "description": "केवल वह सूचीबद्ध करें जो बदलेगा।"
+        },
+        "kinds": {
+          "name": "डिटेक्शन",
+          "description": "इन प्रकारों तक सीमित करें; खाली का मतलब सभी।"
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "ISAPI अनुरोध",
+      "description": "एक ISAPI अनुरोध भेजता है और गोपनीय जानकारी हटाकर उत्तर लौटाता है। बदलाव करने वाली विधियों के लिए पुष्टि चाहिए।",
+      "fields": {
+        "device_id": {
+          "name": "डिवाइस",
+          "description": "कैमरा, चैनल या रिकॉर्डर।"
+        },
+        "method": {
+          "name": "विधि",
+          "description": "HTTP विधि।"
+        },
+        "path": {
+          "name": "पथ",
+          "description": "/ISAPI/ से शुरू होने वाला पथ।"
+        },
+        "body": {
+          "name": "बॉडी",
+          "description": "बदलाव करने वाली विधियों के लिए XML या JSON बॉडी।"
+        },
+        "confirm_write": {
+          "name": "बदलाव की पुष्टि करें",
+          "description": "डिवाइस को बदलने वाली हर चीज़ के लिए आवश्यक।"
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "PTZ मूव",
+      "description": "PTZ कैमरे को थोड़े समय के लिए घुमाता है।",
+      "fields": {
+        "device_id": {
+          "name": "डिवाइस",
+          "description": "कैमरा, चैनल या रिकॉर्डर।"
+        },
+        "pan": {
+          "name": "पैन",
+          "description": "गति, ऋणात्मक बाएँ है।"
+        },
+        "tilt": {
+          "name": "टिल्ट",
+          "description": "गति, ऋणात्मक नीचे है।"
+        },
+        "zoom": {
+          "name": "ज़ूम",
+          "description": "गति, ऋणात्मक ज़ूम आउट करता है।"
+        },
+        "duration": {
+          "name": "अवधि",
+          "description": "रुकने से पहले के सेकंड।"
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ प्रीसेट",
+      "description": "PTZ कैमरे को सहेजे गए प्रीसेट पर ले जाता है।",
+      "fields": {
+        "device_id": {
+          "name": "डिवाइस",
+          "description": "कैमरा, चैनल या रिकॉर्डर।"
+        },
+        "preset": {
+          "name": "प्रीसेट",
+          "description": "प्रीसेट संख्या।"
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "सूचना होस्ट सेट करें",
+      "description": "डिवाइस के एक सूचना होस्ट स्लॉट को इस Home Assistant वेबहुक पर इंगित करता है।",
+      "fields": {
+        "device_id": {
+          "name": "डिवाइस",
+          "description": "कैमरा, चैनल या रिकॉर्डर।"
+        },
+        "slot": {
+          "name": "स्लॉट",
+          "description": "डिवाइस पर सूचना होस्ट संख्या।"
+        },
+        "confirm_write": {
+          "name": "बदलाव की पुष्टि करें",
+          "description": "डिवाइस को बदलने वाली हर चीज़ के लिए आवश्यक।"
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "रिकॉर्डिंग खोजें",
+      "description": "किसी कैमरे या चैनल की एक अवधि की रिकॉर्ड की गई फ़ाइलें दिखाता है।",
+      "fields": {
+        "device_id": {
+          "name": "डिवाइस",
+          "description": "कैमरा या चैनल।"
+        },
+        "start": {
+          "name": "शुरुआत",
+          "description": "अवधि की शुरुआत।"
+        },
+        "end": {
+          "name": "अंत",
+          "description": "अवधि का अंत, शुरुआत के अधिकतम एक दिन बाद।"
+        },
+        "source": {
+          "name": "स्रोत",
+          "description": "रिकॉर्डर या कैमरे का मेमोरी कार्ड; स्वचालित पहले रिकॉर्डर आज़माता है।"
+        }
+      }
+    },
+    "download_recording": {
+      "name": "रिकॉर्डिंग सहेजें",
+      "description": "एक अवधि की रिकॉर्डिंग को मीडिया फ़ोल्डर 'hikvision_bridge' में सहेजता है।",
+      "fields": {
+        "device_id": {
+          "name": "डिवाइस",
+          "description": "कैमरा या चैनल।"
+        },
+        "start": {
+          "name": "शुरुआत",
+          "description": "अवधि की शुरुआत।"
+        },
+        "end": {
+          "name": "अंत",
+          "description": "अवधि का अंत, शुरुआत के अधिकतम एक दिन बाद।"
+        },
+        "source": {
+          "name": "स्रोत",
+          "description": "रिकॉर्डर या कैमरे का मेमोरी कार्ड; स्वचालित पहले रिकॉर्डर आज़माता है।"
+        },
+        "format": {
+          "name": "फ़ॉर्मेट",
+          "description": "MP4 और MPEG-TS रिकॉर्ड किया गया वीडियो वैसा ही रखते हैं; H.264 उसे बदलता है, जिसमें छोटी मशीनों पर देर लगती है।"
+        },
+        "trim": {
+          "name": "अवधि तक काटें",
+          "description": "फ़ाइलों को अवधि तक काटता है; मूल फ़ाइल कभी नहीं कटती।"
+        }
+      }
+    }
+  }
+}

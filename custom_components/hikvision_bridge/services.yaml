@@ -120,3 +120,67 @@ set_notification_host:
       default: false
       selector:
         boolean:
+
+search_recordings:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: hikvision_bridge
+    start:
+      required: true
+      selector:
+        datetime:
+    end:
+      required: true
+      selector:
+        datetime:
+    source:
+      default: auto
+      selector:
+        select:
+          translation_key: recording_source
+          options:
+            - auto
+            - recorder
+            - card
+
+download_recording:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: hikvision_bridge
+    start:
+      required: true
+      selector:
+        datetime:
+    end:
+      required: true
+      selector:
+        datetime:
+    source:
+      default: auto
+      selector:
+        select:
+          translation_key: recording_source
+          options:
+            - auto
+            - recorder
+            - card
+    format:
+      default: mp4
+      selector:
+        select:
+          translation_key: recording_format
+          options:
+            - mp4
+            - h264
+            - ts
+            - original
+    trim:
+      default: true
+      selector:
+        boolean:

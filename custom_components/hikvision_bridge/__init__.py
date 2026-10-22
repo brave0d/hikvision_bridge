@@ -14,6 +14,7 @@ from .model.discover import discover
 from .runtime.bridge import DeviceBridge, build_link
 from .runtime.hookin import async_register_webhook, async_unregister_webhook
 from .services import async_register_services
+from .views import async_register_views
 from .wire.faults import (
     AuthHiccup,
     BadCredentials,
@@ -49,6 +50,7 @@ type BridgeConfigEntry = ConfigEntry[DeviceBridge]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_register_services(hass)
+    async_register_views(hass)
     return True
 
 

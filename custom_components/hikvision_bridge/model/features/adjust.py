@@ -1,4 +1,4 @@
-"""All adjustable channel settings behind one interface: image, strobe, siren, speaker."""
+"""All adjustable channel settings behind one interface: image, strobe, siren, speaker, park."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from ...wire.link import IsapiLink
-from . import image, signals, speaker
+from . import image, park, signals, speaker
 from .image import ImageCapability, ImageSetting, ImageValue
 
 
@@ -42,6 +42,7 @@ SOURCES: dict[str, Source] = {
     "speaker": Source(
         speaker.SETTINGS, True, speaker.read_capabilities, speaker.read_values, speaker.write
     ),
+    "park": Source(park.SETTINGS, False, park.read_capabilities, park.read_values, park.write),
 }
 BY_KEY: dict[str, ImageSetting] = {
     setting.key: setting for source in SOURCES.values() for setting in source.settings

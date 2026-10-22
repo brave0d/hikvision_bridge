@@ -13,7 +13,8 @@
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS custom repository"></a>
   <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fyannik2480%2Fhikvision_bridge%2Fmain%2Fcustom_components%2Fhikvision_bridge%2Fmanifest.json&query=%24.version&label=version&color=10306b" alt="Version">
   <img src="https://img.shields.io/badge/Home%20Assistant-2026.9%2B-14a898.svg" alt="Home Assistant 2026.9 or newer">
-  <img src="https://img.shields.io/badge/languages-English%20%7C%20Deutsch-lightgrey.svg" alt="English and German">
+  <img src="https://img.shields.io/badge/languages-30-lightgrey.svg" alt="30 languages">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="Apache 2.0 license">
 </p>
 
 <p align="center">
@@ -44,11 +45,12 @@
 | Image settings | Day/night, supplement light, colour, WDR and more per channel (see below) |
 | Deterrence and audio | Strobe light duration and frequency, siren sound, volume and repeats, speaker and microphone volume (cameras that have them) |
 | Cameras | Main/sub stream per channel, snapshots, codec and resolution as attributes |
-| PTZ | Pan/tilt/zoom step buttons and a preset select per PTZ channel (also through a recorder); motorised zoom lenses get the zoom buttons only |
+| PTZ | Pan/tilt/zoom step buttons and a preset select per PTZ channel (also through a recorder); motorised zoom lenses get the zoom buttons only. Park action: switch, idle time, action type (preset, patrol, pattern, scans) and its number |
 | Recorder | One HA device per channel below the recorder, channel connected, recording per channel, storage status/free/capacity, alarm inputs |
 | Health | Event connection, event delay, stream encryption, IP address, repairs for misconfigured devices (see below); uptime/last boot, CPU, memory and reboot count (diagnostic, disabled by default; firmware that reports a timestamp instead of a count shows it as the `reported_timestamp` attribute); memory card of directly connected cameras |
+| Recordings | Recorder and memory-card recordings in the media browser, by day and kind, with thumbnails; playback as MP4, as H.264 or streamed by the device; saving to the media folder (see below) |
 | Hik-Connect (optional) | Cloud connection per device, stream-encryption status, connection change events, door opening for intercoms (unverified, see limits) |
-| Actions | `add_center_links`, `isapi_request` (read-only unless confirmed), `ptz_move`, `ptz_preset`, `set_notification_host` |
+| Actions | `add_center_links`, `isapi_request` (read-only unless confirmed), `ptz_move`, `ptz_preset`, `set_notification_host`, `search_recordings`, `download_recording` |
 
 ### Image settings
 
@@ -81,6 +83,47 @@ How it behaves:
 * **Behind a recorder** the settings go through the recorder, or straight to the camera when a direct
   camera connection exists. Siren and two-way audio need a direct camera connection.
 
+### Recordings
+
+*Media → Hikvision Bridge* lists the recordings of every recorder and of cameras with a memory card:
+device → channel → day → kind (continuous, motion, alarm input, smart event, …) → recorded file.
+For a recorder channel with a [direct camera connection](#cameras-behind-a-recorder) whose camera has a
+memory card, the channel first asks which store to open: *Recorder* or *Memory card*. Days come from the
+device's calendar; files show their first picture as thumbnail (days with up to 60 files).
+
+Devices record into an MPEG program stream with H.265 or H.264 video; downloading always returns the
+whole recorded file (often 10 minutes and several hundred MB on recorders). Home Assistant converts it
+while it downloads, using its ffmpeg:
+
+| Format | What happens | Use |
+| --- | --- | --- |
+| MP4 as recorded (default) | Video copied into MP4, audio to AAC; almost no CPU | Plays at once; H.265 needs a browser with hardware support (Safari, Chrome/Edge on most current PCs) |
+| H.264 | Decoded and encoded again, at most 1080p | Plays in every browser and on casting devices; slow on small machines, especially with 4K recordings |
+| Stream from the device | The device plays the file over RTSP, Home Assistant serves it as HLS | Long continuous recordings; plays in real time, no seeking, restarts at the end |
+| MPEG-TS as recorded | Video copied into MPEG-TS | Saving only |
+| Original file | The device's bytes, unchanged (`.ps`, plays in VLC) | Saving only |
+
+The first three are the option *Playback in the media browser*. The action
+`hikvision_bridge.download_recording` saves all files of a period (up to one day, at most 50 files) to
+`/media/hikvision_bridge/<device>/` in any of the formats and, except for the original file, cuts them
+to the period. `hikvision_bridge.search_recordings` returns the list without downloading.
+
+```yaml
+action: hikvision_bridge.download_recording
+data:
+  device_id: <camera or channel device>
+  start: "2026-10-22 08:00:00"
+  end: "2026-10-22 08:15:00"
+  format: mp4        # mp4, h264, ts, original
+  source: auto       # auto (recorder first), recorder, card
+```
+
+**Encrypted recordings.** With *stream encryption* on, the device encrypts the video it records. Such files
+cannot be played or converted; the integration recognises them and says so instead of returning a
+broken file. Switch stream encryption off (*Network → Platform Access*, on the recorder and on cameras
+behind it) or use the camera's memory card through a direct camera connection. Files recorded while it
+was on stay encrypted.
+
 ## Installation
 
 ### HACS (recommended)
@@ -98,17 +141,30 @@ Requires Home Assistant 2026.9 or newer.
 
 ## Setup
 
-Choose **Camera or recorder in the local network** or **Hik-Connect account**.
+Settings → Devices & services → **Add integration** → *Hikvision Bridge*, then choose
+**Camera or recorder in the local network** or **Hik-Connect account**.
 
 ### Devices
 
+| Field | Meaning |
+| --- | --- |
+| Host | IP address or host name of the camera or recorder |
+| Port (optional) | Empty means 80 (HTTP) or 443 (HTTPS) |
+| Connection | *Automatic* (default), *HTTPS* or *HTTP* |
+| Verify HTTPS certificate | Turn off for self-signed certificates |
+| Username / Password | A dedicated operator user is recommended, see [User rights](#user-rights) |
+
+Setup only reads from the device. Then the device is added with all its channels.
+
 * **Connection**: *Automatic* tries HTTPS first and uses HTTP only if HTTPS cannot connect at all.
-  An authentication error is never retried with the other scheme. You can also force HTTP or HTTPS
-  and disable certificate verification for self-signed certificates.
+  An authentication error is never retried with the other scheme.
 * **Credentials per device**: every device has its own username and password. A recorder and its
   cameras may use different users.
 * **Each device once**: entries are keyed by serial number, not by address. A changed IP is fixed with
-  **Reconfigure**; the integration refuses if the new address belongs to a different device.
+  **Reconfigure** (three-dot menu of the entry); the integration refuses if the new address belongs to
+  a different device.
+* **Login failed**: when a device rejects the stored credentials, the integration stops trying and
+  Home Assistant asks you to re-authenticate the entry. Enter the current username and password there.
 
 ### Cameras behind a recorder
 
@@ -116,15 +172,52 @@ Cameras connected to a recorder appear as channel devices of the recorder. If a 
 reachable directly (for example the recorder's PoE subnet is routed), add a **Direct camera connection**
 to the recorder entry (*Add* on the recorder entry). It has its own address and credentials, or reuses the
 recorder's, and is used for the live stream, image settings and detection switches, and optionally for
-detections. The channel device is then listed under its connection. When you add such a camera as a
-normal device, the integration notices it is already a recorder channel and offers to link it instead.
+detections. The channel device is then listed under its connection.
+
+| Field | Meaning |
+| --- | --- |
+| Recorder channel | The channel the camera is connected to (only channels without a direct connection) |
+| Host | Address under which Home Assistant reaches the camera directly |
+| Port, Connection, Verify HTTPS certificate | As for devices |
+| Use the recorder's username and password | Leave off if the camera has its own credentials |
+| Username / Password | The camera's credentials |
+| Take detections from | *Recorder* (default) or *Camera* |
+
+A direct connection can be changed later with **Reconfigure** on the subentry, or removed again.
+
+When you add such a camera as a normal device, the integration notices that a recorder already shows
+it and asks:
+
+* **Link to the recorder channel**: the camera becomes a direct connection of that channel (one device,
+  stream directly from the camera).
+* **Add as separate device**: the camera gets its own entry next to the recorder channel.
 
 ### Hik-Connect
 
 Hik-Connect has no official third-party interface. The integration only logs in, reads the device
-list and status every 30 seconds, and stores the password in Home Assistant. If Hik-Connect asks for
-a verification code, the flow shows it. Cloud devices are shown as their own devices, placed below the
+list and status every 30 seconds, and stores the password in Home Assistant. Enter the account
+(e-mail or phone number) and password. If Hik-Connect asks for a verification code, the flow shows the
+image and asks for the code. If the password stops working, Home Assistant asks you to re-authenticate
+and enter the new password (and a code, if needed). Cloud devices are shown as their own devices, placed below the
 matching local device when there is one.
+
+### Options
+
+**Configure** on a device entry (not available for Hik-Connect entries):
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| How events arrive | Event stream | *Event stream*: Home Assistant keeps a connection to the device's alert stream, no change on the device needed. *Webhook*: the device sends events to Home Assistant. *Both*: stream and webhook at the same time |
+| Hold detections on for (seconds) | 5 | Many devices only report the start of a detection. The sensor stays on this long after the last report (1–300); each new report extends it |
+| RTSP port (optional) | empty | Empty uses the port reported by the device, otherwise 554. Applies to the device's own streams; direct camera connections use 554 |
+| RTSP transport | TCP | *TCP* is reliable; *UDP* can have less delay but shows artefacts on packet loss |
+| Separate sensors for people and vehicles | off | Adds person and vehicle binary sensors for detections with a target filter |
+| Playback in the media browser | MP4 as recorded | *MP4 as recorded*, *Convert to H.264* or *Stream from the device*, see [Recordings](#recordings) |
+
+When *Webhook* or *Both* is chosen, the next step shows the address `/api/webhook/<id>` where
+notifications are accepted (local network only, POST or PUT). Point the device there in its web
+interface (Network → Advanced → HTTP Listening / Alarm server) or with the action
+`hikvision_bridge.set_notification_host`.
 
 ## Recommended device settings
 
@@ -152,6 +245,8 @@ integration: some devices invalidate a login when another client of the same use
 | Live view, snapshots | Remote: Live view |
 | Detection switches, image settings, alarm outputs, repairs that tick linkage | Remote: Parameters settings |
 | PTZ buttons, preset select and actions | Remote: PTZ control |
+| Park action | Remote: PTZ control and Remote: Parameters settings |
+| Recordings: browse, play, save | Remote: Playback/Download (on the camera too when its memory card is used) |
 | Restart button (disabled by default) | Remote: Shutdown/Reboot |
 
 ## Example automations
@@ -232,6 +327,9 @@ Other ISAPI devices should work; please report models that do or do not.
   *Notify surveillance center* is missing or no area is drawn.
 * **Camera shows no video, snapshots work**: Hik-Connect stream encryption (see above), or use a direct camera connection.
 * **Main stream does not play in the browser**: 4K H.265 streams need a browser with H.265 support; use the sub stream otherwise.
+* **A recording does not play**: *“The device encrypts its recordings”* means stream encryption (see
+  [Recordings](#recordings)). A black or missing picture with H.265 means the browser cannot decode it;
+  choose *Convert to H.264* in the options. Converting needs Home Assistant's ffmpeg.
 * **Events late**: compare the *Event delay* sensor; large values usually mean a wrong device clock.
 * **A setting is unavailable**: it belongs to a mode that is not active (see image settings).
 * **Diagnostics**: *Download diagnostics* on the entry. Passwords, usernames, serial numbers, MAC
@@ -253,7 +351,8 @@ Logged requests never contain passwords; still check the log before attaching it
 * Door opening for intercoms through Hik-Connect is implemented but not yet verified on real hardware.
 * Session login (cookie based) is not implemented; Digest and Basic authentication are.
 * Holiday schedules are not exposed.
-* Encrypted Hik-Connect streams cannot be decoded; this needs the manufacturer's player.
+* Encrypted Hik-Connect streams and recordings cannot be decoded; this needs the manufacturer's player.
+* Converted playback starts at the beginning of the recorded file and cannot seek; save the file for that.
 
 ## Development
 
@@ -264,3 +363,15 @@ sh scripts/test.sh
 ```
 
 Tests use simulated devices; no test talks to real hardware.
+
+## Languages
+
+The interface is translated into 30 languages: Arabic, Bengali, Chinese (Simplified), Czech, Danish,
+Dutch, English, Finnish, French, German, Greek, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean,
+Norwegian Bokmål, Persian, Polish, Portuguese (Portugal and Brazil), Romanian, Russian, Spanish, Swedish,
+Turkish, Ukrainian, Urdu and Vietnamese. Home Assistant picks the language set in your profile. Apart
+from English and German the texts are machine-assisted; corrections are welcome as pull requests.
+
+## License
+
+[Apache License 2.0](LICENSE)

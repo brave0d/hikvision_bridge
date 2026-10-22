@@ -15,6 +15,7 @@
       "recording": { "default": "mdi:record-rec" }
     },
     "switch": {
+      "park_action": { "default": "mdi:parking" },
       "motion_detection": { "default": "mdi:motion-sensor" },
       "line_crossing_detection": { "default": "mdi:vector-line" },
       "intrusion_detection": { "default": "mdi:vector-square" },
@@ -72,9 +73,12 @@
       "power_line_frequency": { "default": "mdi:sine-wave" },
       "flip_direction": { "default": "mdi:flip-horizontal" },
       "strobe_frequency": { "default": "mdi:alarm-light" },
-      "siren_sound": { "default": "mdi:bullhorn-outline" }
+      "siren_sound": { "default": "mdi:bullhorn-outline" },
+      "park_action_type": { "default": "mdi:parking" }
     },
     "number": {
+      "park_time": { "default": "mdi:timer-outline" },
+      "park_action_number": { "default": "mdi:numeric" },
       "day_night_sensitivity": { "default": "mdi:theme-light-dark" },
       "day_night_delay": { "default": "mdi:timer-sand" },
       "white_light_brightness": { "default": "mdi:lightbulb-on" },
@@ -103,6 +107,8 @@
     "isapi_request": { "service": "mdi:api" },
     "ptz_move": { "service": "mdi:pan" },
     "ptz_preset": { "service": "mdi:map-marker-radius-outline" },
-    "set_notification_host": { "service": "mdi:webhook" }
+    "set_notification_host": { "service": "mdi:webhook" },
+    "search_recordings": { "service": "mdi:filmstrip-box-multiple" },
+    "download_recording": { "service": "mdi:download" }
   }
 }

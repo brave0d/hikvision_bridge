@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "로컬 네트워크의 카메라 또는 녹화기",
+          "cloud": "Hik-Connect 계정(클라우드)"
+        }
+      },
+      "device": {
+        "title": "장치 연결",
+        "description": "설정 중에는 읽기 권한만 사용합니다.",
+        "data": {
+          "host": "호스트",
+          "port": "포트(선택 사항)",
+          "connection": "연결",
+          "verify_tls": "HTTPS 인증서 확인",
+          "username": "사용자 이름",
+          "password": "비밀번호"
+        },
+        "data_description": {
+          "host": "카메라 또는 녹화기의 IP 주소나 호스트 이름입니다.",
+          "port": "비워 두면 80(HTTP) 또는 443(HTTPS)을 사용합니다.",
+          "connection": "자동은 먼저 HTTPS를 시도하고 HTTPS로 연결할 수 없을 때만 HTTP로 전환합니다.",
+          "username": "장치마다 고유한 사용자를 사용할 수 있습니다. 전용 운영자 사용자를 권장합니다."
+        }
+      },
+      "duplicate": {
+        "title": "이미 알려진 카메라",
+        "description": "이 카메라는 이미 {recorder}의 채널 {channel}에 표시되고 있습니다. 이 채널에 연결할까요(장치 하나, 카메라에서 직접 스트리밍), 아니면 별도의 장치로 추가할까요?",
+        "menu_options": {
+          "link_to_channel": "녹화기 채널에 연결",
+          "keep_separate": "별도의 장치로 추가"
+        }
+      },
+      "reauth_confirm": {
+        "title": "로그인 실패",
+        "description": "{device}({host})이(가) 저장된 자격 증명을 거부했습니다. 현재 자격 증명을 입력하세요.",
+        "data": {
+          "username": "사용자 이름",
+          "password": "비밀번호"
+        }
+      },
+      "reconfigure": {
+        "title": "연결 변경",
+        "description": "새 주소는 같은 장치로 연결되어야 합니다.",
+        "data": {
+          "host": "호스트",
+          "port": "포트(선택 사항)",
+          "connection": "연결",
+          "verify_tls": "HTTPS 인증서 확인",
+          "username": "사용자 이름",
+          "password": "비밀번호"
+        },
+        "data_description": {
+          "host": "카메라 또는 녹화기의 IP 주소나 호스트 이름입니다.",
+          "port": "비워 두면 80(HTTP) 또는 443(HTTPS)을 사용합니다.",
+          "connection": "자동은 먼저 HTTPS를 시도하고 HTTPS로 연결할 수 없을 때만 HTTP로 전환합니다.",
+          "username": "장치마다 고유한 사용자를 사용할 수 있습니다. 전용 운영자 사용자를 권장합니다."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect에는 타사를 위한 공식 인터페이스가 없습니다. 이 통합은 장치 목록과 상태만 읽으며, 비밀번호는 Home Assistant에 저장됩니다.",
+        "data": {
+          "account": "Hik-Connect 계정(이메일 또는 전화번호)",
+          "password": "비밀번호"
+        }
+      },
+      "cloud_captcha": {
+        "title": "인증 코드",
+        "description": "여기에 표시된 코드를 입력하세요: {image}",
+        "data": {
+          "captcha": "코드"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Hik-Connect 로그인",
+        "description": "{account}의 비밀번호를 입력하세요.",
+        "data": {
+          "password": "비밀번호",
+          "captcha": "인증 코드(요청된 경우에만)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "사용자 이름 또는 비밀번호가 거부되었습니다. 잠금을 피하기 위해 더 이상 시도하지 않습니다.",
+      "locked_out": "로그인 실패로 장치 또는 계정이 일시적으로 잠겼습니다. 잠시 후 다시 시도하세요.",
+      "name_not_resolved": "호스트 이름을 확인할 수 없습니다.",
+      "tls_untrusted": "HTTPS 인증서를 신뢰할 수 없습니다. 인증서 확인을 끄거나 HTTP를 사용하세요.",
+      "cannot_connect": "연결할 수 없습니다.",
+      "not_isapi": "주소가 응답하지만 Hikvision ISAPI 장치처럼 응답하지 않습니다.",
+      "forbidden": "사용자에게 필요한 권한이 없습니다.",
+      "unknown": "예기치 않은 오류입니다.",
+      "wrong_camera": "이 주소는 선택한 채널의 카메라가 아닌 다른 카메라의 주소입니다.",
+      "captcha_required": "Hik-Connect에서 인증 코드를 요구합니다.",
+      "cloud_unavailable": "Hik-Connect를 현재 사용할 수 없습니다.",
+      "cloud_changed": "Hik-Connect가 예기치 않은 형식으로 응답했습니다.",
+      "cloud_rejected": "Hik-Connect가 요청을 거부했습니다."
+    },
+    "abort": {
+      "already_configured": "이 장치 또는 계정은 이미 설정되어 있습니다.",
+      "reauth_successful": "자격 증명이 업데이트되었습니다.",
+      "reconfigure_successful": "연결이 업데이트되었습니다.",
+      "other_device": "이 주소는 다른 장치의 주소입니다. 대신 새 장치로 추가하세요.",
+      "channel_already_linked": "이 녹화기 채널에는 이미 직접 연결이 있습니다.",
+      "linked_to_channel": "카메라가 녹화기 채널에 연결되었습니다."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "옵션",
+        "data": {
+          "event_path": "이벤트 수신 방식",
+          "hold_seconds": "감지 유지 시간(초)",
+          "rtsp_port": "RTSP 포트(선택 사항)",
+          "rtsp_transport": "RTSP 전송",
+          "target_sensors": "사람과 차량용 별도 센서",
+          "playback": "미디어 브라우저에서 재생"
+        },
+        "data_description": {
+          "event_path": "이벤트 스트림은 장치 변경이 필요 없습니다. 웹훅은 장치가 Home Assistant로 전송해야 합니다.",
+          "hold_seconds": "많은 감지에서 장치는 시작만 보고합니다. 센서는 마지막 보고 후 이 시간 동안 켜진 상태를 유지합니다.",
+          "playback": "녹화는 H.265 또는 H.264입니다. '녹화된 그대로 MP4'는 바로 시작되지만 브라우저는 하드웨어 지원이 있을 때만 H.265를 재생합니다. 'H.264로 변환'은 어디서나 재생되며 CPU를 많이 사용합니다. '장치에서 스트리밍'은 장치가 RTSP로 녹화를 재생하게 합니다."
+        }
+      },
+      "webhook": {
+        "title": "웹훅",
+        "description": "알림은 {path}에서 수신합니다(로컬 네트워크만). '알림 호스트 설정' 작업이나 장치 웹 인터페이스를 사용해 장치가 이곳으로 보내도록 설정하세요."
+      }
+    },
+    "abort": {
+      "no_options": "Hik-Connect 계정에는 옵션이 없습니다."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "카메라 직접 연결"
+      },
+      "entry_type": "카메라 직접 연결",
+      "step": {
+        "user": {
+          "title": "카메라 직접 연결",
+          "description": "녹화기 채널의 카메라를 자체 주소와 자격 증명으로 직접 연결합니다. 그러면 라이브 스트림이 카메라에서 오므로 녹화기 스트림이 암호화된 경우에도 도움이 됩니다.",
+          "data": {
+            "channel_id": "녹화기 채널",
+            "host": "호스트",
+            "port": "포트(선택 사항)",
+            "connection": "연결",
+            "verify_tls": "HTTPS 인증서 확인",
+            "username": "사용자 이름",
+            "password": "비밀번호",
+            "reuse_recorder_credentials": "녹화기의 사용자 이름과 비밀번호 사용",
+            "event_source": "감지 가져올 곳"
+          },
+          "data_description": {
+            "host": "Home Assistant가 카메라에 직접 접근하는 주소입니다(예: 라우팅된 경우 녹화기의 PoE 서브넷).",
+            "reuse_recorder_credentials": "카메라에 자체 자격 증명이 있으면 끈 상태로 두세요."
+          }
+        },
+        "reconfigure": {
+          "title": "카메라 직접 연결 변경",
+          "description": "녹화기 채널의 카메라를 자체 주소와 자격 증명으로 직접 연결합니다. 그러면 라이브 스트림이 카메라에서 오므로 녹화기 스트림이 암호화된 경우에도 도움이 됩니다.",
+          "data": {
+            "channel_id": "녹화기 채널",
+            "host": "호스트",
+            "port": "포트(선택 사항)",
+            "connection": "연결",
+            "verify_tls": "HTTPS 인증서 확인",
+            "username": "사용자 이름",
+            "password": "비밀번호",
+            "reuse_recorder_credentials": "녹화기의 사용자 이름과 비밀번호 사용",
+            "event_source": "감지 가져올 곳"
+          },
+          "data_description": {
+            "host": "Home Assistant가 카메라에 직접 접근하는 주소입니다(예: 라우팅된 경우 녹화기의 PoE 서브넷).",
+            "reuse_recorder_credentials": "카메라에 자체 자격 증명이 있으면 끈 상태로 두세요."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "사용자 이름 또는 비밀번호가 거부되었습니다. 잠금을 피하기 위해 더 이상 시도하지 않습니다.",
+        "locked_out": "로그인 실패로 장치 또는 계정이 일시적으로 잠겼습니다. 잠시 후 다시 시도하세요.",
+        "name_not_resolved": "호스트 이름을 확인할 수 없습니다.",
+        "tls_untrusted": "HTTPS 인증서를 신뢰할 수 없습니다. 인증서 확인을 끄거나 HTTP를 사용하세요.",
+        "cannot_connect": "연결할 수 없습니다.",
+        "not_isapi": "주소가 응답하지만 Hikvision ISAPI 장치처럼 응답하지 않습니다.",
+        "forbidden": "사용자에게 필요한 권한이 없습니다.",
+        "unknown": "예기치 않은 오류입니다.",
+        "wrong_camera": "이 주소는 선택한 채널의 카메라가 아닌 다른 카메라의 주소입니다.",
+        "captcha_required": "Hik-Connect에서 인증 코드를 요구합니다.",
+        "cloud_unavailable": "Hik-Connect를 현재 사용할 수 없습니다.",
+        "cloud_changed": "Hik-Connect가 예기치 않은 형식으로 응답했습니다.",
+        "cloud_rejected": "Hik-Connect가 요청을 거부했습니다."
+      },
+      "abort": {
+        "not_loaded": "먼저 녹화기를 불러와야 합니다.",
+        "not_a_recorder": "연결할 채널은 녹화기에만 있습니다.",
+        "no_free_channel": "모든 채널에 이미 직접 연결이 있습니다.",
+        "reconfigure_successful": "직접 연결이 업데이트되었습니다."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "동작"
+      },
+      "tamper": {
+        "name": "영상 방해"
+      },
+      "video_loss": {
+        "name": "영상 손실"
+      },
+      "scene_change": {
+        "name": "장면 변경"
+      },
+      "intrusion": {
+        "name": "침입"
+      },
+      "line_crossing": {
+        "name": "선 넘기"
+      },
+      "region_entrance": {
+        "name": "영역 진입"
+      },
+      "region_exiting": {
+        "name": "영역 이탈"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "초점 이탈"
+      },
+      "audio_exception": {
+        "name": "오디오 이상"
+      },
+      "target_human": {
+        "name": "사람"
+      },
+      "target_vehicle": {
+        "name": "차량"
+      },
+      "alarm_input": {
+        "name": "알람 입력 {port}"
+      },
+      "channel_online": {
+        "name": "카메라 연결됨"
+      },
+      "storage_problem": {
+        "name": "저장소 문제"
+      },
+      "event_link": {
+        "name": "이벤트 연결"
+      },
+      "stream_encryption": {
+        "name": "스트림 암호화"
+      },
+      "cloud_online": {
+        "name": "클라우드 연결"
+      },
+      "cloud_stream_encryption": {
+        "name": "스트림 암호화"
+      },
+      "recording": {
+        "name": "녹화"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "동작 감지"
+      },
+      "tamper_detection": {
+        "name": "영상 방해 감지"
+      },
+      "scene_change_detection": {
+        "name": "장면 변경 감지"
+      },
+      "intrusion_detection": {
+        "name": "침입 감지"
+      },
+      "line_crossing_detection": {
+        "name": "선 넘기 감지"
+      },
+      "region_entrance_detection": {
+        "name": "영역 진입 감지"
+      },
+      "region_exiting_detection": {
+        "name": "영역 이탈 감지"
+      },
+      "alarm_output": {
+        "name": "알람 출력 {port}"
+      },
+      "blc": {
+        "name": "역광 보정"
+      },
+      "hlc": {
+        "name": "강한 빛 보정"
+      },
+      "overexposure_suppression": {
+        "name": "과다 노출 억제"
+      },
+      "image_flip": {
+        "name": "영상 반전"
+      },
+      "stabilization": {
+        "name": "영상 안정화"
+      },
+      "lens_correction": {
+        "name": "렌즈 왜곡 보정"
+      },
+      "video_loss_detection": {
+        "name": "영상 손실 감지"
+      },
+      "input_armed": {
+        "name": "알람 입력 {port} 경계 중"
+      },
+      "park_action": {
+        "name": "파킹 동작"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "메인 스트림"
+      },
+      "sub_stream": {
+        "name": "서브 스트림"
+      },
+      "third_stream": {
+        "name": "세 번째 스트림"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "감지",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "동작",
+              "intrusion": "침입",
+              "line_crossing": "선 넘기",
+              "region_entrance": "영역 진입",
+              "region_exiting": "영역 이탈",
+              "face": "얼굴",
+              "anpr": "번호판"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "클라우드 연결 변경",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "온라인",
+              "went_offline": "오프라인"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "저장소 {unit}",
+        "state": {
+          "ok": "정상",
+          "unformatted": "포맷되지 않음",
+          "error": "오류",
+          "idle": "유휴",
+          "sleeping": "절전",
+          "abnormal": "비정상",
+          "full": "가득 참",
+          "unknown": "알 수 없음"
+        }
+      },
+      "storage_free": {
+        "name": "저장소 {unit} 여유 공간"
+      },
+      "storage_capacity": {
+        "name": "저장소 {unit} 용량"
+      },
+      "event_latency": {
+        "name": "이벤트 지연"
+      },
+      "boot_time": {
+        "name": "마지막 부팅"
+      },
+      "cpu_load": {
+        "name": "CPU 부하"
+      },
+      "memory_use": {
+        "name": "메모리 사용량"
+      },
+      "reboots": {
+        "name": "재부팅 횟수",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "보고된 타임스탬프"
+          }
+        }
+      },
+      "network_address": {
+        "name": "IP 주소"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "재시작"
+      },
+      "rescan": {
+        "name": "기능 다시 읽기"
+      },
+      "cloud_unlock": {
+        "name": "문 열기(클라우드)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ 왼쪽으로 팬"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ 오른쪽으로 팬"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ 위로 틸트"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ 아래로 틸트"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ 확대"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ 축소"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "PTZ 프리셋"
+      },
+      "day_night": {
+        "name": "주간/야간 모드",
+        "state": {
+          "day": "주간",
+          "night": "야간",
+          "auto": "자동",
+          "schedule": "일정",
+          "eventtrigger": "이벤트 트리거"
+        }
+      },
+      "supplement_light": {
+        "name": "보조 조명",
+        "state": {
+          "eventintelligence": "스마트(이벤트)",
+          "colorvuwhitelight": "백색광",
+          "irlight": "IR 조명",
+          "close": "꺼짐"
+        }
+      },
+      "light_brightness_control": {
+        "name": "조명 밝기 제어",
+        "state": {
+          "auto": "자동",
+          "manual": "수동"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "꺼짐",
+          "open": "켜짐",
+          "auto": "자동"
+        }
+      },
+      "blc_area": {
+        "name": "역광 보정 영역",
+        "state": {
+          "close": "꺼짐",
+          "up": "위",
+          "down": "아래",
+          "left": "왼쪽",
+          "right": "오른쪽",
+          "center": "가운데",
+          "region": "사용자 지정 영역",
+          "auto": "자동"
+        }
+      },
+      "noise_reduction": {
+        "name": "노이즈 감소",
+        "state": {
+          "close": "꺼짐",
+          "general": "일반",
+          "advanced": "전문가"
+        }
+      },
+      "defog": {
+        "name": "안개 제거",
+        "state": {
+          "close": "꺼짐",
+          "open": "켜짐",
+          "auto": "자동"
+        }
+      },
+      "white_balance": {
+        "name": "화이트 밸런스",
+        "state": {
+          "manual": "수동",
+          "auto1": "자동 1",
+          "auto2": "자동 2",
+          "locked": "잠금",
+          "daylightlamp": "형광등",
+          "incandescentlight": "백열등",
+          "warmlight": "따뜻한 빛",
+          "naturallight": "자연광"
+        }
+      },
+      "exposure_mode": {
+        "name": "노출 모드",
+        "state": {
+          "auto": "자동",
+          "manual": "수동"
+        }
+      },
+      "shutter": {
+        "name": "셔터"
+      },
+      "power_line_frequency": {
+        "name": "전원 주파수",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "반전 방향",
+        "state": {
+          "leftright": "좌우",
+          "updown": "상하",
+          "center": "가운데"
+        }
+      },
+      "strobe_frequency": {
+        "name": "스트로브 조명 주파수",
+        "state": {
+          "high": "높음",
+          "medium": "중간",
+          "low": "낮음",
+          "normallyon": "계속 켜짐"
+        }
+      },
+      "siren_sound": {
+        "name": "사이렌 소리"
+      },
+      "park_action_type": {
+        "name": "파킹 동작 유형",
+        "state": {
+          "autoscan": "자동 스캔",
+          "framescan": "프레임 스캔",
+          "randomscan": "무작위 스캔",
+          "patrol": "순찰",
+          "pattern": "패턴",
+          "preset": "프리셋",
+          "panoramascan": "파노라마 스캔",
+          "tiltscan": "틸트 스캔"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "주간/야간 감도"
+      },
+      "day_night_delay": {
+        "name": "주간/야간 지연"
+      },
+      "white_light_brightness": {
+        "name": "백색광 밝기"
+      },
+      "ir_light_brightness": {
+        "name": "IR 조명 밝기"
+      },
+      "white_light_duration": {
+        "name": "백색광 지속 시간"
+      },
+      "brightness": {
+        "name": "밝기"
+      },
+      "contrast": {
+        "name": "대비"
+      },
+      "saturation": {
+        "name": "채도"
+      },
+      "sharpness": {
+        "name": "선명도"
+      },
+      "wdr_level": {
+        "name": "WDR 레벨"
+      },
+      "hlc_level": {
+        "name": "강한 빛 보정 레벨"
+      },
+      "noise_reduction_level": {
+        "name": "노이즈 감소 레벨"
+      },
+      "defog_level": {
+        "name": "안개 제거 레벨"
+      },
+      "white_balance_red": {
+        "name": "화이트 밸런스 빨강"
+      },
+      "white_balance_blue": {
+        "name": "화이트 밸런스 파랑"
+      },
+      "gain_limit": {
+        "name": "게인 한도"
+      },
+      "strobe_duration": {
+        "name": "스트로브 조명 지속 시간"
+      },
+      "siren_volume": {
+        "name": "사이렌 음량"
+      },
+      "siren_repeats": {
+        "name": "사이렌 반복 횟수"
+      },
+      "speaker_volume": {
+        "name": "스피커 음량"
+      },
+      "microphone_volume": {
+        "name": "마이크 음량"
+      },
+      "park_time": {
+        "name": "파킹 시간"
+      },
+      "park_action_number": {
+        "name": "파킹 동작 번호"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: 로그인 잠김",
+      "description": "시도 실패 후 장치가 로그인을 잠갔습니다. 통합은 약 {minutes}분 동안 일시 중지하며 그 전에는 다시 시도하지 않습니다."
+    },
+    "channel_link_auth": {
+      "title": "{device}: {channel}에 대한 직접 연결이 거부됨",
+      "description": "카메라가 직접 연결의 자격 증명을 거부했습니다. 대신 녹화기를 사용합니다. 이 채널의 직접 연결을 업데이트하세요."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: {channel}에 다른 카메라가 있음",
+      "description": "이 채널의 직접 연결이 현재 녹화기에 연결된 카메라와 다른 카메라로 연결됩니다. 수정될 때까지 사용되지 않습니다."
+    },
+    "center_link_missing": {
+      "title": "{device}: {channel}의 {kind}이(가) 보고되지 않음",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "보고 활성화",
+            "description": "장치가 {kind}을(를) 감지하지만 연동 '감시 센터에 알림'이 꺼져 있어 이벤트 스트림으로 보내지 않습니다. 확인하면 이 연동만 켭니다(트리거 {trigger}). 다른 것은 바뀌지 않습니다. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "장치가 변경을 수락하지 않았습니다."
+        },
+        "abort": {
+          "not_loaded": "장치가 로드되지 않았습니다."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: {channel}의 {kind}에 영역이 그려지지 않음",
+      "description": "감지가 켜져 있지만 선이나 영역이 그려지지 않아 작동할 수 없습니다. 장치 웹 인터페이스에서 그리세요."
+    },
+    "detection_off": {
+      "title": "{device}: {channel}의 {kind}이(가) 꺼져 있음",
+      "description": "이 감지는 지원되지만 꺼져 있습니다. 사용하려면 해당 스위치 엔티티로 켜세요."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {channel}의 {kind}은(는) {detail}에만 해당",
+      "description": "녹화기는 나열된 대상 유형에 대해서만 이 감지를 보고합니다. 다른 움직임으로는 작동하지 않습니다."
+    },
+    "stream_encrypted": {
+      "title": "{device}: 비디오 스트림이 Hik-Connect로 암호화됨",
+      "description": "Hik-Connect 스트림 암호화가 켜져 있습니다. Home Assistant는 이 스트림을 디코딩할 수 없으며, 스냅샷과 이벤트는 계속 작동합니다. 장치의 플랫폼 액세스 설정에서 '스트림 암호화'를 끄거나, 해당 카메라를 직접 연결하세요(카메라 직접 연결)."
+    },
+    "default_password": {
+      "title": "{device}: 약하거나 기본 비밀번호",
+      "description": "장치의 비밀번호가 약하거나 여전히 기본값이라고 보고되었습니다. 장치에서 변경하세요."
+    },
+    "basic_over_http": {
+      "title": "{device}: 비밀번호가 보호 없이 전송됨",
+      "description": "장치가 HTTP를 통한 Basic 인증만 허용하므로 비밀번호가 평문으로 전송됩니다. 장치에서 Digest 인증 또는 HTTPS를 활성화하세요."
+    },
+    "clock_skew": {
+      "title": "{device}: 시계가 {detail}초 어긋남",
+      "description": "장치 시계가 Home Assistant와 눈에 띄게 다릅니다. 이벤트 시간은 보정되지만 녹화에는 잘못된 시간이 기록됩니다. 장치에서 NTP를 설정하세요."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "장치가 자격 증명을 거부했습니다."
+    },
+    "locked_out": {
+      "message": "장치가 로그인을 잠갔습니다. 잠금이 연장되지 않도록 설정이 일시 중지되었습니다."
+    },
+    "not_isapi": {
+      "message": "장치가 Hikvision ISAPI 장치처럼 응답하지 않습니다."
+    },
+    "unreachable": {
+      "message": "{host}에 연결할 수 없습니다."
+    },
+    "other_device": {
+      "message": "이제 {host}에서 다른 장치가 응답합니다. '재구성'을 사용하거나 새 장치로 추가하세요."
+    },
+    "write_failed": {
+      "message": "장치가 변경을 수락하지 않았습니다({reason})."
+    },
+    "unknown_device": {
+      "message": "선택한 장치는 Hikvision Bridge에 속하지 않습니다."
+    },
+    "channel_needed": {
+      "message": "카메라 또는 채널 장치를 선택하세요."
+    },
+    "confirm_needed": {
+      "message": "이 작업은 장치를 변경합니다. 실행하려면 '변경 확인'을 켜세요."
+    },
+    "bad_path": {
+      "message": "/ISAPI/ 아래의 경로만 허용됩니다."
+    },
+    "webhook_off": {
+      "message": "먼저 옵션에서 웹훅을 활성화하세요."
+    },
+    "no_url": {
+      "message": "Home Assistant에 로컬 URL이 설정되어 있지 않습니다."
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect가 로그인을 거부했습니다."
+    },
+    "cloud_failed": {
+      "message": "Hik-Connect 요청 실패({reason})."
+    },
+    "cloud_gone": {
+      "message": "장치가 더 이상 Hik-Connect 계정에 없습니다."
+    },
+    "setting_inactive": {
+      "message": "이 설정은 카메라의 현재 모드에서 활성화되어 있지 않습니다."
+    },
+    "read_failed": {
+      "message": "장치가 요청에 응답하지 않았습니다({reason})."
+    },
+    "bad_period": {
+      "message": "종료는 시작 이후여야 하며 최대 하루 뒤까지입니다."
+    },
+    "no_recordings": {
+      "message": "이 기간에 녹화가 없습니다."
+    },
+    "too_many_recordings": {
+      "message": "이 기간에는 녹화가 {count}개 있습니다. 한 번에 최대 {limit}개까지 저장할 수 있습니다."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant가 미디어 폴더에 쓸 수 없습니다."
+    },
+    "recording_encrypted": {
+      "message": "장치가 녹화를 암호화하므로(스트림 암호화) 재생하거나 변환할 수 없습니다. 스트림 암호화를 끄거나 카메라의 메모리 카드를 사용하세요."
+    },
+    "conversion_failed": {
+      "message": "녹화를 변환할 수 없습니다."
+    },
+    "no_ffmpeg": {
+      "message": "Home Assistant에서 ffmpeg를 사용할 수 없습니다."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "자동",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "이벤트 스트림(권장)",
+        "webhook": "웹훅",
+        "both": "둘 다"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "녹화기",
+        "camera": "카메라"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "녹화된 그대로 MP4(권장)",
+        "h264": "H.264로 변환(어디서나 재생, 높은 CPU 부하)",
+        "stream": "장치에서 스트리밍(RTSP에서 HLS로)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "자동",
+        "recorder": "녹화기",
+        "card": "메모리 카드"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "녹화된 그대로 MP4",
+        "h264": "H.264로 변환한 MP4",
+        "ts": "녹화된 그대로 MPEG-TS",
+        "original": "원본 파일(MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "전체",
+        "continuous": "연속 녹화",
+        "motion": "동작",
+        "alarm": "알람 입력",
+        "event": "스마트 이벤트",
+        "manual": "수동",
+        "other": "기타"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "이벤트 보고 활성화",
+      "description": "연동 '감시 센터에 알림'이 없는 감지에 대해 이를 켭니다. '미리 보기만'을 끄지 않으면 미리 보기로 실행됩니다.",
+      "fields": {
+        "device_id": {
+          "name": "장치",
+          "description": "카메라, 채널 또는 녹화기."
+        },
+        "dry_run": {
+          "name": "미리 보기만",
+          "description": "변경될 내용만 나열합니다."
+        },
+        "kinds": {
+          "name": "감지",
+          "description": "이 종류로 제한합니다. 비워 두면 모두입니다."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "ISAPI 요청",
+      "description": "ISAPI 요청 하나를 보내고 비밀 정보를 제거한 응답을 반환합니다. 변경하는 메서드는 확인이 필요합니다.",
+      "fields": {
+        "device_id": {
+          "name": "장치",
+          "description": "카메라, 채널 또는 녹화기."
+        },
+        "method": {
+          "name": "메서드",
+          "description": "HTTP 메서드."
+        },
+        "path": {
+          "name": "경로",
+          "description": "/ISAPI/로 시작하는 경로."
+        },
+        "body": {
+          "name": "본문",
+          "description": "변경하는 메서드용 XML 또는 JSON 본문."
+        },
+        "confirm_write": {
+          "name": "변경 확인",
+          "description": "장치를 변경하는 모든 작업에 필요합니다."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "PTZ 이동",
+      "description": "PTZ 카메라를 잠깐 움직입니다.",
+      "fields": {
+        "device_id": {
+          "name": "장치",
+          "description": "카메라, 채널 또는 녹화기."
+        },
+        "pan": {
+          "name": "팬",
+          "description": "속도, 음수는 왼쪽."
+        },
+        "tilt": {
+          "name": "틸트",
+          "description": "속도, 음수는 아래쪽."
+        },
+        "zoom": {
+          "name": "줌",
+          "description": "속도, 음수는 축소."
+        },
+        "duration": {
+          "name": "지속 시간",
+          "description": "정지하기까지의 초."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ 프리셋",
+      "description": "PTZ 카메라를 저장된 프리셋으로 이동합니다.",
+      "fields": {
+        "device_id": {
+          "name": "장치",
+          "description": "카메라, 채널 또는 녹화기."
+        },
+        "preset": {
+          "name": "프리셋",
+          "description": "프리셋 번호."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "알림 호스트 설정",
+      "description": "장치의 알림 호스트 슬롯 하나를 이 Home Assistant 웹훅으로 지정합니다.",
+      "fields": {
+        "device_id": {
+          "name": "장치",
+          "description": "카메라, 채널 또는 녹화기."
+        },
+        "slot": {
+          "name": "슬롯",
+          "description": "장치의 알림 호스트 번호."
+        },
+        "confirm_write": {
+          "name": "변경 확인",
+          "description": "장치를 변경하는 모든 작업에 필요합니다."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "녹화 검색",
+      "description": "카메라나 채널의 기간 내 녹화 파일을 나열합니다.",
+      "fields": {
+        "device_id": {
+          "name": "장치",
+          "description": "카메라 또는 채널."
+        },
+        "start": {
+          "name": "시작",
+          "description": "기간의 시작."
+        },
+        "end": {
+          "name": "종료",
+          "description": "기간의 끝, 시작 후 최대 하루."
+        },
+        "source": {
+          "name": "소스",
+          "description": "녹화기 또는 카메라의 메모리 카드. 자동은 먼저 녹화기를 시도합니다."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "녹화 저장",
+      "description": "기간 내 녹화를 미디어 폴더 'hikvision_bridge'에 저장합니다.",
+      "fields": {
+        "device_id": {
+          "name": "장치",
+          "description": "카메라 또는 채널."
+        },
+        "start": {
+          "name": "시작",
+          "description": "기간의 시작."
+        },
+        "end": {
+          "name": "종료",
+          "description": "기간의 끝, 시작 후 최대 하루."
+        },
+        "source": {
+          "name": "소스",
+          "description": "녹화기 또는 카메라의 메모리 카드. 자동은 먼저 녹화기를 시도합니다."
+        },
+        "format": {
+          "name": "형식",
+          "description": "MP4와 MPEG-TS는 녹화된 영상을 그대로 유지합니다. H.264는 변환하므로 작은 기기에서는 오래 걸립니다."
+        },
+        "trim": {
+          "name": "기간에 맞춰 자르기",
+          "description": "파일을 기간에 맞춰 자릅니다. 원본 파일은 자르지 않습니다."
+        }
+      }
+    }
+  }
+}

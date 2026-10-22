@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "دوربین یا ضبط‌کننده در شبکهٔ محلی",
+          "cloud": "حساب Hik-Connect (ابری)"
+        }
+      },
+      "device": {
+        "title": "اتصال یک دستگاه",
+        "description": "در هنگام راه‌اندازی فقط از دسترسی خواندن استفاده می‌شود.",
+        "data": {
+          "host": "میزبان",
+          "port": "درگاه (اختیاری)",
+          "connection": "اتصال",
+          "verify_tls": "بررسی گواهی HTTPS",
+          "username": "نام کاربری",
+          "password": "رمز عبور"
+        },
+        "data_description": {
+          "host": "نشانی IP یا نام میزبان دوربین یا ضبط‌کننده.",
+          "port": "برای 80 (HTTP) یا 443 (HTTPS) خالی بگذارید.",
+          "connection": "حالت خودکار ابتدا HTTPS را امتحان می‌کند و فقط اگر HTTPS نتواند وصل شود به HTTP می‌رود.",
+          "username": "هر دستگاه می‌تواند کاربر خودش را داشته باشد. یک کاربر اپراتور جداگانه توصیه می‌شود."
+        }
+      },
+      "duplicate": {
+        "title": "دوربین از قبل شناخته شده است",
+        "description": "این دوربین از قبل توسط {recorder} در کانال {channel} نمایش داده می‌شود. آن را به این کانال پیوند دهید (یک دستگاه، پخش مستقیم از دوربین) یا به‌عنوان دستگاه جداگانه اضافه کنید؟",
+        "menu_options": {
+          "link_to_channel": "پیوند به کانال ضبط‌کننده",
+          "keep_separate": "افزودن به‌عنوان دستگاه جداگانه"
+        }
+      },
+      "reauth_confirm": {
+        "title": "ورود ناموفق بود",
+        "description": "{device} ({host}) اطلاعات ورود ذخیره‌شده را رد کرد. اطلاعات فعلی را وارد کنید.",
+        "data": {
+          "username": "نام کاربری",
+          "password": "رمز عبور"
+        }
+      },
+      "reconfigure": {
+        "title": "تغییر اتصال",
+        "description": "نشانی جدید باید به همان دستگاه برسد.",
+        "data": {
+          "host": "میزبان",
+          "port": "درگاه (اختیاری)",
+          "connection": "اتصال",
+          "verify_tls": "بررسی گواهی HTTPS",
+          "username": "نام کاربری",
+          "password": "رمز عبور"
+        },
+        "data_description": {
+          "host": "نشانی IP یا نام میزبان دوربین یا ضبط‌کننده.",
+          "port": "برای 80 (HTTP) یا 443 (HTTPS) خالی بگذارید.",
+          "connection": "حالت خودکار ابتدا HTTPS را امتحان می‌کند و فقط اگر HTTPS نتواند وصل شود به HTTP می‌رود.",
+          "username": "هر دستگاه می‌تواند کاربر خودش را داشته باشد. یک کاربر اپراتور جداگانه توصیه می‌شود."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect رابط رسمی برای اشخاص ثالث ندارد. این یکپارچه‌سازی فقط فهرست دستگاه‌ها و وضعیت آن‌ها را می‌خواند؛ رمز عبور در Home Assistant ذخیره می‌شود.",
+        "data": {
+          "account": "حساب Hik-Connect (ایمیل یا تلفن)",
+          "password": "رمز عبور"
+        }
+      },
+      "cloud_captcha": {
+        "title": "کد تأیید",
+        "description": "کد نمایش‌داده‌شده در اینجا را وارد کنید: {image}",
+        "data": {
+          "captcha": "کد"
+        }
+      },
+      "cloud_reauth": {
+        "title": "ورود به Hik-Connect",
+        "description": "رمز عبور {account} را وارد کنید.",
+        "data": {
+          "password": "رمز عبور",
+          "captcha": "کد تأیید (فقط در صورت درخواست)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "نام کاربری یا رمز عبور رد شد. برای جلوگیری از قفل شدن، تلاش دیگری انجام نمی‌شود.",
+      "locked_out": "دستگاه یا حساب پس از ورودهای ناموفق موقتاً قفل شده است. پیش از تلاش دوباره صبر کنید.",
+      "name_not_resolved": "نام میزبان قابل تفکیک نبود.",
+      "tls_untrusted": "گواهی HTTPS معتبر نیست. بررسی گواهی را غیرفعال کنید یا از HTTP استفاده کنید.",
+      "cannot_connect": "اتصال ممکن نیست.",
+      "not_isapi": "نشانی پاسخ می‌دهد، اما نه مانند یک دستگاه Hikvision ISAPI.",
+      "forbidden": "کاربر مجوزهای لازم را ندارد.",
+      "unknown": "خطای غیرمنتظره.",
+      "wrong_camera": "این نشانی متعلق به دوربین دیگری غیر از دوربین کانال انتخاب‌شده است.",
+      "captcha_required": "Hik-Connect کد تأیید درخواست می‌کند.",
+      "cloud_unavailable": "Hik-Connect در حال حاضر در دسترس نیست.",
+      "cloud_changed": "Hik-Connect در قالبی غیرمنتظره پاسخ داد.",
+      "cloud_rejected": "Hik-Connect درخواست را رد کرد."
+    },
+    "abort": {
+      "already_configured": "این دستگاه یا حساب قبلاً راه‌اندازی شده است.",
+      "reauth_successful": "اطلاعات ورود به‌روزرسانی شد.",
+      "reconfigure_successful": "اتصال به‌روزرسانی شد.",
+      "other_device": "این نشانی متعلق به دستگاه دیگری است. به‌جای آن، آن را به‌عنوان دستگاه جدید اضافه کنید.",
+      "channel_already_linked": "این کانال ضبط‌کننده از قبل اتصال مستقیم دارد.",
+      "linked_to_channel": "دوربین به کانال ضبط‌کننده پیوند داده شد."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "گزینه‌ها",
+        "data": {
+          "event_path": "نحوهٔ دریافت رویدادها",
+          "hold_seconds": "روشن نگه داشتن تشخیص‌ها به مدت (ثانیه)",
+          "rtsp_port": "درگاه RTSP (اختیاری)",
+          "rtsp_transport": "انتقال RTSP",
+          "target_sensors": "حسگرهای جداگانه برای افراد و وسایل نقلیه",
+          "playback": "پخش در مرورگر رسانه"
+        },
+        "data_description": {
+          "event_path": "جریان رویداد نیازی به تغییر در دستگاه ندارد. وب‌هوک نیاز دارد دستگاه به Home Assistant ارسال کند.",
+          "hold_seconds": "دستگاه‌ها در بسیاری از تشخیص‌ها فقط شروع را گزارش می‌کنند؛ حسگر پس از آخرین گزارش به این مدت روشن می‌ماند.",
+          "playback": "ضبط‌ها با H.265 یا H.264 هستند. «MP4 همان‌طور که ضبط شده» بلافاصله شروع می‌شود، اما مرورگرها H.265 را فقط با پشتیبانی سخت‌افزاری پخش می‌کنند. «تبدیل به H.264» همه‌جا پخش می‌شود و پردازنده زیادی می‌خواهد. «پخش جریانی از دستگاه» اجازه می‌دهد دستگاه ضبط را از طریق RTSP پخش کند."
+        }
+      },
+      "webhook": {
+        "title": "وب‌هوک",
+        "description": "اعلان‌ها در {path} پذیرفته می‌شوند (فقط شبکهٔ محلی). برای هدایت دستگاه به آنجا از عملیات «تنظیم میزبان اعلان» یا رابط وب دستگاه استفاده کنید."
+      }
+    },
+    "abort": {
+      "no_options": "حساب Hik-Connect گزینه‌ای ندارد."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "اتصال مستقیم دوربین"
+      },
+      "entry_type": "اتصال مستقیم دوربین",
+      "step": {
+        "user": {
+          "title": "اتصال مستقیم دوربین",
+          "description": "دوربین یک کانال ضبط‌کننده را با نشانی و اطلاعات ورود خودش مستقیماً وصل می‌کند. در این حالت پخش زنده از دوربین می‌آید که وقتی جریان ضبط‌کننده رمزگذاری شده نیز کمک می‌کند.",
+          "data": {
+            "channel_id": "کانال ضبط‌کننده",
+            "host": "میزبان",
+            "port": "درگاه (اختیاری)",
+            "connection": "اتصال",
+            "verify_tls": "بررسی گواهی HTTPS",
+            "username": "نام کاربری",
+            "password": "رمز عبور",
+            "reuse_recorder_credentials": "استفاده از نام کاربری و رمز عبور ضبط‌کننده",
+            "event_source": "دریافت تشخیص‌ها از"
+          },
+          "data_description": {
+            "host": "نشانی‌ای که Home Assistant از طریق آن مستقیماً به دوربین می‌رسد (مثلاً در زیرشبکهٔ PoE ضبط‌کننده، اگر مسیریابی شده باشد).",
+            "reuse_recorder_credentials": "اگر دوربین اطلاعات ورود خودش را دارد، خاموش بگذارید."
+          }
+        },
+        "reconfigure": {
+          "title": "تغییر اتصال مستقیم دوربین",
+          "description": "دوربین یک کانال ضبط‌کننده را با نشانی و اطلاعات ورود خودش مستقیماً وصل می‌کند. در این حالت پخش زنده از دوربین می‌آید که وقتی جریان ضبط‌کننده رمزگذاری شده نیز کمک می‌کند.",
+          "data": {
+            "channel_id": "کانال ضبط‌کننده",
+            "host": "میزبان",
+            "port": "درگاه (اختیاری)",
+            "connection": "اتصال",
+            "verify_tls": "بررسی گواهی HTTPS",
+            "username": "نام کاربری",
+            "password": "رمز عبور",
+            "reuse_recorder_credentials": "استفاده از نام کاربری و رمز عبور ضبط‌کننده",
+            "event_source": "دریافت تشخیص‌ها از"
+          },
+          "data_description": {
+            "host": "نشانی‌ای که Home Assistant از طریق آن مستقیماً به دوربین می‌رسد (مثلاً در زیرشبکهٔ PoE ضبط‌کننده، اگر مسیریابی شده باشد).",
+            "reuse_recorder_credentials": "اگر دوربین اطلاعات ورود خودش را دارد، خاموش بگذارید."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "نام کاربری یا رمز عبور رد شد. برای جلوگیری از قفل شدن، تلاش دیگری انجام نمی‌شود.",
+        "locked_out": "دستگاه یا حساب پس از ورودهای ناموفق موقتاً قفل شده است. پیش از تلاش دوباره صبر کنید.",
+        "name_not_resolved": "نام میزبان قابل تفکیک نبود.",
+        "tls_untrusted": "گواهی HTTPS معتبر نیست. بررسی گواهی را غیرفعال کنید یا از HTTP استفاده کنید.",
+        "cannot_connect": "اتصال ممکن نیست.",
+        "not_isapi": "نشانی پاسخ می‌دهد، اما نه مانند یک دستگاه Hikvision ISAPI.",
+        "forbidden": "کاربر مجوزهای لازم را ندارد.",
+        "unknown": "خطای غیرمنتظره.",
+        "wrong_camera": "این نشانی متعلق به دوربین دیگری غیر از دوربین کانال انتخاب‌شده است.",
+        "captcha_required": "Hik-Connect کد تأیید درخواست می‌کند.",
+        "cloud_unavailable": "Hik-Connect در حال حاضر در دسترس نیست.",
+        "cloud_changed": "Hik-Connect در قالبی غیرمنتظره پاسخ داد.",
+        "cloud_rejected": "Hik-Connect درخواست را رد کرد."
+      },
+      "abort": {
+        "not_loaded": "ابتدا باید ضبط‌کننده بارگذاری شود.",
+        "not_a_recorder": "فقط ضبط‌کننده‌ها کانالی برای پیوند دارند.",
+        "no_free_channel": "همهٔ کانال‌ها از قبل اتصال مستقیم دارند.",
+        "reconfigure_successful": "اتصال مستقیم به‌روزرسانی شد."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "حرکت"
+      },
+      "tamper": {
+        "name": "دست‌کاری"
+      },
+      "video_loss": {
+        "name": "قطع تصویر"
+      },
+      "scene_change": {
+        "name": "تغییر صحنه"
+      },
+      "intrusion": {
+        "name": "نفوذ"
+      },
+      "line_crossing": {
+        "name": "عبور از خط"
+      },
+      "region_entrance": {
+        "name": "ورود به ناحیه"
+      },
+      "region_exiting": {
+        "name": "خروج از ناحیه"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "خارج شدن از فوکوس"
+      },
+      "audio_exception": {
+        "name": "ناهنجاری صدا"
+      },
+      "target_human": {
+        "name": "فرد"
+      },
+      "target_vehicle": {
+        "name": "وسیلهٔ نقلیه"
+      },
+      "alarm_input": {
+        "name": "ورودی هشدار {port}"
+      },
+      "channel_online": {
+        "name": "دوربین متصل است"
+      },
+      "storage_problem": {
+        "name": "مشکل ذخیره‌سازی"
+      },
+      "event_link": {
+        "name": "اتصال رویداد"
+      },
+      "stream_encryption": {
+        "name": "رمزگذاری جریان"
+      },
+      "cloud_online": {
+        "name": "اتصال ابری"
+      },
+      "cloud_stream_encryption": {
+        "name": "رمزگذاری جریان"
+      },
+      "recording": {
+        "name": "ضبط"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "تشخیص حرکت"
+      },
+      "tamper_detection": {
+        "name": "تشخیص دست‌کاری"
+      },
+      "scene_change_detection": {
+        "name": "تشخیص تغییر صحنه"
+      },
+      "intrusion_detection": {
+        "name": "تشخیص نفوذ"
+      },
+      "line_crossing_detection": {
+        "name": "تشخیص عبور از خط"
+      },
+      "region_entrance_detection": {
+        "name": "تشخیص ورود به ناحیه"
+      },
+      "region_exiting_detection": {
+        "name": "تشخیص خروج از ناحیه"
+      },
+      "alarm_output": {
+        "name": "خروجی هشدار {port}"
+      },
+      "blc": {
+        "name": "جبران نور پس‌زمینه"
+      },
+      "hlc": {
+        "name": "جبران نور شدید"
+      },
+      "overexposure_suppression": {
+        "name": "سرکوب نوردهی بیش از حد"
+      },
+      "image_flip": {
+        "name": "برگرداندن تصویر"
+      },
+      "stabilization": {
+        "name": "تثبیت تصویر"
+      },
+      "lens_correction": {
+        "name": "اصلاح اعوجاج لنز"
+      },
+      "video_loss_detection": {
+        "name": "تشخیص قطع تصویر"
+      },
+      "input_armed": {
+        "name": "ورودی هشدار {port} مسلح"
+      },
+      "park_action": {
+        "name": "عملیات پارک"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "جریان اصلی"
+      },
+      "sub_stream": {
+        "name": "جریان فرعی"
+      },
+      "third_stream": {
+        "name": "جریان سوم"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "تشخیص",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "حرکت",
+              "intrusion": "نفوذ",
+              "line_crossing": "عبور از خط",
+              "region_entrance": "ورود به ناحیه",
+              "region_exiting": "خروج از ناحیه",
+              "face": "چهره",
+              "anpr": "پلاک خودرو"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "تغییر اتصال ابری",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "برخط",
+              "went_offline": "برون‌خط"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "ذخیره‌سازی {unit}",
+        "state": {
+          "ok": "خوب",
+          "unformatted": "قالب‌بندی‌نشده",
+          "error": "خطا",
+          "idle": "بیکار",
+          "sleeping": "در حالت خواب",
+          "abnormal": "غیرعادی",
+          "full": "پر",
+          "unknown": "نامشخص"
+        }
+      },
+      "storage_free": {
+        "name": "ذخیره‌سازی {unit} آزاد"
+      },
+      "storage_capacity": {
+        "name": "ذخیره‌سازی {unit} ظرفیت"
+      },
+      "event_latency": {
+        "name": "تأخیر رویداد"
+      },
+      "boot_time": {
+        "name": "آخرین راه‌اندازی"
+      },
+      "cpu_load": {
+        "name": "بار CPU"
+      },
+      "memory_use": {
+        "name": "مصرف حافظه"
+      },
+      "reboots": {
+        "name": "راه‌اندازی‌های مجدد",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "مهر زمانی گزارش‌شده"
+          }
+        }
+      },
+      "network_address": {
+        "name": "نشانی IP"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "راه‌اندازی مجدد"
+      },
+      "rescan": {
+        "name": "خواندن دوبارهٔ قابلیت‌ها"
+      },
+      "cloud_unlock": {
+        "name": "باز کردن در (ابری)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ چرخش به چپ"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ چرخش به راست"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ شیب به بالا"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ شیب به پایین"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ بزرگ‌نمایی"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ کوچک‌نمایی"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "پیش‌تنظیم PTZ"
+      },
+      "day_night": {
+        "name": "حالت روز/شب",
+        "state": {
+          "day": "روز",
+          "night": "شب",
+          "auto": "خودکار",
+          "schedule": "زمان‌بندی",
+          "eventtrigger": "فعال‌سازی با رویداد"
+        }
+      },
+      "supplement_light": {
+        "name": "نور تکمیلی",
+        "state": {
+          "eventintelligence": "هوشمند (رویداد)",
+          "colorvuwhitelight": "نور سفید",
+          "irlight": "نور IR",
+          "close": "خاموش"
+        }
+      },
+      "light_brightness_control": {
+        "name": "کنترل روشنایی نور",
+        "state": {
+          "auto": "خودکار",
+          "manual": "دستی"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "خاموش",
+          "open": "روشن",
+          "auto": "خودکار"
+        }
+      },
+      "blc_area": {
+        "name": "ناحیهٔ جبران نور پس‌زمینه",
+        "state": {
+          "close": "خاموش",
+          "up": "بالا",
+          "down": "پایین",
+          "left": "چپ",
+          "right": "راست",
+          "center": "مرکز",
+          "region": "ناحیهٔ سفارشی",
+          "auto": "خودکار"
+        }
+      },
+      "noise_reduction": {
+        "name": "کاهش نویز",
+        "state": {
+          "close": "خاموش",
+          "general": "معمولی",
+          "advanced": "پیشرفته"
+        }
+      },
+      "defog": {
+        "name": "رفع مه",
+        "state": {
+          "close": "خاموش",
+          "open": "روشن",
+          "auto": "خودکار"
+        }
+      },
+      "white_balance": {
+        "name": "تراز سفیدی",
+        "state": {
+          "manual": "دستی",
+          "auto1": "خودکار 1",
+          "auto2": "خودکار 2",
+          "locked": "قفل‌شده",
+          "daylightlamp": "لامپ فلورسنت",
+          "incandescentlight": "لامپ رشته‌ای",
+          "warmlight": "نور گرم",
+          "naturallight": "نور طبیعی"
+        }
+      },
+      "exposure_mode": {
+        "name": "حالت نوردهی",
+        "state": {
+          "auto": "خودکار",
+          "manual": "دستی"
+        }
+      },
+      "shutter": {
+        "name": "شاتر"
+      },
+      "power_line_frequency": {
+        "name": "فرکانس برق",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "جهت برگرداندن",
+        "state": {
+          "leftright": "چپ/راست",
+          "updown": "بالا/پایین",
+          "center": "مرکز"
+        }
+      },
+      "strobe_frequency": {
+        "name": "فرکانس نور چشمک‌زن",
+        "state": {
+          "high": "زیاد",
+          "medium": "متوسط",
+          "low": "کم",
+          "normallyon": "همیشه روشن"
+        }
+      },
+      "siren_sound": {
+        "name": "صدای آژیر"
+      },
+      "park_action_type": {
+        "name": "نوع عملیات پارک",
+        "state": {
+          "autoscan": "اسکن خودکار",
+          "framescan": "اسکن قاب",
+          "randomscan": "اسکن تصادفی",
+          "patrol": "گشت",
+          "pattern": "الگو",
+          "preset": "پیش‌تنظیم",
+          "panoramascan": "اسکن پانوراما",
+          "tiltscan": "اسکن شیب"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "حساسیت روز/شب"
+      },
+      "day_night_delay": {
+        "name": "تأخیر روز/شب"
+      },
+      "white_light_brightness": {
+        "name": "روشنایی نور سفید"
+      },
+      "ir_light_brightness": {
+        "name": "روشنایی نور IR"
+      },
+      "white_light_duration": {
+        "name": "مدت نور سفید"
+      },
+      "brightness": {
+        "name": "روشنایی"
+      },
+      "contrast": {
+        "name": "کنتراست"
+      },
+      "saturation": {
+        "name": "اشباع رنگ"
+      },
+      "sharpness": {
+        "name": "وضوح"
+      },
+      "wdr_level": {
+        "name": "سطح WDR"
+      },
+      "hlc_level": {
+        "name": "سطح جبران نور شدید"
+      },
+      "noise_reduction_level": {
+        "name": "سطح کاهش نویز"
+      },
+      "defog_level": {
+        "name": "سطح رفع مه"
+      },
+      "white_balance_red": {
+        "name": "تراز سفیدی قرمز"
+      },
+      "white_balance_blue": {
+        "name": "تراز سفیدی آبی"
+      },
+      "gain_limit": {
+        "name": "حد بهره"
+      },
+      "strobe_duration": {
+        "name": "مدت نور چشمک‌زن"
+      },
+      "siren_volume": {
+        "name": "بلندی صدای آژیر"
+      },
+      "siren_repeats": {
+        "name": "تکرارهای آژیر"
+      },
+      "speaker_volume": {
+        "name": "بلندی صدای بلندگو"
+      },
+      "microphone_volume": {
+        "name": "بلندی صدای میکروفون"
+      },
+      "park_time": {
+        "name": "زمان پارک"
+      },
+      "park_action_number": {
+        "name": "شمارهٔ عملیات پارک"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: ورود قفل شد",
+      "description": "دستگاه پس از تلاش‌های ناموفق ورود را قفل کرد. یکپارچه‌سازی حدود {minutes} دقیقه مکث می‌کند و پیش از آن دوباره تلاش نمی‌کند."
+    },
+    "channel_link_auth": {
+      "title": "{device}: اتصال مستقیم به {channel} رد شد",
+      "description": "دوربین اطلاعات ورود اتصال مستقیم را رد کرد. به‌جای آن از ضبط‌کننده استفاده می‌شود. اتصال مستقیم این کانال را به‌روزرسانی کنید."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: دوربین دیگری در {channel}",
+      "description": "اتصال مستقیم این کانال به دوربینی غیر از دوربینی که اکنون به ضبط‌کننده وصل است می‌رسد. تا اصلاح نشود استفاده نمی‌شود."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} در {channel} گزارش نمی‌شود",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "فعال کردن گزارش",
+            "description": "دستگاه {kind} را تشخیص می‌دهد اما آن را به جریان رویداد نمی‌فرستد، چون پیوند «اطلاع به مرکز نظارت» خاموش است. برای روشن کردن فقط همین پیوند تأیید کنید (محرک {trigger})؛ چیز دیگری تغییر نمی‌کند. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "دستگاه تغییر را نپذیرفت."
+        },
+        "abort": {
+          "not_loaded": "دستگاه بارگذاری نشده است."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: هیچ ناحیه‌ای برای {kind} در {channel} رسم نشده",
+      "description": "تشخیص روشن است، اما هیچ خط یا ناحیه‌ای رسم نشده، بنابراین نمی‌تواند فعال شود. آن را در رابط وب دستگاه رسم کنید."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} در {channel} خاموش است",
+      "description": "این تشخیص پشتیبانی می‌شود اما خاموش است. اگر می‌خواهید از آن استفاده کنید، با موجودیت کلید آن روشنش کنید."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} در {channel} فقط برای {detail}",
+      "description": "ضبط‌کننده این تشخیص را فقط برای انواع هدف فهرست‌شده گزارش می‌کند. حرکت‌های دیگر آن را فعال نمی‌کنند."
+    },
+    "stream_encrypted": {
+      "title": "{device}: جریان ویدئو توسط Hik-Connect رمزگذاری شده",
+      "description": "رمزگذاری جریان برای Hik-Connect روشن است. Home Assistant نمی‌تواند این جریان را رمزگشایی کند؛ عکس‌های لحظه‌ای و رویدادها همچنان کار می‌کنند. «رمزگذاری جریان» را در تنظیمات دسترسی پلتفرم دستگاه خاموش کنید، یا دوربین‌های مربوط را مستقیماً وصل کنید (اتصال مستقیم دوربین)."
+    },
+    "default_password": {
+      "title": "{device}: رمز عبور ضعیف یا پیش‌فرض",
+      "description": "دستگاه گزارش می‌دهد که رمز عبورش ضعیف است یا هنوز پیش‌فرض است. آن را روی دستگاه تغییر دهید."
+    },
+    "basic_over_http": {
+      "title": "{device}: رمز عبور بدون محافظت ارسال می‌شود",
+      "description": "دستگاه فقط احراز هویت Basic روی HTTP را می‌پذیرد، بنابراین رمز عبور به‌صورت متن ساده منتقل می‌شود. احراز هویت Digest یا HTTPS را روی دستگاه فعال کنید."
+    },
+    "clock_skew": {
+      "title": "{device}: ساعت {detail} ثانیه اختلاف دارد",
+      "description": "ساعت دستگاه به‌طور محسوسی با Home Assistant متفاوت است. زمان رویدادها اصلاح می‌شود، اما ضبط‌ها زمان نادرست دارند. NTP را روی دستگاه پیکربندی کنید."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "دستگاه اطلاعات ورود را رد کرد."
+    },
+    "locked_out": {
+      "message": "دستگاه ورود را قفل کرده است. راه‌اندازی متوقف شده تا قفل طولانی‌تر نشود."
+    },
+    "not_isapi": {
+      "message": "دستگاه مانند یک دستگاه Hikvision ISAPI پاسخ نمی‌دهد."
+    },
+    "unreachable": {
+      "message": "{host} در دسترس نیست."
+    },
+    "other_device": {
+      "message": "اکنون دستگاه دیگری در {host} پاسخ می‌دهد. از «پیکربندی مجدد» استفاده کنید یا آن را به‌عنوان دستگاه جدید اضافه کنید."
+    },
+    "write_failed": {
+      "message": "دستگاه تغییر را نپذیرفت ({reason})."
+    },
+    "unknown_device": {
+      "message": "دستگاه انتخاب‌شده متعلق به Hikvision Bridge نیست."
+    },
+    "channel_needed": {
+      "message": "یک دوربین یا دستگاه کانال انتخاب کنید."
+    },
+    "confirm_needed": {
+      "message": "این عملیات دستگاه را تغییر می‌دهد. برای اجرا «تأیید تغییر» را روشن کنید."
+    },
+    "bad_path": {
+      "message": "فقط مسیرهای زیر /ISAPI/ مجاز هستند."
+    },
+    "webhook_off": {
+      "message": "ابتدا وب‌هوک را در گزینه‌ها فعال کنید."
+    },
+    "no_url": {
+      "message": "Home Assistant نشانی URL محلی پیکربندی‌شده ندارد."
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect ورود را رد کرد."
+    },
+    "cloud_failed": {
+      "message": "درخواست Hik-Connect ناموفق بود ({reason})."
+    },
+    "cloud_gone": {
+      "message": "دستگاه دیگر در حساب Hik-Connect نیست."
+    },
+    "setting_inactive": {
+      "message": "این تنظیم در حالت فعلی دوربین فعال نیست."
+    },
+    "read_failed": {
+      "message": "دستگاه به درخواست پاسخ نداد ({reason})."
+    },
+    "bad_period": {
+      "message": "پایان باید بعد از شروع و حداکثر یک روز بعد باشد."
+    },
+    "no_recordings": {
+      "message": "برای این بازه هیچ ضبطی پیدا نشد."
+    },
+    "too_many_recordings": {
+      "message": "این بازه {count} ضبط دارد؛ هر بار حداکثر {limit} ضبط را می‌توان ذخیره کرد."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant اجازه نوشتن در پوشه رسانه خود را ندارد."
+    },
+    "recording_encrypted": {
+      "message": "دستگاه ضبط‌های خود را رمزگذاری می‌کند (رمزگذاری جریان)، بنابراین نمی‌توان آن‌ها را پخش یا تبدیل کرد. رمزگذاری جریان را خاموش کنید یا از کارت حافظه دوربین استفاده کنید."
+    },
+    "conversion_failed": {
+      "message": "ضبط قابل تبدیل نبود."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg در Home Assistant در دسترس نیست."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "خودکار",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "جریان رویداد (توصیه‌شده)",
+        "webhook": "وب‌هوک",
+        "both": "هر دو"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "ضبط‌کننده",
+        "camera": "دوربین"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 همان‌طور که ضبط شده (توصیه‌شده)",
+        "h264": "تبدیل به H.264 (همه‌جا پخش می‌شود، بار پردازنده زیاد)",
+        "stream": "پخش جریانی از دستگاه (RTSP به HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "خودکار",
+        "recorder": "ضبط‌کننده",
+        "card": "کارت حافظه"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 همان‌طور که ضبط شده",
+        "h264": "MP4 تبدیل‌شده به H.264",
+        "ts": "MPEG-TS همان‌طور که ضبط شده",
+        "original": "فایل اصلی (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "همه",
+        "continuous": "پیوسته",
+        "motion": "حرکت",
+        "alarm": "ورودی هشدار",
+        "event": "رویداد هوشمند",
+        "manual": "دستی",
+        "other": "سایر"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "فعال کردن گزارش رویدادها",
+      "description": "پیوند «اطلاع به مرکز نظارت» را برای تشخیص‌هایی که آن را ندارند روشن می‌کند. تا وقتی «فقط پیش‌نمایش» خاموش نشده، به‌صورت پیش‌نمایش اجرا می‌شود.",
+      "fields": {
+        "device_id": {
+          "name": "دستگاه",
+          "description": "دوربین، کانال یا ضبط‌کننده."
+        },
+        "dry_run": {
+          "name": "فقط پیش‌نمایش",
+          "description": "فقط آنچه تغییر می‌کند را فهرست کن."
+        },
+        "kinds": {
+          "name": "تشخیص‌ها",
+          "description": "محدود به این انواع؛ خالی یعنی همه."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "درخواست ISAPI",
+      "description": "یک درخواست ISAPI می‌فرستد و پاسخ را بدون اطلاعات محرمانه برمی‌گرداند. روش‌های تغییردهنده نیاز به تأیید دارند.",
+      "fields": {
+        "device_id": {
+          "name": "دستگاه",
+          "description": "دوربین، کانال یا ضبط‌کننده."
+        },
+        "method": {
+          "name": "روش",
+          "description": "روش HTTP."
+        },
+        "path": {
+          "name": "مسیر",
+          "description": "مسیری که با /ISAPI/ شروع می‌شود."
+        },
+        "body": {
+          "name": "بدنه",
+          "description": "بدنهٔ XML یا JSON برای روش‌های تغییردهنده."
+        },
+        "confirm_write": {
+          "name": "تأیید تغییر",
+          "description": "برای هر چیزی که دستگاه را تغییر می‌دهد لازم است."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "حرکت PTZ",
+      "description": "یک دوربین PTZ را برای مدت کوتاهی حرکت می‌دهد.",
+      "fields": {
+        "device_id": {
+          "name": "دستگاه",
+          "description": "دوربین، کانال یا ضبط‌کننده."
+        },
+        "pan": {
+          "name": "چرخش",
+          "description": "سرعت، منفی یعنی چپ."
+        },
+        "tilt": {
+          "name": "شیب",
+          "description": "سرعت، منفی یعنی پایین."
+        },
+        "zoom": {
+          "name": "زوم",
+          "description": "سرعت، منفی کوچک‌نمایی می‌کند."
+        },
+        "duration": {
+          "name": "مدت",
+          "description": "ثانیه‌ها تا توقف."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "پیش‌تنظیم PTZ",
+      "description": "یک دوربین PTZ را به یک پیش‌تنظیم ذخیره‌شده می‌برد.",
+      "fields": {
+        "device_id": {
+          "name": "دستگاه",
+          "description": "دوربین، کانال یا ضبط‌کننده."
+        },
+        "preset": {
+          "name": "پیش‌تنظیم",
+          "description": "شمارهٔ پیش‌تنظیم."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "تنظیم میزبان اعلان",
+      "description": "یک جایگاه میزبان اعلان دستگاه را به این وب‌هوک Home Assistant هدایت می‌کند.",
+      "fields": {
+        "device_id": {
+          "name": "دستگاه",
+          "description": "دوربین، کانال یا ضبط‌کننده."
+        },
+        "slot": {
+          "name": "جایگاه",
+          "description": "شمارهٔ میزبان اعلان روی دستگاه."
+        },
+        "confirm_write": {
+          "name": "تأیید تغییر",
+          "description": "برای هر چیزی که دستگاه را تغییر می‌دهد لازم است."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "جستجوی ضبط‌ها",
+      "description": "فایل‌های ضبط‌شده یک دوربین یا کانال را در یک بازه فهرست می‌کند.",
+      "fields": {
+        "device_id": {
+          "name": "دستگاه",
+          "description": "دوربین یا کانال."
+        },
+        "start": {
+          "name": "شروع",
+          "description": "ابتدای بازه."
+        },
+        "end": {
+          "name": "پایان",
+          "description": "انتهای بازه، حداکثر یک روز پس از شروع."
+        },
+        "source": {
+          "name": "منبع",
+          "description": "ضبط‌کننده یا کارت حافظه دوربین؛ حالت خودکار ابتدا ضبط‌کننده را امتحان می‌کند."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "ذخیره ضبط",
+      "description": "ضبط‌های یک بازه را در پوشه رسانه «hikvision_bridge» ذخیره می‌کند.",
+      "fields": {
+        "device_id": {
+          "name": "دستگاه",
+          "description": "دوربین یا کانال."
+        },
+        "start": {
+          "name": "شروع",
+          "description": "ابتدای بازه."
+        },
+        "end": {
+          "name": "پایان",
+          "description": "انتهای بازه، حداکثر یک روز پس از شروع."
+        },
+        "source": {
+          "name": "منبع",
+          "description": "ضبط‌کننده یا کارت حافظه دوربین؛ حالت خودکار ابتدا ضبط‌کننده را امتحان می‌کند."
+        },
+        "format": {
+          "name": "قالب",
+          "description": "MP4 و MPEG-TS ویدیوی ضبط‌شده را حفظ می‌کنند؛ H.264 آن را تبدیل می‌کند که روی دستگاه‌های کوچک زمان زیادی می‌برد."
+        },
+        "trim": {
+          "name": "برش به بازه",
+          "description": "فایل‌ها را به بازه برش می‌دهد؛ فایل اصلی هرگز برش داده نمی‌شود."
+        }
+      }
+    }
+  }
+}

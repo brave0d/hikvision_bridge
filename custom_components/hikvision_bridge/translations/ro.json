@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "Cameră sau înregistrator în rețeaua locală",
+          "cloud": "Cont Hik-Connect (cloud)"
+        }
+      },
+      "device": {
+        "title": "Conectează un dispozitiv",
+        "description": "În timpul configurării se folosește doar acces de citire.",
+        "data": {
+          "host": "Gazdă",
+          "port": "Port (opțional)",
+          "connection": "Conexiune",
+          "verify_tls": "Verifică certificatul HTTPS",
+          "username": "Nume de utilizator",
+          "password": "Parolă"
+        },
+        "data_description": {
+          "host": "Adresa IP sau numele gazdei camerei sau înregistratorului.",
+          "port": "Lasă gol pentru 80 (HTTP) sau 443 (HTTPS).",
+          "connection": "Automat încearcă mai întâi HTTPS și trece la HTTP doar dacă HTTPS nu se poate conecta.",
+          "username": "Fiecare dispozitiv poate folosi propriul utilizator. Se recomandă un utilizator operator dedicat."
+        }
+      },
+      "duplicate": {
+        "title": "Cameră deja cunoscută",
+        "description": "Această cameră este deja afișată de {recorder} pe canalul {channel}. O legi de acel canal (un singur dispozitiv, flux direct de la cameră) sau o adaugi ca dispozitiv separat?",
+        "menu_options": {
+          "link_to_channel": "Leagă de canalul înregistratorului",
+          "keep_separate": "Adaugă ca dispozitiv separat"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Autentificare eșuată",
+        "description": "{device} ({host}) a respins datele de autentificare salvate. Introdu-le pe cele actuale.",
+        "data": {
+          "username": "Nume de utilizator",
+          "password": "Parolă"
+        }
+      },
+      "reconfigure": {
+        "title": "Schimbă conexiunea",
+        "description": "Noua adresă trebuie să ducă la același dispozitiv.",
+        "data": {
+          "host": "Gazdă",
+          "port": "Port (opțional)",
+          "connection": "Conexiune",
+          "verify_tls": "Verifică certificatul HTTPS",
+          "username": "Nume de utilizator",
+          "password": "Parolă"
+        },
+        "data_description": {
+          "host": "Adresa IP sau numele gazdei camerei sau înregistratorului.",
+          "port": "Lasă gol pentru 80 (HTTP) sau 443 (HTTPS).",
+          "connection": "Automat încearcă mai întâi HTTPS și trece la HTTP doar dacă HTTPS nu se poate conecta.",
+          "username": "Fiecare dispozitiv poate folosi propriul utilizator. Se recomandă un utilizator operator dedicat."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect nu are o interfață oficială pentru terți. Integrarea citește doar lista dispozitivelor și starea lor; parola este stocată în Home Assistant.",
+        "data": {
+          "account": "Cont Hik-Connect (e-mail sau telefon)",
+          "password": "Parolă"
+        }
+      },
+      "cloud_captcha": {
+        "title": "Cod de verificare",
+        "description": "Introdu codul afișat aici: {image}",
+        "data": {
+          "captcha": "Cod"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Autentificare Hik-Connect",
+        "description": "Introdu parola pentru {account}.",
+        "data": {
+          "password": "Parolă",
+          "captcha": "Cod de verificare (doar dacă se cere)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Nume de utilizator sau parolă respinse. Nu se mai fac încercări, pentru a evita blocarea.",
+      "locked_out": "Dispozitivul sau contul este blocat temporar după autentificări eșuate. Așteaptă înainte de a încerca din nou.",
+      "name_not_resolved": "Numele gazdei nu a putut fi rezolvat.",
+      "tls_untrusted": "Certificatul HTTPS nu este de încredere. Dezactivează verificarea certificatului sau folosește HTTP.",
+      "cannot_connect": "Nu se poate conecta.",
+      "not_isapi": "Adresa răspunde, dar nu ca un dispozitiv Hikvision ISAPI.",
+      "forbidden": "Utilizatorul nu are drepturile necesare.",
+      "unknown": "Eroare neașteptată.",
+      "wrong_camera": "Această adresă aparține altei camere decât cea de pe canalul selectat.",
+      "captcha_required": "Hik-Connect cere un cod de verificare.",
+      "cloud_unavailable": "Hik-Connect nu este disponibil momentan.",
+      "cloud_changed": "Hik-Connect a răspuns într-un format neașteptat.",
+      "cloud_rejected": "Hik-Connect a respins solicitarea."
+    },
+    "abort": {
+      "already_configured": "Acest dispozitiv sau cont este deja configurat.",
+      "reauth_successful": "Datele de autentificare au fost actualizate.",
+      "reconfigure_successful": "Conexiunea a fost actualizată.",
+      "other_device": "Această adresă aparține altui dispozitiv. Adaugă-l mai bine ca dispozitiv nou.",
+      "channel_already_linked": "Acest canal al înregistratorului are deja o conexiune directă.",
+      "linked_to_channel": "Camera a fost legată de canalul înregistratorului."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opțiuni",
+        "data": {
+          "event_path": "Cum sosesc evenimentele",
+          "hold_seconds": "Menține detecțiile active timp de (secunde)",
+          "rtsp_port": "Port RTSP (opțional)",
+          "rtsp_transport": "Transport RTSP",
+          "target_sensors": "Senzori separați pentru persoane și vehicule",
+          "playback": "Redare în browserul media"
+        },
+        "data_description": {
+          "event_path": "Fluxul de evenimente nu necesită modificări pe dispozitiv. Webhook-ul necesită ca dispozitivul să trimită către Home Assistant.",
+          "hold_seconds": "Dispozitivele raportează doar începutul multor detecții; senzorul rămâne activ atât timp după ultima raportare.",
+          "playback": "Înregistrările sunt H.265 sau H.264. „MP4 așa cum a fost înregistrat” pornește imediat, dar browserele redau H.265 doar cu suport hardware. „Convertire în H.264” funcționează oriunde și necesită mult procesor. „Flux de la dispozitiv” lasă dispozitivul să redea înregistrarea prin RTSP."
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "Notificările sunt acceptate la {path} (doar rețea locală). Folosește acțiunea „Setează gazda de notificare” sau interfața web a dispozitivului pentru a-l direcționa acolo."
+      }
+    },
+    "abort": {
+      "no_options": "Un cont Hik-Connect nu are opțiuni."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "Conectează camera direct"
+      },
+      "entry_type": "Conexiune directă la cameră",
+      "step": {
+        "user": {
+          "title": "Conexiune directă la cameră",
+          "description": "Conectează direct camera de pe un canal al înregistratorului, cu adresă și date de autentificare proprii. Fluxul live vine atunci de la cameră, ceea ce ajută și când fluxul înregistratorului este criptat.",
+          "data": {
+            "channel_id": "Canalul înregistratorului",
+            "host": "Gazdă",
+            "port": "Port (opțional)",
+            "connection": "Conexiune",
+            "verify_tls": "Verifică certificatul HTTPS",
+            "username": "Nume de utilizator",
+            "password": "Parolă",
+            "reuse_recorder_credentials": "Folosește numele de utilizator și parola înregistratorului",
+            "event_source": "Preia detecțiile de la"
+          },
+          "data_description": {
+            "host": "Adresa prin care Home Assistant ajunge direct la cameră (de exemplu în subrețeaua PoE a înregistratorului, dacă este rutată).",
+            "reuse_recorder_credentials": "Lasă dezactivat dacă camera are propriile date de autentificare."
+          }
+        },
+        "reconfigure": {
+          "title": "Schimbă conexiunea directă la cameră",
+          "description": "Conectează direct camera de pe un canal al înregistratorului, cu adresă și date de autentificare proprii. Fluxul live vine atunci de la cameră, ceea ce ajută și când fluxul înregistratorului este criptat.",
+          "data": {
+            "channel_id": "Canalul înregistratorului",
+            "host": "Gazdă",
+            "port": "Port (opțional)",
+            "connection": "Conexiune",
+            "verify_tls": "Verifică certificatul HTTPS",
+            "username": "Nume de utilizator",
+            "password": "Parolă",
+            "reuse_recorder_credentials": "Folosește numele de utilizator și parola înregistratorului",
+            "event_source": "Preia detecțiile de la"
+          },
+          "data_description": {
+            "host": "Adresa prin care Home Assistant ajunge direct la cameră (de exemplu în subrețeaua PoE a înregistratorului, dacă este rutată).",
+            "reuse_recorder_credentials": "Lasă dezactivat dacă camera are propriile date de autentificare."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "Nume de utilizator sau parolă respinse. Nu se mai fac încercări, pentru a evita blocarea.",
+        "locked_out": "Dispozitivul sau contul este blocat temporar după autentificări eșuate. Așteaptă înainte de a încerca din nou.",
+        "name_not_resolved": "Numele gazdei nu a putut fi rezolvat.",
+        "tls_untrusted": "Certificatul HTTPS nu este de încredere. Dezactivează verificarea certificatului sau folosește HTTP.",
+        "cannot_connect": "Nu se poate conecta.",
+        "not_isapi": "Adresa răspunde, dar nu ca un dispozitiv Hikvision ISAPI.",
+        "forbidden": "Utilizatorul nu are drepturile necesare.",
+        "unknown": "Eroare neașteptată.",
+        "wrong_camera": "Această adresă aparține altei camere decât cea de pe canalul selectat.",
+        "captcha_required": "Hik-Connect cere un cod de verificare.",
+        "cloud_unavailable": "Hik-Connect nu este disponibil momentan.",
+        "cloud_changed": "Hik-Connect a răspuns într-un format neașteptat.",
+        "cloud_rejected": "Hik-Connect a respins solicitarea."
+      },
+      "abort": {
+        "not_loaded": "Înregistratorul trebuie încărcat mai întâi.",
+        "not_a_recorder": "Doar înregistratoarele au canale de legat.",
+        "no_free_channel": "Fiecare canal are deja o conexiune directă.",
+        "reconfigure_successful": "Conexiunea directă a fost actualizată."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Mișcare"
+      },
+      "tamper": {
+        "name": "Sabotaj"
+      },
+      "video_loss": {
+        "name": "Pierdere video"
+      },
+      "scene_change": {
+        "name": "Schimbare de scenă"
+      },
+      "intrusion": {
+        "name": "Intruziune"
+      },
+      "line_crossing": {
+        "name": "Traversare linie"
+      },
+      "region_entrance": {
+        "name": "Intrare în zonă"
+      },
+      "region_exiting": {
+        "name": "Ieșire din zonă"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "Defocalizare"
+      },
+      "audio_exception": {
+        "name": "Anomalie audio"
+      },
+      "target_human": {
+        "name": "Persoană"
+      },
+      "target_vehicle": {
+        "name": "Vehicul"
+      },
+      "alarm_input": {
+        "name": "Intrare alarmă {port}"
+      },
+      "channel_online": {
+        "name": "Cameră conectată"
+      },
+      "storage_problem": {
+        "name": "Problemă de stocare"
+      },
+      "event_link": {
+        "name": "Conexiune evenimente"
+      },
+      "stream_encryption": {
+        "name": "Criptarea fluxului"
+      },
+      "cloud_online": {
+        "name": "Conexiune cloud"
+      },
+      "cloud_stream_encryption": {
+        "name": "Criptarea fluxului"
+      },
+      "recording": {
+        "name": "Înregistrare"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Detecție mișcare"
+      },
+      "tamper_detection": {
+        "name": "Detecție sabotaj"
+      },
+      "scene_change_detection": {
+        "name": "Detecție schimbare de scenă"
+      },
+      "intrusion_detection": {
+        "name": "Detecție intruziune"
+      },
+      "line_crossing_detection": {
+        "name": "Detecție traversare linie"
+      },
+      "region_entrance_detection": {
+        "name": "Detecție intrare în zonă"
+      },
+      "region_exiting_detection": {
+        "name": "Detecție ieșire din zonă"
+      },
+      "alarm_output": {
+        "name": "Ieșire alarmă {port}"
+      },
+      "blc": {
+        "name": "Compensare contralumină"
+      },
+      "hlc": {
+        "name": "Compensare lumină puternică"
+      },
+      "overexposure_suppression": {
+        "name": "Suprimare supraexpunere"
+      },
+      "image_flip": {
+        "name": "Răsturnare imagine"
+      },
+      "stabilization": {
+        "name": "Stabilizare imagine"
+      },
+      "lens_correction": {
+        "name": "Corecție distorsiune obiectiv"
+      },
+      "video_loss_detection": {
+        "name": "Detecție pierdere video"
+      },
+      "input_armed": {
+        "name": "Intrare alarmă {port} armată"
+      },
+      "park_action": {
+        "name": "Acțiune de parcare"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "Flux principal"
+      },
+      "sub_stream": {
+        "name": "Flux secundar"
+      },
+      "third_stream": {
+        "name": "Al treilea flux"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "Detecție",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Mișcare",
+              "intrusion": "Intruziune",
+              "line_crossing": "Traversare linie",
+              "region_entrance": "Intrare în zonă",
+              "region_exiting": "Ieșire din zonă",
+              "face": "Față",
+              "anpr": "Număr de înmatriculare"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "Schimbare conexiune cloud",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "Online",
+              "went_offline": "Offline"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "Stocare {unit}",
+        "state": {
+          "ok": "OK",
+          "unformatted": "Neformatat",
+          "error": "Eroare",
+          "idle": "Inactiv",
+          "sleeping": "În repaus",
+          "abnormal": "Anormal",
+          "full": "Plin",
+          "unknown": "Necunoscut"
+        }
+      },
+      "storage_free": {
+        "name": "Stocare {unit} liber"
+      },
+      "storage_capacity": {
+        "name": "Stocare {unit} capacitate"
+      },
+      "event_latency": {
+        "name": "Întârziere evenimente"
+      },
+      "boot_time": {
+        "name": "Ultima pornire"
+      },
+      "cpu_load": {
+        "name": "Încărcare CPU"
+      },
+      "memory_use": {
+        "name": "Utilizare memorie"
+      },
+      "reboots": {
+        "name": "Reporniri",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "Marcaj de timp raportat"
+          }
+        }
+      },
+      "network_address": {
+        "name": "Adresă IP"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Repornește"
+      },
+      "rescan": {
+        "name": "Recitește capabilitățile"
+      },
+      "cloud_unlock": {
+        "name": "Deschide ușa (cloud)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ rotire stânga"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ rotire dreapta"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ înclinare sus"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ înclinare jos"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ mărire"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ micșorare"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "Presetare PTZ"
+      },
+      "day_night": {
+        "name": "Mod zi/noapte",
+        "state": {
+          "day": "Zi",
+          "night": "Noapte",
+          "auto": "Auto",
+          "schedule": "Program",
+          "eventtrigger": "Declanșare la eveniment"
+        }
+      },
+      "supplement_light": {
+        "name": "Lumină suplimentară",
+        "state": {
+          "eventintelligence": "Inteligent (eveniment)",
+          "colorvuwhitelight": "Lumină albă",
+          "irlight": "Lumină IR",
+          "close": "Oprit"
+        }
+      },
+      "light_brightness_control": {
+        "name": "Control luminozitate lumină",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "Oprit",
+          "open": "Pornit",
+          "auto": "Auto"
+        }
+      },
+      "blc_area": {
+        "name": "Zonă compensare contralumină",
+        "state": {
+          "close": "Oprit",
+          "up": "Sus",
+          "down": "Jos",
+          "left": "Stânga",
+          "right": "Dreapta",
+          "center": "Centru",
+          "region": "Zonă personalizată",
+          "auto": "Auto"
+        }
+      },
+      "noise_reduction": {
+        "name": "Reducere zgomot",
+        "state": {
+          "close": "Oprit",
+          "general": "Normal",
+          "advanced": "Expert"
+        }
+      },
+      "defog": {
+        "name": "Anticeață",
+        "state": {
+          "close": "Oprit",
+          "open": "Pornit",
+          "auto": "Auto"
+        }
+      },
+      "white_balance": {
+        "name": "Balans de alb",
+        "state": {
+          "manual": "Manual",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "locked": "Blocat",
+          "daylightlamp": "Lampă fluorescentă",
+          "incandescentlight": "Bec incandescent",
+          "warmlight": "Lumină caldă",
+          "naturallight": "Lumină naturală"
+        }
+      },
+      "exposure_mode": {
+        "name": "Mod expunere",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "shutter": {
+        "name": "Obturator"
+      },
+      "power_line_frequency": {
+        "name": "Frecvența rețelei",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "Direcție răsturnare",
+        "state": {
+          "leftright": "Stânga/dreapta",
+          "updown": "Sus/jos",
+          "center": "Centru"
+        }
+      },
+      "strobe_frequency": {
+        "name": "Frecvență lumină stroboscopică",
+        "state": {
+          "high": "Ridicată",
+          "medium": "Medie",
+          "low": "Scăzută",
+          "normallyon": "Aprinsă continuu"
+        }
+      },
+      "siren_sound": {
+        "name": "Sunet sirenă"
+      },
+      "park_action_type": {
+        "name": "Tip acțiune de parcare",
+        "state": {
+          "autoscan": "Scanare automată",
+          "framescan": "Scanare cadru",
+          "randomscan": "Scanare aleatorie",
+          "patrol": "Patrulare",
+          "pattern": "Tipar",
+          "preset": "Presetare",
+          "panoramascan": "Scanare panoramică",
+          "tiltscan": "Scanare înclinare"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "Sensibilitate zi/noapte"
+      },
+      "day_night_delay": {
+        "name": "Întârziere zi/noapte"
+      },
+      "white_light_brightness": {
+        "name": "Luminozitate lumină albă"
+      },
+      "ir_light_brightness": {
+        "name": "Luminozitate lumină IR"
+      },
+      "white_light_duration": {
+        "name": "Durată lumină albă"
+      },
+      "brightness": {
+        "name": "Luminozitate"
+      },
+      "contrast": {
+        "name": "Contrast"
+      },
+      "saturation": {
+        "name": "Saturație"
+      },
+      "sharpness": {
+        "name": "Claritate"
+      },
+      "wdr_level": {
+        "name": "Nivel WDR"
+      },
+      "hlc_level": {
+        "name": "Nivel compensare lumină puternică"
+      },
+      "noise_reduction_level": {
+        "name": "Nivel reducere zgomot"
+      },
+      "defog_level": {
+        "name": "Nivel anticeață"
+      },
+      "white_balance_red": {
+        "name": "Balans de alb roșu"
+      },
+      "white_balance_blue": {
+        "name": "Balans de alb albastru"
+      },
+      "gain_limit": {
+        "name": "Limită câștig"
+      },
+      "strobe_duration": {
+        "name": "Durată lumină stroboscopică"
+      },
+      "siren_volume": {
+        "name": "Volum sirenă"
+      },
+      "siren_repeats": {
+        "name": "Repetări sirenă"
+      },
+      "speaker_volume": {
+        "name": "Volum difuzor"
+      },
+      "microphone_volume": {
+        "name": "Volum microfon"
+      },
+      "park_time": {
+        "name": "Timp de parcare"
+      },
+      "park_action_number": {
+        "name": "Număr acțiune de parcare"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: autentificare blocată",
+      "description": "Dispozitivul a blocat autentificarea după încercări eșuate. Integrarea face o pauză de aproximativ {minutes} minute și nu reîncearcă mai devreme."
+    },
+    "channel_link_auth": {
+      "title": "{device}: conexiunea directă la {channel} a fost respinsă",
+      "description": "Camera a respins datele de autentificare ale conexiunii directe. În schimb se folosește înregistratorul. Actualizează conexiunea directă a acestui canal."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: altă cameră pe {channel}",
+      "description": "Conexiunea directă a acestui canal duce la altă cameră decât cea conectată acum la înregistrator. Nu este folosită până nu este corectată."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} pe {channel} nu este raportat",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Activează raportarea",
+            "description": "Dispozitivul detectează {kind}, dar nu îl trimite în fluxul de evenimente, deoarece legătura „Notifică centrul de supraveghere” este dezactivată. Confirmă pentru a activa doar acea legătură (declanșator {trigger}); nimic altceva nu se schimbă. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "Dispozitivul nu a acceptat modificarea."
+        },
+        "abort": {
+          "not_loaded": "Dispozitivul nu este încărcat."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: nicio zonă desenată pentru {kind} pe {channel}",
+      "description": "Detecția este activă, dar nu este desenată nicio linie sau zonă, așa că nu se poate declanșa. Desenează-o în interfața web a dispozitivului."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} este oprit pe {channel}",
+      "description": "Această detecție este acceptată, dar oprită. Pornește-o cu comutatorul ei dacă vrei să o folosești."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} pe {channel} doar pentru {detail}",
+      "description": "Înregistratorul raportează această detecție doar pentru tipurile de țintă enumerate. Altă mișcare nu o va declanșa."
+    },
+    "stream_encrypted": {
+      "title": "{device}: flux video criptat de Hik-Connect",
+      "description": "Criptarea fluxului pentru Hik-Connect este activă. Home Assistant nu poate decoda acest flux; instantaneele și evenimentele funcționează în continuare. Dezactivează „Criptarea fluxului” în setările de acces la platformă ale dispozitivului sau conectează direct camerele afectate (conexiune directă la cameră)."
+    },
+    "default_password": {
+      "title": "{device}: parolă slabă sau implicită",
+      "description": "Dispozitivul raportează că parola sa este slabă sau încă cea implicită. Schimb-o pe dispozitiv."
+    },
+    "basic_over_http": {
+      "title": "{device}: parolă trimisă neprotejat",
+      "description": "Dispozitivul acceptă doar autentificare Basic prin HTTP, așa că parola circulă în text clar. Activează autentificarea Digest sau HTTPS pe dispozitiv."
+    },
+    "clock_skew": {
+      "title": "{device}: ceas decalat cu {detail} s",
+      "description": "Ceasul dispozitivului diferă vizibil de Home Assistant. Orele evenimentelor sunt corectate, dar înregistrările au ora greșită. Configurează NTP pe dispozitiv."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "Dispozitivul a respins datele de autentificare."
+    },
+    "locked_out": {
+      "message": "Dispozitivul a blocat autentificarea. Configurarea este în pauză pentru a nu prelungi blocarea."
+    },
+    "not_isapi": {
+      "message": "Dispozitivul nu răspunde ca un dispozitiv Hikvision ISAPI."
+    },
+    "unreachable": {
+      "message": "{host} nu este accesibil."
+    },
+    "other_device": {
+      "message": "La {host} răspunde acum alt dispozitiv. Folosește „Reconfigurare” sau adaugă-l ca dispozitiv nou."
+    },
+    "write_failed": {
+      "message": "Dispozitivul nu a acceptat modificarea ({reason})."
+    },
+    "unknown_device": {
+      "message": "Dispozitivul selectat nu aparține Hikvision Bridge."
+    },
+    "channel_needed": {
+      "message": "Selectează o cameră sau un dispozitiv de canal."
+    },
+    "confirm_needed": {
+      "message": "Această acțiune modifică dispozitivul. Activează „Confirmă modificarea” pentru a o executa."
+    },
+    "bad_path": {
+      "message": "Sunt permise doar căi sub /ISAPI/."
+    },
+    "webhook_off": {
+      "message": "Activează mai întâi webhook-ul în opțiuni."
+    },
+    "no_url": {
+      "message": "Home Assistant nu are configurat un URL local."
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect a respins autentificarea."
+    },
+    "cloud_failed": {
+      "message": "Solicitarea Hik-Connect a eșuat ({reason})."
+    },
+    "cloud_gone": {
+      "message": "Dispozitivul nu mai este în contul Hik-Connect."
+    },
+    "setting_inactive": {
+      "message": "Această setare nu este activă în modul curent al camerei."
+    },
+    "read_failed": {
+      "message": "Dispozitivul nu a răspuns la cerere ({reason})."
+    },
+    "bad_period": {
+      "message": "Sfârșitul trebuie să fie după început și cel mult o zi mai târziu."
+    },
+    "no_recordings": {
+      "message": "Nu s-au găsit înregistrări pentru această perioadă."
+    },
+    "too_many_recordings": {
+      "message": "Perioada conține {count} înregistrări; se pot salva cel mult {limit} odată."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant nu are voie să scrie în folderul său media."
+    },
+    "recording_encrypted": {
+      "message": "Dispozitivul își criptează înregistrările (criptarea fluxului), deci nu pot fi redate sau convertite. Dezactivează criptarea fluxului sau folosește cardul de memorie al camerei."
+    },
+    "conversion_failed": {
+      "message": "Înregistrarea nu a putut fi convertită."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg nu este disponibil în Home Assistant."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "Automat",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "Flux de evenimente (recomandat)",
+        "webhook": "Webhook",
+        "both": "Ambele"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "Înregistrator",
+        "camera": "Cameră"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 așa cum a fost înregistrat (recomandat)",
+        "h264": "Convertire în H.264 (funcționează oriunde, încărcare mare a procesorului)",
+        "stream": "Flux de la dispozitiv (RTSP în HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "Automat",
+        "recorder": "Înregistrator",
+        "card": "Card de memorie"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 așa cum a fost înregistrat",
+        "h264": "MP4 convertit în H.264",
+        "ts": "MPEG-TS așa cum a fost înregistrat",
+        "original": "Fișier original (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "Toate",
+        "continuous": "Continuă",
+        "motion": "Mișcare",
+        "alarm": "Intrare de alarmă",
+        "event": "Eveniment inteligent",
+        "manual": "Manual",
+        "other": "Altele"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "Activează raportarea evenimentelor",
+      "description": "Activează legătura „Notifică centrul de supraveghere” pentru detecțiile care nu o au. Rulează ca previzualizare dacă „Doar previzualizare” nu este dezactivat.",
+      "fields": {
+        "device_id": {
+          "name": "Dispozitiv",
+          "description": "Cameră, canal sau înregistrator."
+        },
+        "dry_run": {
+          "name": "Doar previzualizare",
+          "description": "Doar listează ce s-ar schimba."
+        },
+        "kinds": {
+          "name": "Detecții",
+          "description": "Limitează la aceste tipuri; gol înseamnă toate."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "Solicitare ISAPI",
+      "description": "Trimite o solicitare ISAPI și returnează răspunsul fără secrete. Metodele care modifică necesită confirmare.",
+      "fields": {
+        "device_id": {
+          "name": "Dispozitiv",
+          "description": "Cameră, canal sau înregistrator."
+        },
+        "method": {
+          "name": "Metodă",
+          "description": "Metodă HTTP."
+        },
+        "path": {
+          "name": "Cale",
+          "description": "Cale care începe cu /ISAPI/."
+        },
+        "body": {
+          "name": "Corp",
+          "description": "Corp XML sau JSON pentru metodele care modifică."
+        },
+        "confirm_write": {
+          "name": "Confirmă modificarea",
+          "description": "Necesar pentru tot ce modifică dispozitivul."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "Mișcare PTZ",
+      "description": "Mișcă o cameră PTZ pentru scurt timp.",
+      "fields": {
+        "device_id": {
+          "name": "Dispozitiv",
+          "description": "Cameră, canal sau înregistrator."
+        },
+        "pan": {
+          "name": "Rotire",
+          "description": "Viteză, negativ înseamnă stânga."
+        },
+        "tilt": {
+          "name": "Înclinare",
+          "description": "Viteză, negativ înseamnă jos."
+        },
+        "zoom": {
+          "name": "Zoom",
+          "description": "Viteză, negativ micșorează."
+        },
+        "duration": {
+          "name": "Durată",
+          "description": "Secunde până la oprire."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "Presetare PTZ",
+      "description": "Mută o cameră PTZ la o presetare salvată.",
+      "fields": {
+        "device_id": {
+          "name": "Dispozitiv",
+          "description": "Cameră, canal sau înregistrator."
+        },
+        "preset": {
+          "name": "Presetare",
+          "description": "Numărul presetării."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "Setează gazda de notificare",
+      "description": "Direcționează un slot de gazdă de notificare al dispozitivului către acest webhook Home Assistant.",
+      "fields": {
+        "device_id": {
+          "name": "Dispozitiv",
+          "description": "Cameră, canal sau înregistrator."
+        },
+        "slot": {
+          "name": "Slot",
+          "description": "Numărul gazdei de notificare pe dispozitiv."
+        },
+        "confirm_write": {
+          "name": "Confirmă modificarea",
+          "description": "Necesar pentru tot ce modifică dispozitivul."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "Caută înregistrări",
+      "description": "Listează fișierele înregistrate ale unei camere sau ale unui canal într-o perioadă.",
+      "fields": {
+        "device_id": {
+          "name": "Dispozitiv",
+          "description": "Cameră sau canal."
+        },
+        "start": {
+          "name": "Început",
+          "description": "Începutul perioadei."
+        },
+        "end": {
+          "name": "Sfârșit",
+          "description": "Sfârșitul perioadei, cel mult o zi după început."
+        },
+        "source": {
+          "name": "Sursă",
+          "description": "Înregistratorul sau cardul de memorie al camerei; modul automat încearcă întâi înregistratorul."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "Salvează înregistrarea",
+      "description": "Salvează înregistrările unei perioade în folderul media „hikvision_bridge”.",
+      "fields": {
+        "device_id": {
+          "name": "Dispozitiv",
+          "description": "Cameră sau canal."
+        },
+        "start": {
+          "name": "Început",
+          "description": "Începutul perioadei."
+        },
+        "end": {
+          "name": "Sfârșit",
+          "description": "Sfârșitul perioadei, cel mult o zi după început."
+        },
+        "source": {
+          "name": "Sursă",
+          "description": "Înregistratorul sau cardul de memorie al camerei; modul automat încearcă întâi înregistratorul."
+        },
+        "format": {
+          "name": "Format",
+          "description": "MP4 și MPEG-TS păstrează videoclipul înregistrat; H.264 îl convertește, ceea ce durează mult pe mașinile mici."
+        },
+        "trim": {
+          "name": "Taie la perioadă",
+          "description": "Taie fișierele la perioadă; fișierul original nu este tăiat niciodată."
+        }
+      }
+    }
+  }
+}

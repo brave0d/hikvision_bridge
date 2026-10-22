@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "Camera of recorder in het lokale netwerk",
+          "cloud": "Hik-Connect-account (cloud)"
+        }
+      },
+      "device": {
+        "title": "Een apparaat verbinden",
+        "description": "Tijdens de installatie wordt alleen leestoegang gebruikt.",
+        "data": {
+          "host": "Host",
+          "port": "Poort (optioneel)",
+          "connection": "Verbinding",
+          "verify_tls": "HTTPS-certificaat controleren",
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord"
+        },
+        "data_description": {
+          "host": "IP-adres of hostnaam van de camera of recorder.",
+          "port": "Leeg laten voor 80 (HTTP) of 443 (HTTPS).",
+          "connection": "Automatisch probeert eerst HTTPS en valt alleen terug op HTTP als HTTPS geen verbinding kan maken.",
+          "username": "Elk apparaat kan een eigen gebruiker hebben. Een aparte operatorgebruiker wordt aanbevolen."
+        }
+      },
+      "duplicate": {
+        "title": "Camera al bekend",
+        "description": "Deze camera wordt al door {recorder} getoond op kanaal {channel}. Koppelen aan dat kanaal (één apparaat, stream rechtstreeks van de camera) of toevoegen als apart apparaat?",
+        "menu_options": {
+          "link_to_channel": "Koppelen aan het recorderkanaal",
+          "keep_separate": "Toevoegen als apart apparaat"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Aanmelden mislukt",
+        "description": "{device} ({host}) heeft de opgeslagen inloggegevens geweigerd. Voer de huidige in.",
+        "data": {
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord"
+        }
+      },
+      "reconfigure": {
+        "title": "Verbinding wijzigen",
+        "description": "Het nieuwe adres moet naar hetzelfde apparaat leiden.",
+        "data": {
+          "host": "Host",
+          "port": "Poort (optioneel)",
+          "connection": "Verbinding",
+          "verify_tls": "HTTPS-certificaat controleren",
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord"
+        },
+        "data_description": {
+          "host": "IP-adres of hostnaam van de camera of recorder.",
+          "port": "Leeg laten voor 80 (HTTP) of 443 (HTTPS).",
+          "connection": "Automatisch probeert eerst HTTPS en valt alleen terug op HTTP als HTTPS geen verbinding kan maken.",
+          "username": "Elk apparaat kan een eigen gebruiker hebben. Een aparte operatorgebruiker wordt aanbevolen."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect heeft geen officiële interface voor derden. De integratie leest alleen de apparatenlijst en de status; het wachtwoord wordt in Home Assistant opgeslagen.",
+        "data": {
+          "account": "Hik-Connect-account (e-mail of telefoon)",
+          "password": "Wachtwoord"
+        }
+      },
+      "cloud_captcha": {
+        "title": "Verificatiecode",
+        "description": "Voer de hier getoonde code in: {image}",
+        "data": {
+          "captcha": "Code"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Hik-Connect-aanmelding",
+        "description": "Voer het wachtwoord van {account} in.",
+        "data": {
+          "password": "Wachtwoord",
+          "captcha": "Verificatiecode (alleen indien gevraagd)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Gebruikersnaam of wachtwoord geweigerd. Er wordt geen nieuwe poging gedaan, om een blokkering te voorkomen.",
+      "locked_out": "Het apparaat of account is tijdelijk geblokkeerd na mislukte aanmeldingen. Wacht even voordat je het opnieuw probeert.",
+      "name_not_resolved": "De hostnaam kon niet worden omgezet.",
+      "tls_untrusted": "Het HTTPS-certificaat wordt niet vertrouwd. Schakel certificaatcontrole uit of gebruik HTTP.",
+      "cannot_connect": "Kan geen verbinding maken.",
+      "not_isapi": "Het adres antwoordt, maar niet zoals een Hikvision ISAPI-apparaat.",
+      "forbidden": "De gebruiker heeft niet de vereiste rechten.",
+      "unknown": "Onverwachte fout.",
+      "wrong_camera": "Dit adres hoort bij een andere camera dan die op het gekozen kanaal.",
+      "captcha_required": "Hik-Connect vraagt om een verificatiecode.",
+      "cloud_unavailable": "Hik-Connect is momenteel niet beschikbaar.",
+      "cloud_changed": "Hik-Connect antwoordde in een onverwacht formaat.",
+      "cloud_rejected": "Hik-Connect heeft het verzoek geweigerd."
+    },
+    "abort": {
+      "already_configured": "Dit apparaat of account is al ingesteld.",
+      "reauth_successful": "Inloggegevens bijgewerkt.",
+      "reconfigure_successful": "Verbinding bijgewerkt.",
+      "other_device": "Dit adres hoort bij een ander apparaat. Voeg het in plaats daarvan toe als nieuw apparaat.",
+      "channel_already_linked": "Dit recorderkanaal heeft al een directe verbinding.",
+      "linked_to_channel": "De camera is gekoppeld aan het recorderkanaal."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opties",
+        "data": {
+          "event_path": "Hoe gebeurtenissen binnenkomen",
+          "hold_seconds": "Detecties aan houden gedurende (seconden)",
+          "rtsp_port": "RTSP-poort (optioneel)",
+          "rtsp_transport": "RTSP-transport",
+          "target_sensors": "Aparte sensoren voor personen en voertuigen",
+          "playback": "Afspelen in de mediabrowser"
+        },
+        "data_description": {
+          "event_path": "De gebeurtenisstream vereist geen wijziging op het apparaat. De webhook vereist dat het apparaat naar Home Assistant stuurt.",
+          "hold_seconds": "Apparaten melden bij veel detecties alleen het begin; de sensor blijft zo lang aan na de laatste melding.",
+          "playback": "Opnames zijn H.265 of H.264. 'MP4 zoals opgenomen' start meteen, maar browsers spelen H.265 alleen af met hardwareondersteuning. 'Omzetten naar H.264' werkt overal en vraagt veel CPU. 'Streamen vanaf het apparaat' laat het apparaat de opname via RTSP afspelen."
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "Meldingen worden geaccepteerd op {path} (alleen lokaal netwerk). Gebruik de actie 'Meldingshost instellen' of de webinterface van het apparaat om het apparaat daarheen te sturen."
+      }
+    },
+    "abort": {
+      "no_options": "Een Hik-Connect-account heeft geen opties."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "Camera direct verbinden"
+      },
+      "entry_type": "Directe cameraverbinding",
+      "step": {
+        "user": {
+          "title": "Directe cameraverbinding",
+          "description": "Verbindt de camera van een recorderkanaal direct, met een eigen adres en eigen inloggegevens. De livestream komt dan van de camera, wat ook helpt als de stream van de recorder versleuteld is.",
+          "data": {
+            "channel_id": "Recorderkanaal",
+            "host": "Host",
+            "port": "Poort (optioneel)",
+            "connection": "Verbinding",
+            "verify_tls": "HTTPS-certificaat controleren",
+            "username": "Gebruikersnaam",
+            "password": "Wachtwoord",
+            "reuse_recorder_credentials": "Gebruikersnaam en wachtwoord van de recorder gebruiken",
+            "event_source": "Detecties overnemen van"
+          },
+          "data_description": {
+            "host": "Adres waarop Home Assistant de camera direct bereikt (bijvoorbeeld in het PoE-subnet van de recorder, als dat gerouteerd is).",
+            "reuse_recorder_credentials": "Uit laten als de camera eigen inloggegevens heeft."
+          }
+        },
+        "reconfigure": {
+          "title": "Directe cameraverbinding wijzigen",
+          "description": "Verbindt de camera van een recorderkanaal direct, met een eigen adres en eigen inloggegevens. De livestream komt dan van de camera, wat ook helpt als de stream van de recorder versleuteld is.",
+          "data": {
+            "channel_id": "Recorderkanaal",
+            "host": "Host",
+            "port": "Poort (optioneel)",
+            "connection": "Verbinding",
+            "verify_tls": "HTTPS-certificaat controleren",
+            "username": "Gebruikersnaam",
+            "password": "Wachtwoord",
+            "reuse_recorder_credentials": "Gebruikersnaam en wachtwoord van de recorder gebruiken",
+            "event_source": "Detecties overnemen van"
+          },
+          "data_description": {
+            "host": "Adres waarop Home Assistant de camera direct bereikt (bijvoorbeeld in het PoE-subnet van de recorder, als dat gerouteerd is).",
+            "reuse_recorder_credentials": "Uit laten als de camera eigen inloggegevens heeft."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "Gebruikersnaam of wachtwoord geweigerd. Er wordt geen nieuwe poging gedaan, om een blokkering te voorkomen.",
+        "locked_out": "Het apparaat of account is tijdelijk geblokkeerd na mislukte aanmeldingen. Wacht even voordat je het opnieuw probeert.",
+        "name_not_resolved": "De hostnaam kon niet worden omgezet.",
+        "tls_untrusted": "Het HTTPS-certificaat wordt niet vertrouwd. Schakel certificaatcontrole uit of gebruik HTTP.",
+        "cannot_connect": "Kan geen verbinding maken.",
+        "not_isapi": "Het adres antwoordt, maar niet zoals een Hikvision ISAPI-apparaat.",
+        "forbidden": "De gebruiker heeft niet de vereiste rechten.",
+        "unknown": "Onverwachte fout.",
+        "wrong_camera": "Dit adres hoort bij een andere camera dan die op het gekozen kanaal.",
+        "captcha_required": "Hik-Connect vraagt om een verificatiecode.",
+        "cloud_unavailable": "Hik-Connect is momenteel niet beschikbaar.",
+        "cloud_changed": "Hik-Connect antwoordde in een onverwacht formaat.",
+        "cloud_rejected": "Hik-Connect heeft het verzoek geweigerd."
+      },
+      "abort": {
+        "not_loaded": "De recorder moet eerst geladen zijn.",
+        "not_a_recorder": "Alleen recorders hebben kanalen om te koppelen.",
+        "no_free_channel": "Elk kanaal heeft al een directe verbinding.",
+        "reconfigure_successful": "Directe verbinding bijgewerkt."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Beweging"
+      },
+      "tamper": {
+        "name": "Sabotage"
+      },
+      "video_loss": {
+        "name": "Videoverlies"
+      },
+      "scene_change": {
+        "name": "Scènewijziging"
+      },
+      "intrusion": {
+        "name": "Inbraak"
+      },
+      "line_crossing": {
+        "name": "Lijnoverschrijding"
+      },
+      "region_entrance": {
+        "name": "Gebied betreden"
+      },
+      "region_exiting": {
+        "name": "Gebied verlaten"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "Onscherpte"
+      },
+      "audio_exception": {
+        "name": "Audio-afwijking"
+      },
+      "target_human": {
+        "name": "Persoon"
+      },
+      "target_vehicle": {
+        "name": "Voertuig"
+      },
+      "alarm_input": {
+        "name": "Alarmingang {port}"
+      },
+      "channel_online": {
+        "name": "Camera verbonden"
+      },
+      "storage_problem": {
+        "name": "Opslagprobleem"
+      },
+      "event_link": {
+        "name": "Gebeurtenisverbinding"
+      },
+      "stream_encryption": {
+        "name": "Streamversleuteling"
+      },
+      "cloud_online": {
+        "name": "Cloudverbinding"
+      },
+      "cloud_stream_encryption": {
+        "name": "Streamversleuteling"
+      },
+      "recording": {
+        "name": "Opname"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Bewegingsdetectie"
+      },
+      "tamper_detection": {
+        "name": "Sabotagedetectie"
+      },
+      "scene_change_detection": {
+        "name": "Scènewijzigingsdetectie"
+      },
+      "intrusion_detection": {
+        "name": "Inbraakdetectie"
+      },
+      "line_crossing_detection": {
+        "name": "Lijnoverschrijdingsdetectie"
+      },
+      "region_entrance_detection": {
+        "name": "Detectie gebied betreden"
+      },
+      "region_exiting_detection": {
+        "name": "Detectie gebied verlaten"
+      },
+      "alarm_output": {
+        "name": "Alarmuitgang {port}"
+      },
+      "blc": {
+        "name": "Tegenlichtcompensatie"
+      },
+      "hlc": {
+        "name": "Compensatie van fel licht"
+      },
+      "overexposure_suppression": {
+        "name": "Onderdrukking van overbelichting"
+      },
+      "image_flip": {
+        "name": "Beeld spiegelen"
+      },
+      "stabilization": {
+        "name": "Beeldstabilisatie"
+      },
+      "lens_correction": {
+        "name": "Correctie van lensvervorming"
+      },
+      "video_loss_detection": {
+        "name": "Videoverliesdetectie"
+      },
+      "input_armed": {
+        "name": "Alarmingang {port} ingeschakeld"
+      },
+      "park_action": {
+        "name": "Parkeeractie"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "Hoofdstream"
+      },
+      "sub_stream": {
+        "name": "Substream"
+      },
+      "third_stream": {
+        "name": "Derde stream"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "Detectie",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Beweging",
+              "intrusion": "Inbraak",
+              "line_crossing": "Lijnoverschrijding",
+              "region_entrance": "Gebied betreden",
+              "region_exiting": "Gebied verlaten",
+              "face": "Gezicht",
+              "anpr": "Kenteken"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "Wijziging cloudverbinding",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "Online",
+              "went_offline": "Offline"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "Opslag {unit}",
+        "state": {
+          "ok": "OK",
+          "unformatted": "Niet geformatteerd",
+          "error": "Fout",
+          "idle": "Inactief",
+          "sleeping": "Slaapstand",
+          "abnormal": "Afwijkend",
+          "full": "Vol",
+          "unknown": "Onbekend"
+        }
+      },
+      "storage_free": {
+        "name": "Opslag {unit} vrij"
+      },
+      "storage_capacity": {
+        "name": "Capaciteit opslag {unit}"
+      },
+      "event_latency": {
+        "name": "Gebeurtenisvertraging"
+      },
+      "boot_time": {
+        "name": "Laatste opstart"
+      },
+      "cpu_load": {
+        "name": "CPU-belasting"
+      },
+      "memory_use": {
+        "name": "Geheugengebruik"
+      },
+      "reboots": {
+        "name": "Herstarts",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "Gemelde tijdstempel"
+          }
+        }
+      },
+      "network_address": {
+        "name": "IP-adres"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Herstarten"
+      },
+      "rescan": {
+        "name": "Mogelijkheden opnieuw inlezen"
+      },
+      "cloud_unlock": {
+        "name": "Deur openen (cloud)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ naar links draaien"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ naar rechts draaien"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ omhoog kantelen"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ omlaag kantelen"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ inzoomen"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ uitzoomen"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "PTZ-preset"
+      },
+      "day_night": {
+        "name": "Dag/nachtmodus",
+        "state": {
+          "day": "Dag",
+          "night": "Nacht",
+          "auto": "Auto",
+          "schedule": "Schema",
+          "eventtrigger": "Gebeurtenistrigger"
+        }
+      },
+      "supplement_light": {
+        "name": "Extra verlichting",
+        "state": {
+          "eventintelligence": "Slim (gebeurtenis)",
+          "colorvuwhitelight": "Wit licht",
+          "irlight": "IR-licht",
+          "close": "Uit"
+        }
+      },
+      "light_brightness_control": {
+        "name": "Helderheidsregeling licht",
+        "state": {
+          "auto": "Auto",
+          "manual": "Handmatig"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "Uit",
+          "open": "Aan",
+          "auto": "Auto"
+        }
+      },
+      "blc_area": {
+        "name": "Gebied tegenlichtcompensatie",
+        "state": {
+          "close": "Uit",
+          "up": "Boven",
+          "down": "Onder",
+          "left": "Links",
+          "right": "Rechts",
+          "center": "Midden",
+          "region": "Aangepast gebied",
+          "auto": "Auto"
+        }
+      },
+      "noise_reduction": {
+        "name": "Ruisonderdrukking",
+        "state": {
+          "close": "Uit",
+          "general": "Normaal",
+          "advanced": "Expert"
+        }
+      },
+      "defog": {
+        "name": "Ontwasemen",
+        "state": {
+          "close": "Uit",
+          "open": "Aan",
+          "auto": "Auto"
+        }
+      },
+      "white_balance": {
+        "name": "Witbalans",
+        "state": {
+          "manual": "Handmatig",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "locked": "Vergrendeld",
+          "daylightlamp": "Tl-lamp",
+          "incandescentlight": "Gloeilamp",
+          "warmlight": "Warm licht",
+          "naturallight": "Natuurlijk licht"
+        }
+      },
+      "exposure_mode": {
+        "name": "Belichtingsmodus",
+        "state": {
+          "auto": "Auto",
+          "manual": "Handmatig"
+        }
+      },
+      "shutter": {
+        "name": "Sluiter"
+      },
+      "power_line_frequency": {
+        "name": "Netfrequentie",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "Spiegelrichting",
+        "state": {
+          "leftright": "Links/rechts",
+          "updown": "Boven/onder",
+          "center": "Midden"
+        }
+      },
+      "strobe_frequency": {
+        "name": "Frequentie stroboscooplicht",
+        "state": {
+          "high": "Hoog",
+          "medium": "Middel",
+          "low": "Laag",
+          "normallyon": "Continu aan"
+        }
+      },
+      "siren_sound": {
+        "name": "Sirenegeluid"
+      },
+      "park_action_type": {
+        "name": "Type parkeeractie",
+        "state": {
+          "autoscan": "Automatische scan",
+          "framescan": "Framescan",
+          "randomscan": "Willekeurige scan",
+          "patrol": "Patrouille",
+          "pattern": "Patroon",
+          "preset": "Preset",
+          "panoramascan": "Panoramascan",
+          "tiltscan": "Kantelscan"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "Dag/nachtgevoeligheid"
+      },
+      "day_night_delay": {
+        "name": "Dag/nachtvertraging"
+      },
+      "white_light_brightness": {
+        "name": "Helderheid wit licht"
+      },
+      "ir_light_brightness": {
+        "name": "Helderheid IR-licht"
+      },
+      "white_light_duration": {
+        "name": "Duur wit licht"
+      },
+      "brightness": {
+        "name": "Helderheid"
+      },
+      "contrast": {
+        "name": "Contrast"
+      },
+      "saturation": {
+        "name": "Verzadiging"
+      },
+      "sharpness": {
+        "name": "Scherpte"
+      },
+      "wdr_level": {
+        "name": "WDR-niveau"
+      },
+      "hlc_level": {
+        "name": "Niveau compensatie fel licht"
+      },
+      "noise_reduction_level": {
+        "name": "Niveau ruisonderdrukking"
+      },
+      "defog_level": {
+        "name": "Niveau ontwasemen"
+      },
+      "white_balance_red": {
+        "name": "Witbalans rood"
+      },
+      "white_balance_blue": {
+        "name": "Witbalans blauw"
+      },
+      "gain_limit": {
+        "name": "Versterkingslimiet"
+      },
+      "strobe_duration": {
+        "name": "Duur stroboscooplicht"
+      },
+      "siren_volume": {
+        "name": "Sirenevolume"
+      },
+      "siren_repeats": {
+        "name": "Sireneherhalingen"
+      },
+      "speaker_volume": {
+        "name": "Luidsprekervolume"
+      },
+      "microphone_volume": {
+        "name": "Microfoonvolume"
+      },
+      "park_time": {
+        "name": "Parkeertijd"
+      },
+      "park_action_number": {
+        "name": "Nummer parkeeractie"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: aanmelding geblokkeerd",
+      "description": "Het apparaat heeft de aanmelding geblokkeerd na mislukte pogingen. De integratie pauzeert ongeveer {minutes} minuten en probeert het niet eerder opnieuw."
+    },
+    "channel_link_auth": {
+      "title": "{device}: directe verbinding met {channel} geweigerd",
+      "description": "De camera heeft de inloggegevens van de directe verbinding geweigerd. In plaats daarvan wordt de recorder gebruikt. Werk de directe verbinding van dit kanaal bij."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: andere camera op {channel}",
+      "description": "De directe verbinding van dit kanaal leidt naar een andere camera dan die nu op de recorder is aangesloten. Ze wordt niet gebruikt totdat ze is gecorrigeerd."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} op {channel} wordt niet gemeld",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Melden inschakelen",
+            "description": "Het apparaat detecteert {kind} maar stuurt het niet naar de gebeurtenisstream, omdat de koppeling 'Meldkamer waarschuwen' uit staat. Bevestig om alleen die koppeling in te schakelen (trigger {trigger}); verder verandert er niets. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "Het apparaat heeft de wijziging niet geaccepteerd."
+        },
+        "abort": {
+          "not_loaded": "Het apparaat is niet geladen."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: geen gebied getekend voor {kind} op {channel}",
+      "description": "De detectie staat aan, maar er is geen lijn of gebied getekend, dus ze kan niet afgaan. Teken het in de webinterface van het apparaat."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} staat uit op {channel}",
+      "description": "Deze detectie wordt ondersteund maar staat uit. Zet haar aan met de bijbehorende schakelaar als je haar wilt gebruiken."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} op {channel} alleen voor {detail}",
+      "description": "De recorder meldt deze detectie alleen voor de genoemde doeltypen. Andere bewegingen activeren haar niet."
+    },
+    "stream_encrypted": {
+      "title": "{device}: videostream versleuteld door Hik-Connect",
+      "description": "Streamversleuteling voor Hik-Connect staat aan. Home Assistant kan deze stream niet decoderen; snapshots en gebeurtenissen werken nog wel. Schakel 'Streamversleuteling' uit in de platformtoegangsinstellingen van het apparaat, of verbind de betrokken camera's direct (directe cameraverbinding)."
+    },
+    "default_password": {
+      "title": "{device}: zwak of standaardwachtwoord",
+      "description": "Het apparaat meldt dat het wachtwoord zwak is of nog het standaardwachtwoord is. Wijzig het op het apparaat."
+    },
+    "basic_over_http": {
+      "title": "{device}: wachtwoord onbeschermd verzonden",
+      "description": "Het apparaat accepteert alleen Basic-authenticatie via HTTP, dus het wachtwoord gaat in leesbare tekst over het netwerk. Schakel Digest-authenticatie of HTTPS in op het apparaat."
+    },
+    "clock_skew": {
+      "title": "{device}: klok wijkt {detail} s af",
+      "description": "De klok van het apparaat wijkt merkbaar af van Home Assistant. Gebeurtenistijden worden gecorrigeerd, maar opnamen krijgen de verkeerde tijd. Stel NTP in op het apparaat."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "Het apparaat heeft de inloggegevens geweigerd."
+    },
+    "locked_out": {
+      "message": "Het apparaat heeft de aanmelding geblokkeerd. De installatie is gepauzeerd om de blokkering niet te verlengen."
+    },
+    "not_isapi": {
+      "message": "Het apparaat antwoordt niet zoals een Hikvision ISAPI-apparaat."
+    },
+    "unreachable": {
+      "message": "{host} is niet bereikbaar."
+    },
+    "other_device": {
+      "message": "Op {host} antwoordt nu een ander apparaat. Gebruik 'Opnieuw configureren' of voeg het toe als nieuw apparaat."
+    },
+    "write_failed": {
+      "message": "Het apparaat heeft de wijziging niet geaccepteerd ({reason})."
+    },
+    "unknown_device": {
+      "message": "Het gekozen apparaat hoort niet bij Hikvision Bridge."
+    },
+    "channel_needed": {
+      "message": "Kies een camera of kanaalapparaat."
+    },
+    "confirm_needed": {
+      "message": "Deze actie wijzigt het apparaat. Zet 'Wijziging bevestigen' aan om haar uit te voeren."
+    },
+    "bad_path": {
+      "message": "Alleen paden onder /ISAPI/ zijn toegestaan."
+    },
+    "webhook_off": {
+      "message": "Schakel eerst de webhook in bij de opties."
+    },
+    "no_url": {
+      "message": "Home Assistant heeft geen lokale URL ingesteld."
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect heeft de aanmelding geweigerd."
+    },
+    "cloud_failed": {
+      "message": "Hik-Connect-verzoek mislukt ({reason})."
+    },
+    "cloud_gone": {
+      "message": "Het apparaat staat niet meer in het Hik-Connect-account."
+    },
+    "setting_inactive": {
+      "message": "Deze instelling is niet actief in de huidige modus van de camera."
+    },
+    "read_failed": {
+      "message": "Het apparaat heeft het verzoek niet beantwoord ({reason})."
+    },
+    "bad_period": {
+      "message": "Het einde moet na het begin liggen en hoogstens een dag later."
+    },
+    "no_recordings": {
+      "message": "Geen opnames gevonden voor deze periode."
+    },
+    "too_many_recordings": {
+      "message": "De periode bevat {count} opnames; er kunnen er hoogstens {limit} tegelijk worden opgeslagen."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant mag niet naar zijn mediamap schrijven."
+    },
+    "recording_encrypted": {
+      "message": "Het apparaat versleutelt zijn opnames (streamversleuteling), dus ze kunnen niet worden afgespeeld of omgezet. Zet de streamversleuteling uit of gebruik de geheugenkaart van de camera."
+    },
+    "conversion_failed": {
+      "message": "De opname kon niet worden omgezet."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg is niet beschikbaar in Home Assistant."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "Automatisch",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "Gebeurtenisstream (aanbevolen)",
+        "webhook": "Webhook",
+        "both": "Beide"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "Recorder",
+        "camera": "Camera"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 zoals opgenomen (aanbevolen)",
+        "h264": "Omzetten naar H.264 (werkt overal, hoge CPU-belasting)",
+        "stream": "Streamen vanaf het apparaat (RTSP naar HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "Automatisch",
+        "recorder": "Recorder",
+        "card": "Geheugenkaart"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 zoals opgenomen",
+        "h264": "MP4 omgezet naar H.264",
+        "ts": "MPEG-TS zoals opgenomen",
+        "original": "Origineel bestand (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "Alle",
+        "continuous": "Continu",
+        "motion": "Beweging",
+        "alarm": "Alarmingang",
+        "event": "Slimme gebeurtenis",
+        "manual": "Handmatig",
+        "other": "Overig"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "Melden van gebeurtenissen inschakelen",
+      "description": "Schakelt de koppeling 'Meldkamer waarschuwen' in voor detecties die haar missen. Draait als voorbeeld tenzij 'Alleen voorbeeld' uit staat.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Camera, kanaal of recorder."
+        },
+        "dry_run": {
+          "name": "Alleen voorbeeld",
+          "description": "Alleen tonen wat er zou veranderen."
+        },
+        "kinds": {
+          "name": "Detecties",
+          "description": "Beperken tot deze soorten; leeg betekent alle."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "ISAPI-verzoek",
+      "description": "Stuurt één ISAPI-verzoek en geeft het antwoord terug zonder geheimen. Wijzigende methoden vereisen bevestiging.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Camera, kanaal of recorder."
+        },
+        "method": {
+          "name": "Methode",
+          "description": "HTTP-methode."
+        },
+        "path": {
+          "name": "Pad",
+          "description": "Pad dat begint met /ISAPI/."
+        },
+        "body": {
+          "name": "Body",
+          "description": "XML- of JSON-body voor wijzigende methoden."
+        },
+        "confirm_write": {
+          "name": "Wijziging bevestigen",
+          "description": "Vereist voor alles wat het apparaat wijzigt."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "PTZ bewegen",
+      "description": "Beweegt een PTZ-camera korte tijd.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Camera, kanaal of recorder."
+        },
+        "pan": {
+          "name": "Draaien",
+          "description": "Snelheid, negatief is links."
+        },
+        "tilt": {
+          "name": "Kantelen",
+          "description": "Snelheid, negatief is omlaag."
+        },
+        "zoom": {
+          "name": "Zoom",
+          "description": "Snelheid, negatief zoomt uit."
+        },
+        "duration": {
+          "name": "Duur",
+          "description": "Seconden tot het stoppen."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ-preset",
+      "description": "Beweegt een PTZ-camera naar een opgeslagen preset.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Camera, kanaal of recorder."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "Presetnummer."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "Meldingshost instellen",
+      "description": "Richt één meldingshost-slot van het apparaat op deze Home Assistant-webhook.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Camera, kanaal of recorder."
+        },
+        "slot": {
+          "name": "Slot",
+          "description": "Nummer van de meldingshost op het apparaat."
+        },
+        "confirm_write": {
+          "name": "Wijziging bevestigen",
+          "description": "Vereist voor alles wat het apparaat wijzigt."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "Opnames zoeken",
+      "description": "Toont de opgenomen bestanden van een camera of kanaal in een periode.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Camera of kanaal."
+        },
+        "start": {
+          "name": "Begin",
+          "description": "Begin van de periode."
+        },
+        "end": {
+          "name": "Einde",
+          "description": "Einde van de periode, hoogstens een dag na het begin."
+        },
+        "source": {
+          "name": "Bron",
+          "description": "Recorder of de geheugenkaart van de camera; automatisch probeert eerst de recorder."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "Opname opslaan",
+      "description": "Slaat de opnames van een periode op in de mediamap 'hikvision_bridge'.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Camera of kanaal."
+        },
+        "start": {
+          "name": "Begin",
+          "description": "Begin van de periode."
+        },
+        "end": {
+          "name": "Einde",
+          "description": "Einde van de periode, hoogstens een dag na het begin."
+        },
+        "source": {
+          "name": "Bron",
+          "description": "Recorder of de geheugenkaart van de camera; automatisch probeert eerst de recorder."
+        },
+        "format": {
+          "name": "Formaat",
+          "description": "MP4 en MPEG-TS behouden de opgenomen video; H.264 zet hem om, wat op kleine machines lang duurt."
+        },
+        "trim": {
+          "name": "Inkorten tot periode",
+          "description": "Knipt de bestanden bij tot de periode; het originele bestand wordt nooit geknipt."
+        }
+      }
+    }
+  }
+}

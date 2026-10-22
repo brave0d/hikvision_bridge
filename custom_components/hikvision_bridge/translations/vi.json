@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "Camera hoặc đầu ghi trong mạng nội bộ",
+          "cloud": "Tài khoản Hik-Connect (đám mây)"
+        }
+      },
+      "device": {
+        "title": "Kết nối thiết bị",
+        "description": "Trong quá trình thiết lập chỉ sử dụng quyền đọc.",
+        "data": {
+          "host": "Máy chủ",
+          "port": "Cổng (tùy chọn)",
+          "connection": "Kết nối",
+          "verify_tls": "Xác minh chứng chỉ HTTPS",
+          "username": "Tên người dùng",
+          "password": "Mật khẩu"
+        },
+        "data_description": {
+          "host": "Địa chỉ IP hoặc tên máy chủ của camera hoặc đầu ghi.",
+          "port": "Để trống để dùng 80 (HTTP) hoặc 443 (HTTPS).",
+          "connection": "Tự động thử HTTPS trước và chỉ chuyển sang HTTP khi HTTPS không thể kết nối.",
+          "username": "Mỗi thiết bị có thể dùng người dùng riêng. Nên dùng một người dùng vận hành riêng."
+        }
+      },
+      "duplicate": {
+        "title": "Camera đã được biết",
+        "description": "Camera này đã được {recorder} hiển thị trên kênh {channel}. Liên kết nó với kênh đó (một thiết bị, luồng trực tiếp từ camera) hay thêm làm thiết bị riêng?",
+        "menu_options": {
+          "link_to_channel": "Liên kết với kênh của đầu ghi",
+          "keep_separate": "Thêm làm thiết bị riêng"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Đăng nhập thất bại",
+        "description": "{device} ({host}) đã từ chối thông tin đăng nhập đã lưu. Hãy nhập thông tin hiện tại.",
+        "data": {
+          "username": "Tên người dùng",
+          "password": "Mật khẩu"
+        }
+      },
+      "reconfigure": {
+        "title": "Thay đổi kết nối",
+        "description": "Địa chỉ mới phải dẫn đến cùng một thiết bị.",
+        "data": {
+          "host": "Máy chủ",
+          "port": "Cổng (tùy chọn)",
+          "connection": "Kết nối",
+          "verify_tls": "Xác minh chứng chỉ HTTPS",
+          "username": "Tên người dùng",
+          "password": "Mật khẩu"
+        },
+        "data_description": {
+          "host": "Địa chỉ IP hoặc tên máy chủ của camera hoặc đầu ghi.",
+          "port": "Để trống để dùng 80 (HTTP) hoặc 443 (HTTPS).",
+          "connection": "Tự động thử HTTPS trước và chỉ chuyển sang HTTP khi HTTPS không thể kết nối.",
+          "username": "Mỗi thiết bị có thể dùng người dùng riêng. Nên dùng một người dùng vận hành riêng."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect không có giao diện chính thức cho bên thứ ba. Tích hợp chỉ đọc danh sách thiết bị và trạng thái; mật khẩu được lưu trong Home Assistant.",
+        "data": {
+          "account": "Tài khoản Hik-Connect (e-mail hoặc điện thoại)",
+          "password": "Mật khẩu"
+        }
+      },
+      "cloud_captcha": {
+        "title": "Mã xác minh",
+        "description": "Nhập mã hiển thị tại đây: {image}",
+        "data": {
+          "captcha": "Mã"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Đăng nhập Hik-Connect",
+        "description": "Nhập mật khẩu của {account}.",
+        "data": {
+          "password": "Mật khẩu",
+          "captcha": "Mã xác minh (chỉ khi được yêu cầu)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Tên người dùng hoặc mật khẩu bị từ chối. Không thử lại để tránh bị khóa.",
+      "locked_out": "Thiết bị hoặc tài khoản bị khóa tạm thời sau các lần đăng nhập thất bại. Hãy chờ trước khi thử lại.",
+      "name_not_resolved": "Không thể phân giải tên máy chủ.",
+      "tls_untrusted": "Chứng chỉ HTTPS không đáng tin cậy. Tắt xác minh chứng chỉ hoặc dùng HTTP.",
+      "cannot_connect": "Không thể kết nối.",
+      "not_isapi": "Địa chỉ có phản hồi, nhưng không giống thiết bị Hikvision ISAPI.",
+      "forbidden": "Người dùng không có quyền cần thiết.",
+      "unknown": "Lỗi không mong muốn.",
+      "wrong_camera": "Địa chỉ này thuộc về một camera khác với camera trên kênh đã chọn.",
+      "captcha_required": "Hik-Connect yêu cầu mã xác minh.",
+      "cloud_unavailable": "Hik-Connect hiện không khả dụng.",
+      "cloud_changed": "Hik-Connect trả lời theo định dạng không mong muốn.",
+      "cloud_rejected": "Hik-Connect đã từ chối yêu cầu."
+    },
+    "abort": {
+      "already_configured": "Thiết bị hoặc tài khoản này đã được thiết lập.",
+      "reauth_successful": "Đã cập nhật thông tin đăng nhập.",
+      "reconfigure_successful": "Đã cập nhật kết nối.",
+      "other_device": "Địa chỉ này thuộc về thiết bị khác. Hãy thêm nó làm thiết bị mới.",
+      "channel_already_linked": "Kênh đầu ghi này đã có kết nối trực tiếp.",
+      "linked_to_channel": "Camera đã được liên kết với kênh của đầu ghi."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tùy chọn",
+        "data": {
+          "event_path": "Cách nhận sự kiện",
+          "hold_seconds": "Giữ phát hiện bật trong (giây)",
+          "rtsp_port": "Cổng RTSP (tùy chọn)",
+          "rtsp_transport": "Giao thức truyền RTSP",
+          "target_sensors": "Cảm biến riêng cho người và phương tiện",
+          "playback": "Phát trong trình duyệt phương tiện"
+        },
+        "data_description": {
+          "event_path": "Luồng sự kiện không cần thay đổi gì trên thiết bị. Webhook yêu cầu thiết bị gửi đến Home Assistant.",
+          "hold_seconds": "Với nhiều loại phát hiện, thiết bị chỉ báo lúc bắt đầu; cảm biến giữ bật trong khoảng thời gian này sau lần báo cuối.",
+          "playback": "Bản ghi là H.265 hoặc H.264. 'MP4 như khi ghi' bắt đầu ngay, nhưng trình duyệt chỉ phát H.265 khi có hỗ trợ phần cứng. 'Chuyển sang H.264' phát được ở mọi nơi và tốn nhiều CPU. 'Phát trực tiếp từ thiết bị' để thiết bị phát bản ghi qua RTSP."
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "Thông báo được nhận tại {path} (chỉ mạng nội bộ). Dùng hành động 'Đặt máy chủ thông báo' hoặc giao diện web của thiết bị để trỏ thiết bị đến đó."
+      }
+    },
+    "abort": {
+      "no_options": "Tài khoản Hik-Connect không có tùy chọn."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "Kết nối camera trực tiếp"
+      },
+      "entry_type": "Kết nối camera trực tiếp",
+      "step": {
+        "user": {
+          "title": "Kết nối camera trực tiếp",
+          "description": "Kết nối trực tiếp camera trên một kênh đầu ghi, với địa chỉ và thông tin đăng nhập riêng. Khi đó luồng trực tiếp đến từ camera, điều này cũng giúp ích khi luồng của đầu ghi bị mã hóa.",
+          "data": {
+            "channel_id": "Kênh đầu ghi",
+            "host": "Máy chủ",
+            "port": "Cổng (tùy chọn)",
+            "connection": "Kết nối",
+            "verify_tls": "Xác minh chứng chỉ HTTPS",
+            "username": "Tên người dùng",
+            "password": "Mật khẩu",
+            "reuse_recorder_credentials": "Dùng tên người dùng và mật khẩu của đầu ghi",
+            "event_source": "Lấy phát hiện từ"
+          },
+          "data_description": {
+            "host": "Địa chỉ mà Home Assistant truy cập trực tiếp camera (ví dụ trong mạng con PoE của đầu ghi, nếu được định tuyến).",
+            "reuse_recorder_credentials": "Để tắt nếu camera có thông tin đăng nhập riêng."
+          }
+        },
+        "reconfigure": {
+          "title": "Thay đổi kết nối camera trực tiếp",
+          "description": "Kết nối trực tiếp camera trên một kênh đầu ghi, với địa chỉ và thông tin đăng nhập riêng. Khi đó luồng trực tiếp đến từ camera, điều này cũng giúp ích khi luồng của đầu ghi bị mã hóa.",
+          "data": {
+            "channel_id": "Kênh đầu ghi",
+            "host": "Máy chủ",
+            "port": "Cổng (tùy chọn)",
+            "connection": "Kết nối",
+            "verify_tls": "Xác minh chứng chỉ HTTPS",
+            "username": "Tên người dùng",
+            "password": "Mật khẩu",
+            "reuse_recorder_credentials": "Dùng tên người dùng và mật khẩu của đầu ghi",
+            "event_source": "Lấy phát hiện từ"
+          },
+          "data_description": {
+            "host": "Địa chỉ mà Home Assistant truy cập trực tiếp camera (ví dụ trong mạng con PoE của đầu ghi, nếu được định tuyến).",
+            "reuse_recorder_credentials": "Để tắt nếu camera có thông tin đăng nhập riêng."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "Tên người dùng hoặc mật khẩu bị từ chối. Không thử lại để tránh bị khóa.",
+        "locked_out": "Thiết bị hoặc tài khoản bị khóa tạm thời sau các lần đăng nhập thất bại. Hãy chờ trước khi thử lại.",
+        "name_not_resolved": "Không thể phân giải tên máy chủ.",
+        "tls_untrusted": "Chứng chỉ HTTPS không đáng tin cậy. Tắt xác minh chứng chỉ hoặc dùng HTTP.",
+        "cannot_connect": "Không thể kết nối.",
+        "not_isapi": "Địa chỉ có phản hồi, nhưng không giống thiết bị Hikvision ISAPI.",
+        "forbidden": "Người dùng không có quyền cần thiết.",
+        "unknown": "Lỗi không mong muốn.",
+        "wrong_camera": "Địa chỉ này thuộc về một camera khác với camera trên kênh đã chọn.",
+        "captcha_required": "Hik-Connect yêu cầu mã xác minh.",
+        "cloud_unavailable": "Hik-Connect hiện không khả dụng.",
+        "cloud_changed": "Hik-Connect trả lời theo định dạng không mong muốn.",
+        "cloud_rejected": "Hik-Connect đã từ chối yêu cầu."
+      },
+      "abort": {
+        "not_loaded": "Phải tải đầu ghi trước.",
+        "not_a_recorder": "Chỉ đầu ghi mới có kênh để liên kết.",
+        "no_free_channel": "Mọi kênh đều đã có kết nối trực tiếp.",
+        "reconfigure_successful": "Đã cập nhật kết nối trực tiếp."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Chuyển động"
+      },
+      "tamper": {
+        "name": "Phá hoại"
+      },
+      "video_loss": {
+        "name": "Mất video"
+      },
+      "scene_change": {
+        "name": "Thay đổi cảnh"
+      },
+      "intrusion": {
+        "name": "Xâm nhập"
+      },
+      "line_crossing": {
+        "name": "Vượt hàng rào"
+      },
+      "region_entrance": {
+        "name": "Đi vào khu vực"
+      },
+      "region_exiting": {
+        "name": "Rời khỏi khu vực"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "Mất nét"
+      },
+      "audio_exception": {
+        "name": "Bất thường âm thanh"
+      },
+      "target_human": {
+        "name": "Người"
+      },
+      "target_vehicle": {
+        "name": "Phương tiện"
+      },
+      "alarm_input": {
+        "name": "Đầu vào báo động {port}"
+      },
+      "channel_online": {
+        "name": "Camera đã kết nối"
+      },
+      "storage_problem": {
+        "name": "Sự cố lưu trữ"
+      },
+      "event_link": {
+        "name": "Kết nối sự kiện"
+      },
+      "stream_encryption": {
+        "name": "Mã hóa luồng"
+      },
+      "cloud_online": {
+        "name": "Kết nối đám mây"
+      },
+      "cloud_stream_encryption": {
+        "name": "Mã hóa luồng"
+      },
+      "recording": {
+        "name": "Đang ghi"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Phát hiện chuyển động"
+      },
+      "tamper_detection": {
+        "name": "Phát hiện phá hoại"
+      },
+      "scene_change_detection": {
+        "name": "Phát hiện thay đổi cảnh"
+      },
+      "intrusion_detection": {
+        "name": "Phát hiện xâm nhập"
+      },
+      "line_crossing_detection": {
+        "name": "Phát hiện vượt hàng rào"
+      },
+      "region_entrance_detection": {
+        "name": "Phát hiện đi vào khu vực"
+      },
+      "region_exiting_detection": {
+        "name": "Phát hiện rời khỏi khu vực"
+      },
+      "alarm_output": {
+        "name": "Đầu ra báo động {port}"
+      },
+      "blc": {
+        "name": "Bù sáng ngược"
+      },
+      "hlc": {
+        "name": "Bù ánh sáng mạnh"
+      },
+      "overexposure_suppression": {
+        "name": "Chống cháy sáng"
+      },
+      "image_flip": {
+        "name": "Lật hình"
+      },
+      "stabilization": {
+        "name": "Chống rung hình"
+      },
+      "lens_correction": {
+        "name": "Hiệu chỉnh méo ống kính"
+      },
+      "video_loss_detection": {
+        "name": "Phát hiện mất video"
+      },
+      "input_armed": {
+        "name": "Đầu vào báo động {port} đã kích hoạt"
+      },
+      "park_action": {
+        "name": "Hành động đỗ"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "Luồng chính"
+      },
+      "sub_stream": {
+        "name": "Luồng phụ"
+      },
+      "third_stream": {
+        "name": "Luồng thứ ba"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "Phát hiện",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Chuyển động",
+              "intrusion": "Xâm nhập",
+              "line_crossing": "Vượt hàng rào",
+              "region_entrance": "Đi vào khu vực",
+              "region_exiting": "Rời khỏi khu vực",
+              "face": "Khuôn mặt",
+              "anpr": "Biển số xe"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "Thay đổi kết nối đám mây",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "Trực tuyến",
+              "went_offline": "Ngoại tuyến"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "Lưu trữ {unit}",
+        "state": {
+          "ok": "OK",
+          "unformatted": "Chưa định dạng",
+          "error": "Lỗi",
+          "idle": "Rảnh",
+          "sleeping": "Đang ngủ",
+          "abnormal": "Bất thường",
+          "full": "Đầy",
+          "unknown": "Không xác định"
+        }
+      },
+      "storage_free": {
+        "name": "Lưu trữ {unit} còn trống"
+      },
+      "storage_capacity": {
+        "name": "Lưu trữ {unit} dung lượng"
+      },
+      "event_latency": {
+        "name": "Độ trễ sự kiện"
+      },
+      "boot_time": {
+        "name": "Lần khởi động cuối"
+      },
+      "cpu_load": {
+        "name": "Tải CPU"
+      },
+      "memory_use": {
+        "name": "Sử dụng bộ nhớ"
+      },
+      "reboots": {
+        "name": "Số lần khởi động lại",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "Dấu thời gian được báo cáo"
+          }
+        }
+      },
+      "network_address": {
+        "name": "Địa chỉ IP"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Khởi động lại"
+      },
+      "rescan": {
+        "name": "Đọc lại khả năng"
+      },
+      "cloud_unlock": {
+        "name": "Mở cửa (đám mây)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ xoay trái"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ xoay phải"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ nghiêng lên"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ nghiêng xuống"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ phóng to"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ thu nhỏ"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "Điểm đặt trước PTZ"
+      },
+      "day_night": {
+        "name": "Chế độ ngày/đêm",
+        "state": {
+          "day": "Ngày",
+          "night": "Đêm",
+          "auto": "Tự động",
+          "schedule": "Lịch",
+          "eventtrigger": "Kích hoạt theo sự kiện"
+        }
+      },
+      "supplement_light": {
+        "name": "Đèn bổ trợ",
+        "state": {
+          "eventintelligence": "Thông minh (sự kiện)",
+          "colorvuwhitelight": "Ánh sáng trắng",
+          "irlight": "Đèn hồng ngoại",
+          "close": "Tắt"
+        }
+      },
+      "light_brightness_control": {
+        "name": "Điều khiển độ sáng đèn",
+        "state": {
+          "auto": "Tự động",
+          "manual": "Thủ công"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "Tắt",
+          "open": "Bật",
+          "auto": "Tự động"
+        }
+      },
+      "blc_area": {
+        "name": "Vùng bù sáng ngược",
+        "state": {
+          "close": "Tắt",
+          "up": "Trên",
+          "down": "Dưới",
+          "left": "Trái",
+          "right": "Phải",
+          "center": "Giữa",
+          "region": "Vùng tùy chỉnh",
+          "auto": "Tự động"
+        }
+      },
+      "noise_reduction": {
+        "name": "Giảm nhiễu",
+        "state": {
+          "close": "Tắt",
+          "general": "Bình thường",
+          "advanced": "Chuyên gia"
+        }
+      },
+      "defog": {
+        "name": "Khử sương mù",
+        "state": {
+          "close": "Tắt",
+          "open": "Bật",
+          "auto": "Tự động"
+        }
+      },
+      "white_balance": {
+        "name": "Cân bằng trắng",
+        "state": {
+          "manual": "Thủ công",
+          "auto1": "Tự động 1",
+          "auto2": "Tự động 2",
+          "locked": "Khóa",
+          "daylightlamp": "Đèn huỳnh quang",
+          "incandescentlight": "Đèn sợi đốt",
+          "warmlight": "Ánh sáng ấm",
+          "naturallight": "Ánh sáng tự nhiên"
+        }
+      },
+      "exposure_mode": {
+        "name": "Chế độ phơi sáng",
+        "state": {
+          "auto": "Tự động",
+          "manual": "Thủ công"
+        }
+      },
+      "shutter": {
+        "name": "Màn trập"
+      },
+      "power_line_frequency": {
+        "name": "Tần số điện lưới",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "Hướng lật",
+        "state": {
+          "leftright": "Trái/phải",
+          "updown": "Lên/xuống",
+          "center": "Giữa"
+        }
+      },
+      "strobe_frequency": {
+        "name": "Tần số đèn nháy",
+        "state": {
+          "high": "Cao",
+          "medium": "Trung bình",
+          "low": "Thấp",
+          "normallyon": "Luôn bật"
+        }
+      },
+      "siren_sound": {
+        "name": "Âm thanh còi báo"
+      },
+      "park_action_type": {
+        "name": "Loại hành động đỗ",
+        "state": {
+          "autoscan": "Quét tự động",
+          "framescan": "Quét khung hình",
+          "randomscan": "Quét ngẫu nhiên",
+          "patrol": "Tuần tra",
+          "pattern": "Mẫu",
+          "preset": "Điểm đặt trước",
+          "panoramascan": "Quét toàn cảnh",
+          "tiltscan": "Quét nghiêng"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "Độ nhạy ngày/đêm"
+      },
+      "day_night_delay": {
+        "name": "Độ trễ ngày/đêm"
+      },
+      "white_light_brightness": {
+        "name": "Độ sáng ánh sáng trắng"
+      },
+      "ir_light_brightness": {
+        "name": "Độ sáng đèn hồng ngoại"
+      },
+      "white_light_duration": {
+        "name": "Thời lượng ánh sáng trắng"
+      },
+      "brightness": {
+        "name": "Độ sáng"
+      },
+      "contrast": {
+        "name": "Độ tương phản"
+      },
+      "saturation": {
+        "name": "Độ bão hòa"
+      },
+      "sharpness": {
+        "name": "Độ sắc nét"
+      },
+      "wdr_level": {
+        "name": "Mức WDR"
+      },
+      "hlc_level": {
+        "name": "Mức bù ánh sáng mạnh"
+      },
+      "noise_reduction_level": {
+        "name": "Mức giảm nhiễu"
+      },
+      "defog_level": {
+        "name": "Mức khử sương mù"
+      },
+      "white_balance_red": {
+        "name": "Cân bằng trắng đỏ"
+      },
+      "white_balance_blue": {
+        "name": "Cân bằng trắng xanh"
+      },
+      "gain_limit": {
+        "name": "Giới hạn độ lợi"
+      },
+      "strobe_duration": {
+        "name": "Thời lượng đèn nháy"
+      },
+      "siren_volume": {
+        "name": "Âm lượng còi báo"
+      },
+      "siren_repeats": {
+        "name": "Số lần lặp còi báo"
+      },
+      "speaker_volume": {
+        "name": "Âm lượng loa"
+      },
+      "microphone_volume": {
+        "name": "Âm lượng micrô"
+      },
+      "park_time": {
+        "name": "Thời gian đỗ"
+      },
+      "park_action_number": {
+        "name": "Số hành động đỗ"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: đăng nhập bị khóa",
+      "description": "Thiết bị đã khóa đăng nhập sau các lần thử thất bại. Tích hợp tạm dừng khoảng {minutes} phút và không thử lại sớm hơn."
+    },
+    "channel_link_auth": {
+      "title": "{device}: kết nối trực tiếp đến {channel} bị từ chối",
+      "description": "Camera đã từ chối thông tin đăng nhập của kết nối trực tiếp. Đầu ghi được dùng thay thế. Hãy cập nhật kết nối trực tiếp của kênh này."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: camera khác trên {channel}",
+      "description": "Kết nối trực tiếp của kênh này dẫn đến một camera khác với camera hiện đang nối với đầu ghi. Nó không được dùng cho đến khi được sửa."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} trên {channel} không được báo cáo",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Bật báo cáo",
+            "description": "Thiết bị phát hiện {kind} nhưng không gửi vào luồng sự kiện, vì liên kết 'Thông báo trung tâm giám sát' đang tắt. Xác nhận để chỉ bật liên kết đó (kích hoạt {trigger}); không có gì khác thay đổi. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "Thiết bị không chấp nhận thay đổi."
+        },
+        "abort": {
+          "not_loaded": "Thiết bị chưa được tải."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: chưa vẽ vùng cho {kind} trên {channel}",
+      "description": "Phát hiện đang bật nhưng chưa vẽ đường hoặc vùng nào, nên không thể kích hoạt. Hãy vẽ trong giao diện web của thiết bị."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} đang tắt trên {channel}",
+      "description": "Phát hiện này được hỗ trợ nhưng đang tắt. Hãy bật bằng thực thể công tắc của nó nếu bạn muốn dùng."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} trên {channel} chỉ cho {detail}",
+      "description": "Đầu ghi chỉ báo cáo phát hiện này cho các loại mục tiêu được liệt kê. Chuyển động khác sẽ không kích hoạt."
+    },
+    "stream_encrypted": {
+      "title": "{device}: luồng video bị Hik-Connect mã hóa",
+      "description": "Mã hóa luồng cho Hik-Connect đang bật. Home Assistant không thể giải mã luồng này; ảnh chụp và sự kiện vẫn hoạt động. Hãy tắt 'Mã hóa luồng' trong cài đặt truy cập nền tảng của thiết bị, hoặc kết nối trực tiếp các camera bị ảnh hưởng (kết nối camera trực tiếp)."
+    },
+    "default_password": {
+      "title": "{device}: mật khẩu yếu hoặc mặc định",
+      "description": "Thiết bị báo rằng mật khẩu của nó yếu hoặc vẫn là mặc định. Hãy đổi trên thiết bị."
+    },
+    "basic_over_http": {
+      "title": "{device}: mật khẩu được gửi không được bảo vệ",
+      "description": "Thiết bị chỉ chấp nhận xác thực Basic qua HTTP, nên mật khẩu được truyền dưới dạng văn bản thuần. Hãy bật xác thực Digest hoặc HTTPS trên thiết bị."
+    },
+    "clock_skew": {
+      "title": "{device}: đồng hồ lệch {detail} giây",
+      "description": "Đồng hồ thiết bị lệch đáng kể so với Home Assistant. Thời gian sự kiện được hiệu chỉnh, nhưng bản ghi mang thời gian sai. Hãy cấu hình NTP trên thiết bị."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "Thiết bị đã từ chối thông tin đăng nhập."
+    },
+    "locked_out": {
+      "message": "Thiết bị đã khóa đăng nhập. Việc thiết lập tạm dừng để không kéo dài thời gian khóa."
+    },
+    "not_isapi": {
+      "message": "Thiết bị không phản hồi như thiết bị Hikvision ISAPI."
+    },
+    "unreachable": {
+      "message": "Không thể truy cập {host}."
+    },
+    "other_device": {
+      "message": "Một thiết bị khác hiện đang phản hồi tại {host}. Dùng 'Cấu hình lại' hoặc thêm nó làm thiết bị mới."
+    },
+    "write_failed": {
+      "message": "Thiết bị không chấp nhận thay đổi ({reason})."
+    },
+    "unknown_device": {
+      "message": "Thiết bị đã chọn không thuộc Hikvision Bridge."
+    },
+    "channel_needed": {
+      "message": "Chọn một camera hoặc thiết bị kênh."
+    },
+    "confirm_needed": {
+      "message": "Hành động này thay đổi thiết bị. Bật 'Xác nhận thay đổi' để chạy."
+    },
+    "bad_path": {
+      "message": "Chỉ cho phép đường dẫn dưới /ISAPI/."
+    },
+    "webhook_off": {
+      "message": "Hãy bật webhook trong tùy chọn trước."
+    },
+    "no_url": {
+      "message": "Home Assistant chưa cấu hình URL nội bộ."
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect đã từ chối đăng nhập."
+    },
+    "cloud_failed": {
+      "message": "Yêu cầu Hik-Connect thất bại ({reason})."
+    },
+    "cloud_gone": {
+      "message": "Thiết bị không còn trong tài khoản Hik-Connect."
+    },
+    "setting_inactive": {
+      "message": "Cài đặt này không hoạt động ở chế độ hiện tại của camera."
+    },
+    "read_failed": {
+      "message": "Thiết bị không trả lời yêu cầu ({reason})."
+    },
+    "bad_period": {
+      "message": "Thời điểm kết thúc phải sau thời điểm bắt đầu và muộn nhất một ngày sau."
+    },
+    "no_recordings": {
+      "message": "Không tìm thấy bản ghi nào trong khoảng thời gian này."
+    },
+    "too_many_recordings": {
+      "message": "Khoảng thời gian có {count} bản ghi; mỗi lần chỉ lưu được tối đa {limit}."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant không được phép ghi vào thư mục phương tiện của nó."
+    },
+    "recording_encrypted": {
+      "message": "Thiết bị mã hóa các bản ghi (mã hóa luồng), nên không thể phát hay chuyển đổi. Hãy tắt mã hóa luồng hoặc dùng thẻ nhớ của camera."
+    },
+    "conversion_failed": {
+      "message": "Không thể chuyển đổi bản ghi."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg không có trong Home Assistant."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "Tự động",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "Luồng sự kiện (khuyến nghị)",
+        "webhook": "Webhook",
+        "both": "Cả hai"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "Đầu ghi",
+        "camera": "Camera"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 như khi ghi (khuyên dùng)",
+        "h264": "Chuyển sang H.264 (phát ở mọi nơi, tải CPU cao)",
+        "stream": "Phát trực tiếp từ thiết bị (RTSP sang HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "Tự động",
+        "recorder": "Đầu ghi",
+        "card": "Thẻ nhớ"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 như khi ghi",
+        "h264": "MP4 đã chuyển sang H.264",
+        "ts": "MPEG-TS như khi ghi",
+        "original": "Tệp gốc (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "Tất cả",
+        "continuous": "Liên tục",
+        "motion": "Chuyển động",
+        "alarm": "Ngõ vào báo động",
+        "event": "Sự kiện thông minh",
+        "manual": "Thủ công",
+        "other": "Khác"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "Bật báo cáo sự kiện",
+      "description": "Bật liên kết 'Thông báo trung tâm giám sát' cho các phát hiện còn thiếu. Chạy ở chế độ xem trước trừ khi 'Chỉ xem trước' bị tắt.",
+      "fields": {
+        "device_id": {
+          "name": "Thiết bị",
+          "description": "Camera, kênh hoặc đầu ghi."
+        },
+        "dry_run": {
+          "name": "Chỉ xem trước",
+          "description": "Chỉ liệt kê những gì sẽ thay đổi."
+        },
+        "kinds": {
+          "name": "Phát hiện",
+          "description": "Giới hạn ở các loại này; để trống nghĩa là tất cả."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "Yêu cầu ISAPI",
+      "description": "Gửi một yêu cầu ISAPI và trả về câu trả lời đã loại bỏ thông tin bí mật. Các phương thức thay đổi cần xác nhận.",
+      "fields": {
+        "device_id": {
+          "name": "Thiết bị",
+          "description": "Camera, kênh hoặc đầu ghi."
+        },
+        "method": {
+          "name": "Phương thức",
+          "description": "Phương thức HTTP."
+        },
+        "path": {
+          "name": "Đường dẫn",
+          "description": "Đường dẫn bắt đầu bằng /ISAPI/."
+        },
+        "body": {
+          "name": "Nội dung",
+          "description": "Nội dung XML hoặc JSON cho các phương thức thay đổi."
+        },
+        "confirm_write": {
+          "name": "Xác nhận thay đổi",
+          "description": "Bắt buộc cho mọi thứ thay đổi thiết bị."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "Di chuyển PTZ",
+      "description": "Di chuyển camera PTZ trong thời gian ngắn.",
+      "fields": {
+        "device_id": {
+          "name": "Thiết bị",
+          "description": "Camera, kênh hoặc đầu ghi."
+        },
+        "pan": {
+          "name": "Xoay ngang",
+          "description": "Tốc độ, âm là sang trái."
+        },
+        "tilt": {
+          "name": "Nghiêng",
+          "description": "Tốc độ, âm là xuống dưới."
+        },
+        "zoom": {
+          "name": "Thu phóng",
+          "description": "Tốc độ, âm là thu nhỏ."
+        },
+        "duration": {
+          "name": "Thời lượng",
+          "description": "Số giây trước khi dừng."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "Điểm đặt trước PTZ",
+      "description": "Di chuyển camera PTZ đến điểm đặt trước đã lưu.",
+      "fields": {
+        "device_id": {
+          "name": "Thiết bị",
+          "description": "Camera, kênh hoặc đầu ghi."
+        },
+        "preset": {
+          "name": "Điểm đặt trước",
+          "description": "Số điểm đặt trước."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "Đặt máy chủ thông báo",
+      "description": "Trỏ một khe máy chủ thông báo của thiết bị đến webhook Home Assistant này.",
+      "fields": {
+        "device_id": {
+          "name": "Thiết bị",
+          "description": "Camera, kênh hoặc đầu ghi."
+        },
+        "slot": {
+          "name": "Khe",
+          "description": "Số máy chủ thông báo trên thiết bị."
+        },
+        "confirm_write": {
+          "name": "Xác nhận thay đổi",
+          "description": "Bắt buộc cho mọi thứ thay đổi thiết bị."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "Tìm bản ghi",
+      "description": "Liệt kê các tệp đã ghi của một camera hoặc kênh trong một khoảng thời gian.",
+      "fields": {
+        "device_id": {
+          "name": "Thiết bị",
+          "description": "Camera hoặc kênh."
+        },
+        "start": {
+          "name": "Bắt đầu",
+          "description": "Đầu khoảng thời gian."
+        },
+        "end": {
+          "name": "Kết thúc",
+          "description": "Cuối khoảng thời gian, tối đa một ngày sau khi bắt đầu."
+        },
+        "source": {
+          "name": "Nguồn",
+          "description": "Đầu ghi hoặc thẻ nhớ của camera; chế độ tự động thử đầu ghi trước."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "Lưu bản ghi",
+      "description": "Lưu các bản ghi của một khoảng thời gian vào thư mục phương tiện 'hikvision_bridge'.",
+      "fields": {
+        "device_id": {
+          "name": "Thiết bị",
+          "description": "Camera hoặc kênh."
+        },
+        "start": {
+          "name": "Bắt đầu",
+          "description": "Đầu khoảng thời gian."
+        },
+        "end": {
+          "name": "Kết thúc",
+          "description": "Cuối khoảng thời gian, tối đa một ngày sau khi bắt đầu."
+        },
+        "source": {
+          "name": "Nguồn",
+          "description": "Đầu ghi hoặc thẻ nhớ của camera; chế độ tự động thử đầu ghi trước."
+        },
+        "format": {
+          "name": "Định dạng",
+          "description": "MP4 và MPEG-TS giữ nguyên video đã ghi; H.264 chuyển đổi nó, việc này lâu trên máy nhỏ."
+        },
+        "trim": {
+          "name": "Cắt theo khoảng thời gian",
+          "description": "Cắt các tệp theo khoảng thời gian; tệp gốc không bao giờ bị cắt."
+        }
+      }
+    }
+  }
+}

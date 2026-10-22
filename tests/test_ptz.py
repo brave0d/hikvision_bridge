@@ -7,7 +7,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.conftest import device_entry
 from tests.fakedevice import FakeDevice
-from tests.model.test_ptz import CAPS, PRESETS
+from tests.model.test_ptz import CAPS, PARK, PRESETS
 from tests.test_status_entities import _entity
 
 
@@ -65,5 +65,39 @@ async def test_fixed_camera_has_no_ptz(hass: HomeAssistant, serve) -> None:
         for e in er.async_entries_for_config_entry(registry, entry.entry_id)
         if "_ptz_" in e.unique_id
     ]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_park_action_entities(hass: HomeAssistant, serve) -> None:
+    device = FakeDevice("camera_g3")
+    device.documents["/ISAPI/PTZCtrl/channels/1/parkaction"] = PARK
+    server = await serve(device)
+    entry = device_entry(server, device)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    switch = _entity(hass, entry, "switch", "_image_park_action")
+    assert hass.states.get(switch.entity_id).state == "off"
+    kind = _entity(hass, entry, "select", "_image_park_action_type")
+    state = hass.states.get(kind.entity_id)
+    assert state.state == "preset"
+    assert "patrol" in state.attributes["options"]
+    number = _entity(hass, entry, "number", "_image_park_time")
+    assert float(hass.states.get(number.entity_id).state) == 30
+
+    device.writes.clear()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": kind.entity_id, "option": "patrol"},
+        blocking=True,
+    )
+    method, path, body = device.writes[0]
+    assert (method, path) == ("PUT", "/ISAPI/PTZCtrl/channels/1/parkaction")
+    assert "<ActionType>patrol</ActionType>" in body
+    assert "<Parktime>30</Parktime>" in body
+
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

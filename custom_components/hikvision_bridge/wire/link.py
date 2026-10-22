@@ -426,13 +426,21 @@ class IsapiLink:
     # ------------------------------------------------------------- streams
 
     @asynccontextmanager
-    async def open_stream(self, path: str) -> AsyncIterator[aiohttp.ClientResponse]:
-        """Open a long-lived authenticated GET (event stream).
+    async def open_stream(
+        self,
+        path: str,
+        *,
+        method: str = "GET",
+        body: str | None = None,
+        content_type: str = "application/xml; charset=UTF-8",
+    ) -> AsyncIterator[aiohttp.ClientResponse]:
+        """Open a long-lived authenticated request (event stream, recording download).
 
         The request slot is held only until the response headers arrive.
         """
         if self._blocked is not None:
             raise self._blocked
+        payload = body.encode("utf-8") if body is not None else None
         timeout = aiohttp.ClientTimeout(total=None, sock_connect=self._connect_timeout)
         for attempt in range(2):
             async with self._gate:
@@ -440,12 +448,19 @@ class IsapiLink:
                 if not self._auth_checked:
                     await self._establish()
                 headers = {"Accept": "*/*"}
+                if payload is not None:
+                    headers["Content-Type"] = content_type
                 signed = self._signed_state()
                 if self._signer is not None:
-                    headers["Authorization"] = self._signer.authorization("GET", path)
+                    headers["Authorization"] = self._signer.authorization(method, path)
                 try:
-                    response = await self._session.get(
-                        self._url(path), headers=headers, timeout=timeout, allow_redirects=False
+                    response = await self._session.request(
+                        method,
+                        self._url(path),
+                        headers=headers,
+                        data=payload,
+                        timeout=timeout,
+                        allow_redirects=False,
                     )
                 except aiohttp.ClientConnectorCertificateError as err:
                     raise TlsUntrusted(str(err)) from err

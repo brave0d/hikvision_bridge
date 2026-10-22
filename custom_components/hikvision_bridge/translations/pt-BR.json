@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "Câmera ou gravador na rede local",
+          "cloud": "Conta Hik-Connect (nuvem)"
+        }
+      },
+      "device": {
+        "title": "Conectar um dispositivo",
+        "description": "Durante a configuração só é usado acesso de leitura.",
+        "data": {
+          "host": "Host",
+          "port": "Porta (opcional)",
+          "connection": "Conexão",
+          "verify_tls": "Verificar o certificado HTTPS",
+          "username": "Nome de usuário",
+          "password": "Senha"
+        },
+        "data_description": {
+          "host": "Endereço IP ou nome de host da câmera ou do gravador.",
+          "port": "Deixe vazio para 80 (HTTP) ou 443 (HTTPS).",
+          "connection": "Automático tenta primeiro HTTPS e só recorre a HTTP se o HTTPS não conseguir conectar.",
+          "username": "Cada dispositivo pode usar seu próprio usuário. Recomenda-se um usuário operador dedicado."
+        }
+      },
+      "duplicate": {
+        "title": "Câmera já conhecida",
+        "description": "Esta câmera já é exibida por {recorder} no canal {channel}. Vinculá-la a esse canal (um só dispositivo, stream direto da câmera) ou adicioná-la como dispositivo separado?",
+        "menu_options": {
+          "link_to_channel": "Vincular ao canal do gravador",
+          "keep_separate": "Adicionar como dispositivo separado"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Falha no login",
+        "description": "{device} ({host}) rejeitou as credenciais salvas. Digite as atuais.",
+        "data": {
+          "username": "Nome de usuário",
+          "password": "Senha"
+        }
+      },
+      "reconfigure": {
+        "title": "Alterar conexão",
+        "description": "O novo endereço precisa levar ao mesmo dispositivo.",
+        "data": {
+          "host": "Host",
+          "port": "Porta (opcional)",
+          "connection": "Conexão",
+          "verify_tls": "Verificar o certificado HTTPS",
+          "username": "Nome de usuário",
+          "password": "Senha"
+        },
+        "data_description": {
+          "host": "Endereço IP ou nome de host da câmera ou do gravador.",
+          "port": "Deixe vazio para 80 (HTTP) ou 443 (HTTPS).",
+          "connection": "Automático tenta primeiro HTTPS e só recorre a HTTP se o HTTPS não conseguir conectar.",
+          "username": "Cada dispositivo pode usar seu próprio usuário. Recomenda-se um usuário operador dedicado."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "O Hik-Connect não tem uma interface oficial para terceiros. A integração só lê a lista de dispositivos e o status; a senha é armazenada no Home Assistant.",
+        "data": {
+          "account": "Conta Hik-Connect (e-mail ou telefone)",
+          "password": "Senha"
+        }
+      },
+      "cloud_captcha": {
+        "title": "Código de verificação",
+        "description": "Digite o código exibido aqui: {image}",
+        "data": {
+          "captcha": "Código"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Login no Hik-Connect",
+        "description": "Digite a senha de {account}.",
+        "data": {
+          "password": "Senha",
+          "captcha": "Código de verificação (só se solicitado)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Usuário ou senha rejeitados. Nenhuma nova tentativa é feita, para evitar um bloqueio.",
+      "locked_out": "O dispositivo ou a conta está temporariamente bloqueado após logins com falha. Aguarde antes de tentar novamente.",
+      "name_not_resolved": "Não foi possível resolver o nome de host.",
+      "tls_untrusted": "O certificado HTTPS não é confiável. Desative a verificação do certificado ou use HTTP.",
+      "cannot_connect": "Não é possível conectar.",
+      "not_isapi": "O endereço responde, mas não como um dispositivo Hikvision ISAPI.",
+      "forbidden": "O usuário não tem as permissões necessárias.",
+      "unknown": "Erro inesperado.",
+      "wrong_camera": "Este endereço pertence a uma câmera diferente da do canal selecionado.",
+      "captcha_required": "O Hik-Connect solicita um código de verificação.",
+      "cloud_unavailable": "O Hik-Connect está indisponível no momento.",
+      "cloud_changed": "O Hik-Connect respondeu em um formato inesperado.",
+      "cloud_rejected": "O Hik-Connect rejeitou a solicitação."
+    },
+    "abort": {
+      "already_configured": "Este dispositivo ou conta já está configurado.",
+      "reauth_successful": "Credenciais atualizadas.",
+      "reconfigure_successful": "Conexão atualizada.",
+      "other_device": "Este endereço pertence a outro dispositivo. Adicione-o como novo dispositivo.",
+      "channel_already_linked": "Este canal do gravador já tem uma conexão direta.",
+      "linked_to_channel": "A câmera foi vinculada ao canal do gravador."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opções",
+        "data": {
+          "event_path": "Como os eventos chegam",
+          "hold_seconds": "Manter as detecções ativas por (segundos)",
+          "rtsp_port": "Porta RTSP (opcional)",
+          "rtsp_transport": "Transporte RTSP",
+          "target_sensors": "Sensores separados para pessoas e veículos",
+          "playback": "Reprodução no navegador de mídia"
+        },
+        "data_description": {
+          "event_path": "O fluxo de eventos não exige mudanças no dispositivo. O webhook exige que o dispositivo envie para o Home Assistant.",
+          "hold_seconds": "Os dispositivos só informam o início de muitas detecções; o sensor fica ativo por este tempo após o último aviso.",
+          "playback": "As gravações são H.265 ou H.264. \"MP4 como gravado\" começa na hora, mas os navegadores só reproduzem H.265 com suporte de hardware. \"Converter para H.264\" funciona em qualquer lugar e exige muita CPU. \"Transmitir do dispositivo\" deixa o dispositivo reproduzir a gravação via RTSP."
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "As notificações são aceitas em {path} (somente rede local). Use a ação \"Definir host de notificação\" ou a interface web do dispositivo para direcioná-lo para lá."
+      }
+    },
+    "abort": {
+      "no_options": "Uma conta Hik-Connect não tem opções."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "Conectar a câmera diretamente"
+      },
+      "entry_type": "Conexão direta à câmera",
+      "step": {
+        "user": {
+          "title": "Conexão direta à câmera",
+          "description": "Conecta diretamente a câmera de um canal do gravador, com endereço e credenciais próprios. A transmissão ao vivo passa a vir da câmera, o que também ajuda quando o stream do gravador está criptografado.",
+          "data": {
+            "channel_id": "Canal do gravador",
+            "host": "Host",
+            "port": "Porta (opcional)",
+            "connection": "Conexão",
+            "verify_tls": "Verificar o certificado HTTPS",
+            "username": "Nome de usuário",
+            "password": "Senha",
+            "reuse_recorder_credentials": "Usar o usuário e a senha do gravador",
+            "event_source": "Obter as detecções de"
+          },
+          "data_description": {
+            "host": "Endereço pelo qual o Home Assistant alcança a câmera diretamente (por exemplo na sub-rede PoE do gravador, se roteada).",
+            "reuse_recorder_credentials": "Deixe desativado se a câmera tiver credenciais próprias."
+          }
+        },
+        "reconfigure": {
+          "title": "Alterar a conexão direta à câmera",
+          "description": "Conecta diretamente a câmera de um canal do gravador, com endereço e credenciais próprios. A transmissão ao vivo passa a vir da câmera, o que também ajuda quando o stream do gravador está criptografado.",
+          "data": {
+            "channel_id": "Canal do gravador",
+            "host": "Host",
+            "port": "Porta (opcional)",
+            "connection": "Conexão",
+            "verify_tls": "Verificar o certificado HTTPS",
+            "username": "Nome de usuário",
+            "password": "Senha",
+            "reuse_recorder_credentials": "Usar o usuário e a senha do gravador",
+            "event_source": "Obter as detecções de"
+          },
+          "data_description": {
+            "host": "Endereço pelo qual o Home Assistant alcança a câmera diretamente (por exemplo na sub-rede PoE do gravador, se roteada).",
+            "reuse_recorder_credentials": "Deixe desativado se a câmera tiver credenciais próprias."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "Usuário ou senha rejeitados. Nenhuma nova tentativa é feita, para evitar um bloqueio.",
+        "locked_out": "O dispositivo ou a conta está temporariamente bloqueado após logins com falha. Aguarde antes de tentar novamente.",
+        "name_not_resolved": "Não foi possível resolver o nome de host.",
+        "tls_untrusted": "O certificado HTTPS não é confiável. Desative a verificação do certificado ou use HTTP.",
+        "cannot_connect": "Não é possível conectar.",
+        "not_isapi": "O endereço responde, mas não como um dispositivo Hikvision ISAPI.",
+        "forbidden": "O usuário não tem as permissões necessárias.",
+        "unknown": "Erro inesperado.",
+        "wrong_camera": "Este endereço pertence a uma câmera diferente da do canal selecionado.",
+        "captcha_required": "O Hik-Connect solicita um código de verificação.",
+        "cloud_unavailable": "O Hik-Connect está indisponível no momento.",
+        "cloud_changed": "O Hik-Connect respondeu em um formato inesperado.",
+        "cloud_rejected": "O Hik-Connect rejeitou a solicitação."
+      },
+      "abort": {
+        "not_loaded": "O gravador precisa ser carregado primeiro.",
+        "not_a_recorder": "Só gravadores têm canais para vincular.",
+        "no_free_channel": "Todos os canais já têm uma conexão direta.",
+        "reconfigure_successful": "Conexão direta atualizada."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Movimento"
+      },
+      "tamper": {
+        "name": "Violação"
+      },
+      "video_loss": {
+        "name": "Perda de vídeo"
+      },
+      "scene_change": {
+        "name": "Mudança de cena"
+      },
+      "intrusion": {
+        "name": "Intrusão"
+      },
+      "line_crossing": {
+        "name": "Cruzamento de linha"
+      },
+      "region_entrance": {
+        "name": "Entrada na área"
+      },
+      "region_exiting": {
+        "name": "Saída da área"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "Desfoque"
+      },
+      "audio_exception": {
+        "name": "Anomalia de áudio"
+      },
+      "target_human": {
+        "name": "Pessoa"
+      },
+      "target_vehicle": {
+        "name": "Veículo"
+      },
+      "alarm_input": {
+        "name": "Entrada de alarme {port}"
+      },
+      "channel_online": {
+        "name": "Câmera conectada"
+      },
+      "storage_problem": {
+        "name": "Problema de armazenamento"
+      },
+      "event_link": {
+        "name": "Conexão de eventos"
+      },
+      "stream_encryption": {
+        "name": "Criptografia do stream"
+      },
+      "cloud_online": {
+        "name": "Conexão com a nuvem"
+      },
+      "cloud_stream_encryption": {
+        "name": "Criptografia do stream"
+      },
+      "recording": {
+        "name": "Gravação"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Detecção de movimento"
+      },
+      "tamper_detection": {
+        "name": "Detecção de violação"
+      },
+      "scene_change_detection": {
+        "name": "Detecção de mudança de cena"
+      },
+      "intrusion_detection": {
+        "name": "Detecção de intrusão"
+      },
+      "line_crossing_detection": {
+        "name": "Detecção de cruzamento de linha"
+      },
+      "region_entrance_detection": {
+        "name": "Detecção de entrada na área"
+      },
+      "region_exiting_detection": {
+        "name": "Detecção de saída da área"
+      },
+      "alarm_output": {
+        "name": "Saída de alarme {port}"
+      },
+      "blc": {
+        "name": "Compensação de contraluz"
+      },
+      "hlc": {
+        "name": "Compensação de luzes fortes"
+      },
+      "overexposure_suppression": {
+        "name": "Supressão de superexposição"
+      },
+      "image_flip": {
+        "name": "Inversão da imagem"
+      },
+      "stabilization": {
+        "name": "Estabilização da imagem"
+      },
+      "lens_correction": {
+        "name": "Correção de distorção da lente"
+      },
+      "video_loss_detection": {
+        "name": "Detecção de perda de vídeo"
+      },
+      "input_armed": {
+        "name": "Entrada de alarme {port} armada"
+      },
+      "park_action": {
+        "name": "Ação de estacionamento"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "Stream principal"
+      },
+      "sub_stream": {
+        "name": "Substream"
+      },
+      "third_stream": {
+        "name": "Terceiro stream"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "Detecção",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Movimento",
+              "intrusion": "Intrusão",
+              "line_crossing": "Cruzamento de linha",
+              "region_entrance": "Entrada na área",
+              "region_exiting": "Saída da área",
+              "face": "Rosto",
+              "anpr": "Placa do veículo"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "Mudança na conexão com a nuvem",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "Online",
+              "went_offline": "Offline"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "Armazenamento {unit}",
+        "state": {
+          "ok": "OK",
+          "unformatted": "Não formatado",
+          "error": "Erro",
+          "idle": "Ocioso",
+          "sleeping": "Em repouso",
+          "abnormal": "Anormal",
+          "full": "Cheio",
+          "unknown": "Desconhecido"
+        }
+      },
+      "storage_free": {
+        "name": "Armazenamento {unit} livre"
+      },
+      "storage_capacity": {
+        "name": "Capacidade do armazenamento {unit}"
+      },
+      "event_latency": {
+        "name": "Atraso dos eventos"
+      },
+      "boot_time": {
+        "name": "Última inicialização"
+      },
+      "cpu_load": {
+        "name": "Carga da CPU"
+      },
+      "memory_use": {
+        "name": "Uso de memória"
+      },
+      "reboots": {
+        "name": "Reinicializações",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "Data e hora informadas"
+          }
+        }
+      },
+      "network_address": {
+        "name": "Endereço IP"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Reiniciar"
+      },
+      "rescan": {
+        "name": "Reler recursos"
+      },
+      "cloud_unlock": {
+        "name": "Abrir porta (nuvem)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ girar para a esquerda"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ girar para a direita"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ inclinar para cima"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ inclinar para baixo"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ aproximar"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ afastar"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "Predefinição PTZ"
+      },
+      "day_night": {
+        "name": "Modo dia/noite",
+        "state": {
+          "day": "Dia",
+          "night": "Noite",
+          "auto": "Auto",
+          "schedule": "Agendamento",
+          "eventtrigger": "Acionamento por evento"
+        }
+      },
+      "supplement_light": {
+        "name": "Luz suplementar",
+        "state": {
+          "eventintelligence": "Inteligente (evento)",
+          "colorvuwhitelight": "Luz branca",
+          "irlight": "Luz IR",
+          "close": "Desligado"
+        }
+      },
+      "light_brightness_control": {
+        "name": "Controle de brilho da luz",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "Desligado",
+          "open": "Ligado",
+          "auto": "Auto"
+        }
+      },
+      "blc_area": {
+        "name": "Área de compensação de contraluz",
+        "state": {
+          "close": "Desligado",
+          "up": "Cima",
+          "down": "Baixo",
+          "left": "Esquerda",
+          "right": "Direita",
+          "center": "Centro",
+          "region": "Região personalizada",
+          "auto": "Auto"
+        }
+      },
+      "noise_reduction": {
+        "name": "Redução de ruído",
+        "state": {
+          "close": "Desligado",
+          "general": "Normal",
+          "advanced": "Especialista"
+        }
+      },
+      "defog": {
+        "name": "Desembaçador",
+        "state": {
+          "close": "Desligado",
+          "open": "Ligado",
+          "auto": "Auto"
+        }
+      },
+      "white_balance": {
+        "name": "Balanço de branco",
+        "state": {
+          "manual": "Manual",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "locked": "Bloqueado",
+          "daylightlamp": "Lâmpada fluorescente",
+          "incandescentlight": "Lâmpada incandescente",
+          "warmlight": "Luz quente",
+          "naturallight": "Luz natural"
+        }
+      },
+      "exposure_mode": {
+        "name": "Modo de exposição",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "shutter": {
+        "name": "Obturador"
+      },
+      "power_line_frequency": {
+        "name": "Frequência da rede elétrica",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "Direção da inversão",
+        "state": {
+          "leftright": "Esquerda/direita",
+          "updown": "Cima/baixo",
+          "center": "Centro"
+        }
+      },
+      "strobe_frequency": {
+        "name": "Frequência da luz estroboscópica",
+        "state": {
+          "high": "Alta",
+          "medium": "Média",
+          "low": "Baixa",
+          "normallyon": "Sempre acesa"
+        }
+      },
+      "siren_sound": {
+        "name": "Som da sirene"
+      },
+      "park_action_type": {
+        "name": "Tipo de ação de estacionamento",
+        "state": {
+          "autoscan": "Varredura automática",
+          "framescan": "Varredura de quadro",
+          "randomscan": "Varredura aleatória",
+          "patrol": "Patrulha",
+          "pattern": "Padrão",
+          "preset": "Predefinição",
+          "panoramascan": "Varredura panorâmica",
+          "tiltscan": "Varredura vertical"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "Sensibilidade dia/noite"
+      },
+      "day_night_delay": {
+        "name": "Atraso dia/noite"
+      },
+      "white_light_brightness": {
+        "name": "Brilho da luz branca"
+      },
+      "ir_light_brightness": {
+        "name": "Brilho da luz IR"
+      },
+      "white_light_duration": {
+        "name": "Duração da luz branca"
+      },
+      "brightness": {
+        "name": "Brilho"
+      },
+      "contrast": {
+        "name": "Contraste"
+      },
+      "saturation": {
+        "name": "Saturação"
+      },
+      "sharpness": {
+        "name": "Nitidez"
+      },
+      "wdr_level": {
+        "name": "Nível de WDR"
+      },
+      "hlc_level": {
+        "name": "Nível de compensação de luzes fortes"
+      },
+      "noise_reduction_level": {
+        "name": "Nível de redução de ruído"
+      },
+      "defog_level": {
+        "name": "Nível do desembaçador"
+      },
+      "white_balance_red": {
+        "name": "Balanço de branco vermelho"
+      },
+      "white_balance_blue": {
+        "name": "Balanço de branco azul"
+      },
+      "gain_limit": {
+        "name": "Limite de ganho"
+      },
+      "strobe_duration": {
+        "name": "Duração da luz estroboscópica"
+      },
+      "siren_volume": {
+        "name": "Volume da sirene"
+      },
+      "siren_repeats": {
+        "name": "Repetições da sirene"
+      },
+      "speaker_volume": {
+        "name": "Volume do alto-falante"
+      },
+      "microphone_volume": {
+        "name": "Volume do microfone"
+      },
+      "park_time": {
+        "name": "Tempo de estacionamento"
+      },
+      "park_action_number": {
+        "name": "Número da ação de estacionamento"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: login bloqueado",
+      "description": "O dispositivo bloqueou o login após tentativas com falha. A integração faz uma pausa de cerca de {minutes} minutos e não tenta antes disso."
+    },
+    "channel_link_auth": {
+      "title": "{device}: conexão direta com {channel} rejeitada",
+      "description": "A câmera rejeitou as credenciais da conexão direta. O gravador é usado no lugar. Atualize a conexão direta deste canal."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: outra câmera em {channel}",
+      "description": "A conexão direta deste canal leva a uma câmera diferente da que agora está conectada ao gravador. Ela não é usada até ser corrigida."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} em {channel} não é informado",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Ativar o envio",
+            "description": "O dispositivo detecta {kind} mas não o envia ao fluxo de eventos, porque o vínculo \"Notificar centro de vigilância\" está desativado. Confirme para ativar só esse vínculo (gatilho {trigger}); nada mais muda. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "O dispositivo não aceitou a alteração."
+        },
+        "abort": {
+          "not_loaded": "O dispositivo não está carregado."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: nenhuma área desenhada para {kind} em {channel}",
+      "description": "A detecção está ativa, mas nenhuma linha ou área foi desenhada, então ela não pode disparar. Desenhe-a na interface web do dispositivo."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} está desligado em {channel}",
+      "description": "Esta detecção é suportada, mas está desligada. Ligue-a com o respectivo interruptor se quiser usá-la."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} em {channel} só para {detail}",
+      "description": "O gravador só informa esta detecção para os tipos de alvo listados. Outros movimentos não a disparam."
+    },
+    "stream_encrypted": {
+      "title": "{device}: stream de vídeo criptografado pelo Hik-Connect",
+      "description": "A criptografia do stream para o Hik-Connect está ativa. O Home Assistant não consegue decodificar este stream; capturas e eventos continuam funcionando. Desative \"Criptografia do stream\" nas configurações de acesso à plataforma do dispositivo ou conecte diretamente as câmeras afetadas (conexão direta à câmera)."
+    },
+    "default_password": {
+      "title": "{device}: senha fraca ou padrão",
+      "description": "O dispositivo informa que a senha é fraca ou ainda é a padrão. Altere-a no dispositivo."
+    },
+    "basic_over_http": {
+      "title": "{device}: senha enviada sem proteção",
+      "description": "O dispositivo só aceita autenticação Basic por HTTP, então a senha trafega em texto puro. Ative a autenticação Digest ou HTTPS no dispositivo."
+    },
+    "clock_skew": {
+      "title": "{device}: relógio defasado em {detail} s",
+      "description": "O relógio do dispositivo difere visivelmente do Home Assistant. Os horários dos eventos são corrigidos, mas as gravações ficam com o horário errado. Configure o NTP no dispositivo."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "O dispositivo rejeitou as credenciais."
+    },
+    "locked_out": {
+      "message": "O dispositivo bloqueou o login. A configuração está pausada para não prolongar o bloqueio."
+    },
+    "not_isapi": {
+      "message": "O dispositivo não responde como um dispositivo Hikvision ISAPI."
+    },
+    "unreachable": {
+      "message": "{host} não está acessível."
+    },
+    "other_device": {
+      "message": "Outro dispositivo responde agora em {host}. Use \"Reconfigurar\" ou adicione-o como novo dispositivo."
+    },
+    "write_failed": {
+      "message": "O dispositivo não aceitou a alteração ({reason})."
+    },
+    "unknown_device": {
+      "message": "O dispositivo selecionado não pertence ao Hikvision Bridge."
+    },
+    "channel_needed": {
+      "message": "Selecione uma câmera ou um dispositivo de canal."
+    },
+    "confirm_needed": {
+      "message": "Esta ação altera o dispositivo. Ative \"Confirmar alteração\" para executá-la."
+    },
+    "bad_path": {
+      "message": "Só são permitidos caminhos abaixo de /ISAPI/."
+    },
+    "webhook_off": {
+      "message": "Ative primeiro o webhook nas opções."
+    },
+    "no_url": {
+      "message": "O Home Assistant não tem uma URL local configurada."
+    },
+    "cloud_auth": {
+      "message": "O Hik-Connect rejeitou o login."
+    },
+    "cloud_failed": {
+      "message": "A solicitação ao Hik-Connect falhou ({reason})."
+    },
+    "cloud_gone": {
+      "message": "O dispositivo não está mais na conta Hik-Connect."
+    },
+    "setting_inactive": {
+      "message": "Esta configuração não está ativa no modo atual da câmera."
+    },
+    "read_failed": {
+      "message": "O dispositivo não respondeu à solicitação ({reason})."
+    },
+    "bad_period": {
+      "message": "O fim precisa ser depois do início e no máximo um dia depois."
+    },
+    "no_recordings": {
+      "message": "Nenhuma gravação encontrada para este período."
+    },
+    "too_many_recordings": {
+      "message": "O período contém {count} gravações; no máximo {limit} podem ser salvas de uma vez."
+    },
+    "media_not_allowed": {
+      "message": "O Home Assistant não pode gravar na sua pasta de mídia."
+    },
+    "recording_encrypted": {
+      "message": "O dispositivo criptografa suas gravações (criptografia do stream), então elas não podem ser reproduzidas nem convertidas. Desative a criptografia do stream ou use o cartão de memória da câmera."
+    },
+    "conversion_failed": {
+      "message": "Não foi possível converter a gravação."
+    },
+    "no_ffmpeg": {
+      "message": "O ffmpeg não está disponível no Home Assistant."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "Automático",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "Fluxo de eventos (recomendado)",
+        "webhook": "Webhook",
+        "both": "Ambos"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "Gravador",
+        "camera": "Câmera"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 como gravado (recomendado)",
+        "h264": "Converter para H.264 (funciona em qualquer lugar, alta carga de CPU)",
+        "stream": "Transmitir do dispositivo (RTSP para HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "Automático",
+        "recorder": "Gravador",
+        "card": "Cartão de memória"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 como gravado",
+        "h264": "MP4 convertido para H.264",
+        "ts": "MPEG-TS como gravado",
+        "original": "Arquivo original (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "Todas",
+        "continuous": "Contínua",
+        "motion": "Movimento",
+        "alarm": "Entrada de alarme",
+        "event": "Evento inteligente",
+        "manual": "Manual",
+        "other": "Outra"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "Ativar o envio de eventos",
+      "description": "Ativa o vínculo \"Notificar centro de vigilância\" nas detecções que não o têm. É executada como prévia, a menos que \"Somente prévia\" esteja desativado.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Câmera, canal ou gravador."
+        },
+        "dry_run": {
+          "name": "Somente prévia",
+          "description": "Só listar o que mudaria."
+        },
+        "kinds": {
+          "name": "Detecções",
+          "description": "Limitar a estes tipos; vazio significa todos."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "Solicitação ISAPI",
+      "description": "Envia uma solicitação ISAPI e retorna a resposta sem segredos. Métodos que alteram exigem confirmação.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Câmera, canal ou gravador."
+        },
+        "method": {
+          "name": "Método",
+          "description": "Método HTTP."
+        },
+        "path": {
+          "name": "Caminho",
+          "description": "Caminho que começa com /ISAPI/."
+        },
+        "body": {
+          "name": "Corpo",
+          "description": "Corpo XML ou JSON para métodos que alteram."
+        },
+        "confirm_write": {
+          "name": "Confirmar alteração",
+          "description": "Obrigatório para tudo que altera o dispositivo."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "Mover PTZ",
+      "description": "Move uma câmera PTZ por pouco tempo.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Câmera, canal ou gravador."
+        },
+        "pan": {
+          "name": "Giro",
+          "description": "Velocidade, negativo é para a esquerda."
+        },
+        "tilt": {
+          "name": "Inclinação",
+          "description": "Velocidade, negativo é para baixo."
+        },
+        "zoom": {
+          "name": "Zoom",
+          "description": "Velocidade, negativo afasta."
+        },
+        "duration": {
+          "name": "Duração",
+          "description": "Segundos antes de parar."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "Predefinição PTZ",
+      "description": "Move uma câmera PTZ para uma predefinição salva.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Câmera, canal ou gravador."
+        },
+        "preset": {
+          "name": "Predefinição",
+          "description": "Número da predefinição."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "Definir host de notificação",
+      "description": "Aponta um slot de host de notificação do dispositivo para este webhook do Home Assistant.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Câmera, canal ou gravador."
+        },
+        "slot": {
+          "name": "Slot",
+          "description": "Número do host de notificação no dispositivo."
+        },
+        "confirm_write": {
+          "name": "Confirmar alteração",
+          "description": "Obrigatório para tudo que altera o dispositivo."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "Buscar gravações",
+      "description": "Lista os arquivos gravados de uma câmera ou canal em um período.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Câmera ou canal."
+        },
+        "start": {
+          "name": "Início",
+          "description": "Começo do período."
+        },
+        "end": {
+          "name": "Fim",
+          "description": "Fim do período, no máximo um dia após o início."
+        },
+        "source": {
+          "name": "Origem",
+          "description": "Gravador ou cartão de memória da câmera; o modo automático tenta primeiro o gravador."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "Salvar gravação",
+      "description": "Salva as gravações de um período na pasta de mídia \"hikvision_bridge\".",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Câmera ou canal."
+        },
+        "start": {
+          "name": "Início",
+          "description": "Começo do período."
+        },
+        "end": {
+          "name": "Fim",
+          "description": "Fim do período, no máximo um dia após o início."
+        },
+        "source": {
+          "name": "Origem",
+          "description": "Gravador ou cartão de memória da câmera; o modo automático tenta primeiro o gravador."
+        },
+        "format": {
+          "name": "Formato",
+          "description": "MP4 e MPEG-TS mantêm o vídeo gravado; H.264 converte, o que demora em máquinas pequenas."
+        },
+        "trim": {
+          "name": "Cortar no período",
+          "description": "Corta os arquivos no período; o arquivo original nunca é cortado."
+        }
+      }
+    }
+  }
+}

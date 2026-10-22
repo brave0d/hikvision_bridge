@@ -118,11 +118,13 @@
           "hold_seconds": "Erkennungen aktiv halten für (Sekunden)",
           "rtsp_port": "RTSP-Port (optional)",
           "rtsp_transport": "RTSP-Transport",
-          "target_sensors": "Eigene Sensoren für Personen und Fahrzeuge"
+          "target_sensors": "Eigene Sensoren für Personen und Fahrzeuge",
+          "playback": "Wiedergabe im Medienbrowser"
         },
         "data_description": {
           "event_path": "Der Ereignis-Stream braucht keine Änderung am Gerät. Der Webhook setzt voraus, dass das Gerät an Home Assistant sendet.",
-          "hold_seconds": "Viele Geräte melden nur den Beginn einer Erkennung; der Sensor bleibt so lange nach der letzten Meldung an."
+          "hold_seconds": "Viele Geräte melden nur den Beginn einer Erkennung; der Sensor bleibt so lange nach der letzten Meldung an.",
+          "playback": "Aufnahmen sind H.265 oder H.264. „MP4 wie aufgenommen“ startet sofort, Browser spielen H.265 aber nur mit Hardwareunterstützung. „In H.264 umwandeln“ läuft überall und braucht viel CPU. „Vom Gerät streamen“ lässt das Gerät die Aufnahme per RTSP abspielen."
         }
       },
       "webhook": {
@@ -317,6 +319,9 @@
       },
       "input_armed": {
         "name": "Alarmeingang {port} scharf"
+      },
+      "park_action": {
+        "name": "Parkaktion"
       }
     },
     "camera": {
@@ -548,6 +553,19 @@
       },
       "siren_sound": {
         "name": "Sirenenton"
+      },
+      "park_action_type": {
+        "name": "Parkaktion Typ",
+        "state": {
+          "autoscan": "Auto-Scan",
+          "framescan": "Bild-Scan",
+          "randomscan": "Zufalls-Scan",
+          "patrol": "Patrouille",
+          "pattern": "Muster",
+          "preset": "Preset",
+          "panoramascan": "Panorama-Scan",
+          "tiltscan": "Neige-Scan"
+        }
       }
     },
     "number": {
@@ -613,6 +631,12 @@
       },
       "microphone_volume": {
         "name": "Mikrofonlautstärke"
+      },
+      "park_time": {
+        "name": "Parkzeit"
+      },
+      "park_action_number": {
+        "name": "Parkaktion Nummer"
       }
     }
   },
@@ -723,6 +747,30 @@
     },
     "setting_inactive": {
       "message": "Diese Einstellung ist im aktuellen Modus der Kamera nicht aktiv."
+    },
+    "read_failed": {
+      "message": "Das Gerät hat die Anfrage nicht beantwortet ({reason})."
+    },
+    "bad_period": {
+      "message": "Das Ende muss nach dem Beginn und höchstens einen Tag später liegen."
+    },
+    "no_recordings": {
+      "message": "Für diesen Zeitraum wurden keine Aufnahmen gefunden."
+    },
+    "too_many_recordings": {
+      "message": "Der Zeitraum enthält {count} Aufnahmen; höchstens {limit} können auf einmal gespeichert werden."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant darf nicht in seinen Medienordner schreiben."
+    },
+    "recording_encrypted": {
+      "message": "Das Gerät verschlüsselt seine Aufnahmen (Stream-Verschlüsselung), daher können sie weder abgespielt noch umgewandelt werden. Schalte die Stream-Verschlüsselung aus oder nutze die Speicherkarte der Kamera."
+    },
+    "conversion_failed": {
+      "message": "Die Aufnahme konnte nicht umgewandelt werden."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg ist in Home Assistant nicht verfügbar."
     }
   },
   "selector": {
@@ -750,6 +798,39 @@
       "options": {
         "recorder": "Rekorder",
         "camera": "Kamera"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 wie aufgenommen (empfohlen)",
+        "h264": "In H.264 umwandeln (läuft überall, hohe CPU-Last)",
+        "stream": "Vom Gerät streamen (RTSP zu HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "Automatisch",
+        "recorder": "Rekorder",
+        "card": "Speicherkarte"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 wie aufgenommen",
+        "h264": "MP4, in H.264 umgewandelt",
+        "ts": "MPEG-TS wie aufgenommen",
+        "original": "Originaldatei (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "Alle",
+        "continuous": "Daueraufnahme",
+        "motion": "Bewegung",
+        "alarm": "Alarmeingang",
+        "event": "Smart-Ereignis",
+        "manual": "Manuell",
+        "other": "Sonstige"
       }
     }
   },
@@ -853,6 +934,58 @@
         "confirm_write": {
           "name": "Änderung bestätigen",
           "description": "Erforderlich für alles, was das Gerät ändert."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "Aufnahmen suchen",
+      "description": "Listet die aufgenommenen Dateien einer Kamera oder eines Kanals in einem Zeitraum auf.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Kamera oder Kanal."
+        },
+        "start": {
+          "name": "Beginn",
+          "description": "Anfang des Zeitraums."
+        },
+        "end": {
+          "name": "Ende",
+          "description": "Ende des Zeitraums, höchstens einen Tag nach dem Beginn."
+        },
+        "source": {
+          "name": "Quelle",
+          "description": "Rekorder oder die Speicherkarte der Kamera; automatisch versucht zuerst den Rekorder."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "Aufnahme speichern",
+      "description": "Speichert die Aufnahmen eines Zeitraums im Medienordner „hikvision_bridge“.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Kamera oder Kanal."
+        },
+        "start": {
+          "name": "Beginn",
+          "description": "Anfang des Zeitraums."
+        },
+        "end": {
+          "name": "Ende",
+          "description": "Ende des Zeitraums, höchstens einen Tag nach dem Beginn."
+        },
+        "source": {
+          "name": "Quelle",
+          "description": "Rekorder oder die Speicherkarte der Kamera; automatisch versucht zuerst den Rekorder."
+        },
+        "format": {
+          "name": "Format",
+          "description": "MP4 und MPEG-TS behalten das aufgenommene Video; H.264 wandelt es um, was auf kleinen Rechnern lange dauert."
+        },
+        "trim": {
+          "name": "Auf Zeitraum kürzen",
+          "description": "Schneidet die Dateien auf den Zeitraum zu; die Originaldatei wird nie geschnitten."
         }
       }
     }

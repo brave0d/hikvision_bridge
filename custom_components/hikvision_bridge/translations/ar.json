@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "كاميرا أو مسجل في الشبكة المحلية",
+          "cloud": "حساب Hik-Connect (سحابة)"
+        }
+      },
+      "device": {
+        "title": "توصيل جهاز",
+        "description": "يُستخدم الوصول للقراءة فقط أثناء الإعداد.",
+        "data": {
+          "host": "المضيف",
+          "port": "المنفذ (اختياري)",
+          "connection": "الاتصال",
+          "verify_tls": "التحقق من شهادة HTTPS",
+          "username": "اسم المستخدم",
+          "password": "كلمة المرور"
+        },
+        "data_description": {
+          "host": "عنوان IP أو اسم المضيف للكاميرا أو المسجل.",
+          "port": "اتركه فارغًا لاستخدام 80 (HTTP) أو 443 (HTTPS).",
+          "connection": "الوضع التلقائي يجرب HTTPS أولًا ولا ينتقل إلى HTTP إلا إذا تعذر الاتصال عبر HTTPS.",
+          "username": "يمكن لكل جهاز استخدام مستخدم خاص به. يُنصح بمستخدم مشغّل مخصص."
+        }
+      },
+      "duplicate": {
+        "title": "الكاميرا معروفة بالفعل",
+        "description": "هذه الكاميرا معروضة بالفعل عبر {recorder} على القناة {channel}. هل تريد ربطها بتلك القناة (جهاز واحد، بث مباشر من الكاميرا) أم إضافتها كجهاز منفصل؟",
+        "menu_options": {
+          "link_to_channel": "الربط بقناة المسجل",
+          "keep_separate": "إضافة كجهاز منفصل"
+        }
+      },
+      "reauth_confirm": {
+        "title": "فشل تسجيل الدخول",
+        "description": "رفض {device} ({host}) بيانات الاعتماد المحفوظة. أدخل البيانات الحالية.",
+        "data": {
+          "username": "اسم المستخدم",
+          "password": "كلمة المرور"
+        }
+      },
+      "reconfigure": {
+        "title": "تغيير الاتصال",
+        "description": "يجب أن يؤدي العنوان الجديد إلى الجهاز نفسه.",
+        "data": {
+          "host": "المضيف",
+          "port": "المنفذ (اختياري)",
+          "connection": "الاتصال",
+          "verify_tls": "التحقق من شهادة HTTPS",
+          "username": "اسم المستخدم",
+          "password": "كلمة المرور"
+        },
+        "data_description": {
+          "host": "عنوان IP أو اسم المضيف للكاميرا أو المسجل.",
+          "port": "اتركه فارغًا لاستخدام 80 (HTTP) أو 443 (HTTPS).",
+          "connection": "الوضع التلقائي يجرب HTTPS أولًا ولا ينتقل إلى HTTP إلا إذا تعذر الاتصال عبر HTTPS.",
+          "username": "يمكن لكل جهاز استخدام مستخدم خاص به. يُنصح بمستخدم مشغّل مخصص."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "لا يوفر Hik-Connect واجهة رسمية للأطراف الخارجية. يقرأ التكامل قائمة الأجهزة وحالتها فقط؛ وتُخزَّن كلمة المرور في Home Assistant.",
+        "data": {
+          "account": "حساب Hik-Connect (بريد إلكتروني أو هاتف)",
+          "password": "كلمة المرور"
+        }
+      },
+      "cloud_captcha": {
+        "title": "رمز التحقق",
+        "description": "أدخل الرمز الظاهر هنا: {image}",
+        "data": {
+          "captcha": "الرمز"
+        }
+      },
+      "cloud_reauth": {
+        "title": "تسجيل الدخول إلى Hik-Connect",
+        "description": "أدخل كلمة مرور {account}.",
+        "data": {
+          "password": "كلمة المرور",
+          "captcha": "رمز التحقق (فقط عند الطلب)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "تم رفض اسم المستخدم أو كلمة المرور. لن تُجرى محاولة أخرى لتجنب القفل.",
+      "locked_out": "الجهاز أو الحساب مقفل مؤقتًا بعد محاولات دخول فاشلة. انتظر قبل المحاولة مرة أخرى.",
+      "name_not_resolved": "تعذر تحليل اسم المضيف.",
+      "tls_untrusted": "شهادة HTTPS غير موثوقة. عطّل التحقق من الشهادة أو استخدم HTTP.",
+      "cannot_connect": "تعذر الاتصال.",
+      "not_isapi": "العنوان يستجيب، لكن ليس كجهاز Hikvision ISAPI.",
+      "forbidden": "المستخدم لا يملك الصلاحيات المطلوبة.",
+      "unknown": "خطأ غير متوقع.",
+      "wrong_camera": "هذا العنوان يخص كاميرا مختلفة عن الكاميرا الموجودة على القناة المحددة.",
+      "captcha_required": "يطلب Hik-Connect رمز تحقق.",
+      "cloud_unavailable": "Hik-Connect غير متاح حاليًا.",
+      "cloud_changed": "أجاب Hik-Connect بتنسيق غير متوقع.",
+      "cloud_rejected": "رفض Hik-Connect الطلب."
+    },
+    "abort": {
+      "already_configured": "هذا الجهاز أو الحساب مُعد بالفعل.",
+      "reauth_successful": "تم تحديث بيانات الاعتماد.",
+      "reconfigure_successful": "تم تحديث الاتصال.",
+      "other_device": "هذا العنوان يخص جهازًا آخر. أضفه كجهاز جديد بدلًا من ذلك.",
+      "channel_already_linked": "قناة المسجل هذه لديها اتصال مباشر بالفعل.",
+      "linked_to_channel": "تم ربط الكاميرا بقناة المسجل."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "الخيارات",
+        "data": {
+          "event_path": "طريقة وصول الأحداث",
+          "hold_seconds": "إبقاء الاكتشافات مفعّلة لمدة (ثوانٍ)",
+          "rtsp_port": "منفذ RTSP (اختياري)",
+          "rtsp_transport": "نقل RTSP",
+          "target_sensors": "مستشعرات منفصلة للأشخاص والمركبات",
+          "playback": "التشغيل في متصفح الوسائط"
+        },
+        "data_description": {
+          "event_path": "لا يحتاج تدفق الأحداث إلى أي تغيير في الجهاز. يتطلب الـ webhook أن يرسل الجهاز إلى Home Assistant.",
+          "hold_seconds": "تُبلغ الأجهزة عن بداية كثير من الاكتشافات فقط؛ يبقى المستشعر مفعّلًا هذه المدة بعد آخر بلاغ.",
+          "playback": "التسجيلات بصيغة H.265 أو H.264. يبدأ «MP4 كما سُجّل» فورًا، لكن المتصفحات لا تشغّل H.265 إلا بدعم من العتاد. يعمل «التحويل إلى H.264» في كل مكان ويحتاج إلى الكثير من المعالج. يتيح «البث من الجهاز» للجهاز تشغيل التسجيل عبر RTSP."
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "تُقبل الإشعارات على {path} (الشبكة المحلية فقط). استخدم الإجراء «تعيين مضيف الإشعارات» أو واجهة الويب للجهاز لتوجيهه إلى هناك."
+      }
+    },
+    "abort": {
+      "no_options": "لا توجد خيارات لحساب Hik-Connect."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "توصيل الكاميرا مباشرة"
+      },
+      "entry_type": "اتصال مباشر بالكاميرا",
+      "step": {
+        "user": {
+          "title": "اتصال مباشر بالكاميرا",
+          "description": "يوصل كاميرا قناة المسجل مباشرة، بعنوانها وبيانات اعتمادها الخاصة. يأتي البث المباشر عندها من الكاميرا، وهذا يفيد أيضًا عندما يكون بث المسجل مشفرًا.",
+          "data": {
+            "channel_id": "قناة المسجل",
+            "host": "المضيف",
+            "port": "المنفذ (اختياري)",
+            "connection": "الاتصال",
+            "verify_tls": "التحقق من شهادة HTTPS",
+            "username": "اسم المستخدم",
+            "password": "كلمة المرور",
+            "reuse_recorder_credentials": "استخدام اسم مستخدم المسجل وكلمة مروره",
+            "event_source": "أخذ الاكتشافات من"
+          },
+          "data_description": {
+            "host": "العنوان الذي يصل به Home Assistant إلى الكاميرا مباشرة (مثلًا في شبكة PoE الفرعية للمسجل إذا كانت موجّهة).",
+            "reuse_recorder_credentials": "اتركه معطلًا إذا كانت للكاميرا بيانات اعتماد خاصة."
+          }
+        },
+        "reconfigure": {
+          "title": "تغيير الاتصال المباشر بالكاميرا",
+          "description": "يوصل كاميرا قناة المسجل مباشرة، بعنوانها وبيانات اعتمادها الخاصة. يأتي البث المباشر عندها من الكاميرا، وهذا يفيد أيضًا عندما يكون بث المسجل مشفرًا.",
+          "data": {
+            "channel_id": "قناة المسجل",
+            "host": "المضيف",
+            "port": "المنفذ (اختياري)",
+            "connection": "الاتصال",
+            "verify_tls": "التحقق من شهادة HTTPS",
+            "username": "اسم المستخدم",
+            "password": "كلمة المرور",
+            "reuse_recorder_credentials": "استخدام اسم مستخدم المسجل وكلمة مروره",
+            "event_source": "أخذ الاكتشافات من"
+          },
+          "data_description": {
+            "host": "العنوان الذي يصل به Home Assistant إلى الكاميرا مباشرة (مثلًا في شبكة PoE الفرعية للمسجل إذا كانت موجّهة).",
+            "reuse_recorder_credentials": "اتركه معطلًا إذا كانت للكاميرا بيانات اعتماد خاصة."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "تم رفض اسم المستخدم أو كلمة المرور. لن تُجرى محاولة أخرى لتجنب القفل.",
+        "locked_out": "الجهاز أو الحساب مقفل مؤقتًا بعد محاولات دخول فاشلة. انتظر قبل المحاولة مرة أخرى.",
+        "name_not_resolved": "تعذر تحليل اسم المضيف.",
+        "tls_untrusted": "شهادة HTTPS غير موثوقة. عطّل التحقق من الشهادة أو استخدم HTTP.",
+        "cannot_connect": "تعذر الاتصال.",
+        "not_isapi": "العنوان يستجيب، لكن ليس كجهاز Hikvision ISAPI.",
+        "forbidden": "المستخدم لا يملك الصلاحيات المطلوبة.",
+        "unknown": "خطأ غير متوقع.",
+        "wrong_camera": "هذا العنوان يخص كاميرا مختلفة عن الكاميرا الموجودة على القناة المحددة.",
+        "captcha_required": "يطلب Hik-Connect رمز تحقق.",
+        "cloud_unavailable": "Hik-Connect غير متاح حاليًا.",
+        "cloud_changed": "أجاب Hik-Connect بتنسيق غير متوقع.",
+        "cloud_rejected": "رفض Hik-Connect الطلب."
+      },
+      "abort": {
+        "not_loaded": "يجب تحميل المسجل أولًا.",
+        "not_a_recorder": "المسجلات فقط لديها قنوات للربط.",
+        "no_free_channel": "كل القنوات لديها اتصال مباشر بالفعل.",
+        "reconfigure_successful": "تم تحديث الاتصال المباشر."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "الحركة"
+      },
+      "tamper": {
+        "name": "العبث"
+      },
+      "video_loss": {
+        "name": "فقدان الفيديو"
+      },
+      "scene_change": {
+        "name": "تغيّر المشهد"
+      },
+      "intrusion": {
+        "name": "التسلل"
+      },
+      "line_crossing": {
+        "name": "عبور الخط"
+      },
+      "region_entrance": {
+        "name": "دخول المنطقة"
+      },
+      "region_exiting": {
+        "name": "الخروج من المنطقة"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "فقدان التركيز"
+      },
+      "audio_exception": {
+        "name": "شذوذ الصوت"
+      },
+      "target_human": {
+        "name": "شخص"
+      },
+      "target_vehicle": {
+        "name": "مركبة"
+      },
+      "alarm_input": {
+        "name": "مدخل الإنذار {port}"
+      },
+      "channel_online": {
+        "name": "الكاميرا متصلة"
+      },
+      "storage_problem": {
+        "name": "مشكلة في التخزين"
+      },
+      "event_link": {
+        "name": "اتصال الأحداث"
+      },
+      "stream_encryption": {
+        "name": "تشفير البث"
+      },
+      "cloud_online": {
+        "name": "الاتصال السحابي"
+      },
+      "cloud_stream_encryption": {
+        "name": "تشفير البث"
+      },
+      "recording": {
+        "name": "التسجيل"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "اكتشاف الحركة"
+      },
+      "tamper_detection": {
+        "name": "اكتشاف العبث"
+      },
+      "scene_change_detection": {
+        "name": "اكتشاف تغيّر المشهد"
+      },
+      "intrusion_detection": {
+        "name": "اكتشاف التسلل"
+      },
+      "line_crossing_detection": {
+        "name": "اكتشاف عبور الخط"
+      },
+      "region_entrance_detection": {
+        "name": "اكتشاف دخول المنطقة"
+      },
+      "region_exiting_detection": {
+        "name": "اكتشاف الخروج من المنطقة"
+      },
+      "alarm_output": {
+        "name": "مخرج الإنذار {port}"
+      },
+      "blc": {
+        "name": "تعويض الإضاءة الخلفية"
+      },
+      "hlc": {
+        "name": "تعويض الضوء الساطع"
+      },
+      "overexposure_suppression": {
+        "name": "كبح التعريض الزائد"
+      },
+      "image_flip": {
+        "name": "قلب الصورة"
+      },
+      "stabilization": {
+        "name": "تثبيت الصورة"
+      },
+      "lens_correction": {
+        "name": "تصحيح تشوه العدسة"
+      },
+      "video_loss_detection": {
+        "name": "اكتشاف فقدان الفيديو"
+      },
+      "input_armed": {
+        "name": "مدخل الإنذار {port} مسلّح"
+      },
+      "park_action": {
+        "name": "إجراء التوقف"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "البث الرئيسي"
+      },
+      "sub_stream": {
+        "name": "البث الفرعي"
+      },
+      "third_stream": {
+        "name": "البث الثالث"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "الاكتشاف",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "الحركة",
+              "intrusion": "التسلل",
+              "line_crossing": "عبور الخط",
+              "region_entrance": "دخول المنطقة",
+              "region_exiting": "الخروج من المنطقة",
+              "face": "وجه",
+              "anpr": "لوحة الترخيص"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "تغيّر الاتصال السحابي",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "متصل",
+              "went_offline": "غير متصل"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "التخزين {unit}",
+        "state": {
+          "ok": "جيد",
+          "unformatted": "غير مهيأ",
+          "error": "خطأ",
+          "idle": "خامل",
+          "sleeping": "في وضع السكون",
+          "abnormal": "غير طبيعي",
+          "full": "ممتلئ",
+          "unknown": "غير معروف"
+        }
+      },
+      "storage_free": {
+        "name": "التخزين {unit} المساحة الحرة"
+      },
+      "storage_capacity": {
+        "name": "التخزين {unit} السعة"
+      },
+      "event_latency": {
+        "name": "تأخر الأحداث"
+      },
+      "boot_time": {
+        "name": "آخر إقلاع"
+      },
+      "cpu_load": {
+        "name": "حمل المعالج"
+      },
+      "memory_use": {
+        "name": "استخدام الذاكرة"
+      },
+      "reboots": {
+        "name": "مرات إعادة التشغيل",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "الطابع الزمني المُبلّغ"
+          }
+        }
+      },
+      "network_address": {
+        "name": "عنوان IP"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "إعادة التشغيل"
+      },
+      "rescan": {
+        "name": "إعادة قراءة القدرات"
+      },
+      "cloud_unlock": {
+        "name": "فتح الباب (سحابة)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ تدوير لليسار"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ تدوير لليمين"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ إمالة للأعلى"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ إمالة للأسفل"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ تكبير"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ تصغير"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "موضع PTZ المسبق"
+      },
+      "day_night": {
+        "name": "وضع النهار/الليل",
+        "state": {
+          "day": "نهار",
+          "night": "ليل",
+          "auto": "تلقائي",
+          "schedule": "جدول",
+          "eventtrigger": "تشغيل بالحدث"
+        }
+      },
+      "supplement_light": {
+        "name": "الإضاءة الإضافية",
+        "state": {
+          "eventintelligence": "ذكي (حدث)",
+          "colorvuwhitelight": "ضوء أبيض",
+          "irlight": "ضوء الأشعة تحت الحمراء",
+          "close": "إيقاف"
+        }
+      },
+      "light_brightness_control": {
+        "name": "التحكم في سطوع الإضاءة",
+        "state": {
+          "auto": "تلقائي",
+          "manual": "يدوي"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "إيقاف",
+          "open": "تشغيل",
+          "auto": "تلقائي"
+        }
+      },
+      "blc_area": {
+        "name": "منطقة تعويض الإضاءة الخلفية",
+        "state": {
+          "close": "إيقاف",
+          "up": "أعلى",
+          "down": "أسفل",
+          "left": "يسار",
+          "right": "يمين",
+          "center": "الوسط",
+          "region": "منطقة مخصصة",
+          "auto": "تلقائي"
+        }
+      },
+      "noise_reduction": {
+        "name": "تقليل الضوضاء",
+        "state": {
+          "close": "إيقاف",
+          "general": "عادي",
+          "advanced": "خبير"
+        }
+      },
+      "defog": {
+        "name": "إزالة الضباب",
+        "state": {
+          "close": "إيقاف",
+          "open": "تشغيل",
+          "auto": "تلقائي"
+        }
+      },
+      "white_balance": {
+        "name": "توازن اللون الأبيض",
+        "state": {
+          "manual": "يدوي",
+          "auto1": "تلقائي 1",
+          "auto2": "تلقائي 2",
+          "locked": "مقفل",
+          "daylightlamp": "مصباح فلورسنت",
+          "incandescentlight": "مصباح متوهج",
+          "warmlight": "ضوء دافئ",
+          "naturallight": "ضوء طبيعي"
+        }
+      },
+      "exposure_mode": {
+        "name": "وضع التعريض",
+        "state": {
+          "auto": "تلقائي",
+          "manual": "يدوي"
+        }
+      },
+      "shutter": {
+        "name": "الغالق"
+      },
+      "power_line_frequency": {
+        "name": "تردد التيار الكهربائي",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "اتجاه القلب",
+        "state": {
+          "leftright": "يسار/يمين",
+          "updown": "أعلى/أسفل",
+          "center": "الوسط"
+        }
+      },
+      "strobe_frequency": {
+        "name": "تردد الضوء الوامض",
+        "state": {
+          "high": "مرتفع",
+          "medium": "متوسط",
+          "low": "منخفض",
+          "normallyon": "مضاء باستمرار"
+        }
+      },
+      "siren_sound": {
+        "name": "صوت صفارة الإنذار"
+      },
+      "park_action_type": {
+        "name": "نوع إجراء التوقف",
+        "state": {
+          "autoscan": "مسح تلقائي",
+          "framescan": "مسح الإطار",
+          "randomscan": "مسح عشوائي",
+          "patrol": "دورية",
+          "pattern": "نمط",
+          "preset": "موضع مسبق",
+          "panoramascan": "مسح بانورامي",
+          "tiltscan": "مسح الإمالة"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "حساسية النهار/الليل"
+      },
+      "day_night_delay": {
+        "name": "تأخير النهار/الليل"
+      },
+      "white_light_brightness": {
+        "name": "سطوع الضوء الأبيض"
+      },
+      "ir_light_brightness": {
+        "name": "سطوع ضوء الأشعة تحت الحمراء"
+      },
+      "white_light_duration": {
+        "name": "مدة الضوء الأبيض"
+      },
+      "brightness": {
+        "name": "السطوع"
+      },
+      "contrast": {
+        "name": "التباين"
+      },
+      "saturation": {
+        "name": "التشبع"
+      },
+      "sharpness": {
+        "name": "الحدة"
+      },
+      "wdr_level": {
+        "name": "مستوى WDR"
+      },
+      "hlc_level": {
+        "name": "مستوى تعويض الضوء الساطع"
+      },
+      "noise_reduction_level": {
+        "name": "مستوى تقليل الضوضاء"
+      },
+      "defog_level": {
+        "name": "مستوى إزالة الضباب"
+      },
+      "white_balance_red": {
+        "name": "توازن الأبيض الأحمر"
+      },
+      "white_balance_blue": {
+        "name": "توازن الأبيض الأزرق"
+      },
+      "gain_limit": {
+        "name": "حد الكسب"
+      },
+      "strobe_duration": {
+        "name": "مدة الضوء الوامض"
+      },
+      "siren_volume": {
+        "name": "مستوى صوت صفارة الإنذار"
+      },
+      "siren_repeats": {
+        "name": "تكرارات صفارة الإنذار"
+      },
+      "speaker_volume": {
+        "name": "مستوى صوت السماعة"
+      },
+      "microphone_volume": {
+        "name": "مستوى صوت الميكروفون"
+      },
+      "park_time": {
+        "name": "وقت التوقف"
+      },
+      "park_action_number": {
+        "name": "رقم إجراء التوقف"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: تسجيل الدخول مقفل",
+      "description": "قفل الجهاز تسجيل الدخول بعد محاولات فاشلة. يتوقف التكامل لمدة {minutes} دقيقة تقريبًا ولا يعيد المحاولة قبل ذلك."
+    },
+    "channel_link_auth": {
+      "title": "{device}: رُفض الاتصال المباشر بـ {channel}",
+      "description": "رفضت الكاميرا بيانات اعتماد الاتصال المباشر. يُستخدم المسجل بدلًا منه. حدّث الاتصال المباشر لهذه القناة."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: كاميرا أخرى على {channel}",
+      "description": "يؤدي الاتصال المباشر لهذه القناة إلى كاميرا مختلفة عن الكاميرا المتصلة الآن بالمسجل. لن يُستخدم حتى يُصحَّح."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} على {channel} لا يُبلَّغ عنه",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "تفعيل الإبلاغ",
+            "description": "يكتشف الجهاز {kind} لكنه لا يرسله إلى تدفق الأحداث، لأن الربط «إخطار مركز المراقبة» معطّل. أكّد لتفعيل هذا الربط فقط (المشغّل {trigger})؛ ولن يتغير شيء آخر. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "لم يقبل الجهاز التغيير."
+        },
+        "abort": {
+          "not_loaded": "الجهاز غير محمّل."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: لا توجد منطقة مرسومة لـ {kind} على {channel}",
+      "description": "الاكتشاف مفعّل، لكن لا يوجد خط أو منطقة مرسومة، لذا لا يمكن تشغيله. ارسمها في واجهة الويب للجهاز."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} معطّل على {channel}",
+      "description": "هذا الاكتشاف مدعوم لكنه معطّل. فعّله بمفتاحه إذا أردت استخدامه."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} على {channel} فقط لـ {detail}",
+      "description": "يبلّغ المسجل عن هذا الاكتشاف فقط لأنواع الأهداف المذكورة. لن تؤدي الحركات الأخرى إلى تشغيله."
+    },
+    "stream_encrypted": {
+      "title": "{device}: بث الفيديو مشفّر بواسطة Hik-Connect",
+      "description": "تشفير البث لـ Hik-Connect مفعّل. لا يستطيع Home Assistant فك ترميز هذا البث؛ تظل اللقطات والأحداث تعمل. عطّل «تشفير البث» في إعدادات الوصول إلى المنصة في الجهاز، أو وصّل الكاميرات المعنية مباشرة (اتصال مباشر بالكاميرا)."
+    },
+    "default_password": {
+      "title": "{device}: كلمة مرور ضعيفة أو افتراضية",
+      "description": "يبلّغ الجهاز أن كلمة مروره ضعيفة أو ما زالت الافتراضية. غيّرها على الجهاز."
+    },
+    "basic_over_http": {
+      "title": "{device}: كلمة المرور تُرسل دون حماية",
+      "description": "يقبل الجهاز مصادقة Basic عبر HTTP فقط، لذا تنتقل كلمة المرور كنص واضح. فعّل مصادقة Digest أو HTTPS على الجهاز."
+    },
+    "clock_skew": {
+      "title": "{device}: الساعة منحرفة بمقدار {detail} ث",
+      "description": "تختلف ساعة الجهاز بشكل ملحوظ عن Home Assistant. تُصحَّح أوقات الأحداث، لكن التسجيلات تحمل وقتًا خاطئًا. اضبط NTP على الجهاز."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "رفض الجهاز بيانات الاعتماد."
+    },
+    "locked_out": {
+      "message": "قفل الجهاز تسجيل الدخول. تم إيقاف الإعداد مؤقتًا لتجنب إطالة القفل."
+    },
+    "not_isapi": {
+      "message": "لا يستجيب الجهاز كجهاز Hikvision ISAPI."
+    },
+    "unreachable": {
+      "message": "لا يمكن الوصول إلى {host}."
+    },
+    "other_device": {
+      "message": "يستجيب الآن جهاز آخر على {host}. استخدم «إعادة التكوين» أو أضفه كجهاز جديد."
+    },
+    "write_failed": {
+      "message": "لم يقبل الجهاز التغيير ({reason})."
+    },
+    "unknown_device": {
+      "message": "الجهاز المحدد لا ينتمي إلى Hikvision Bridge."
+    },
+    "channel_needed": {
+      "message": "اختر كاميرا أو جهاز قناة."
+    },
+    "confirm_needed": {
+      "message": "هذا الإجراء يغيّر الجهاز. فعّل «تأكيد التغيير» لتشغيله."
+    },
+    "bad_path": {
+      "message": "يُسمح فقط بالمسارات تحت /ISAPI/."
+    },
+    "webhook_off": {
+      "message": "فعّل الـ webhook في الخيارات أولًا."
+    },
+    "no_url": {
+      "message": "لا يوجد عنوان URL محلي مكوَّن في Home Assistant."
+    },
+    "cloud_auth": {
+      "message": "رفض Hik-Connect تسجيل الدخول."
+    },
+    "cloud_failed": {
+      "message": "فشل طلب Hik-Connect ({reason})."
+    },
+    "cloud_gone": {
+      "message": "لم يعد الجهاز موجودًا في حساب Hik-Connect."
+    },
+    "setting_inactive": {
+      "message": "هذا الإعداد غير نشط في الوضع الحالي للكاميرا."
+    },
+    "read_failed": {
+      "message": "لم يستجب الجهاز للطلب ({reason})."
+    },
+    "bad_period": {
+      "message": "يجب أن تكون النهاية بعد البداية وبحد أقصى يومًا واحدًا بعدها."
+    },
+    "no_recordings": {
+      "message": "لم يُعثر على تسجيلات لهذه الفترة."
+    },
+    "too_many_recordings": {
+      "message": "تحتوي الفترة على {count} تسجيلًا؛ يمكن حفظ {limit} على الأكثر في المرة الواحدة."
+    },
+    "media_not_allowed": {
+      "message": "لا يُسمح لـ Home Assistant بالكتابة في مجلد الوسائط الخاص به."
+    },
+    "recording_encrypted": {
+      "message": "يشفّر الجهاز تسجيلاته (تشفير البث)، لذا لا يمكن تشغيلها أو تحويلها. أوقف تشفير البث أو استخدم بطاقة ذاكرة الكاميرا."
+    },
+    "conversion_failed": {
+      "message": "تعذّر تحويل التسجيل."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg غير متاح في Home Assistant."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "تلقائي",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "تدفق الأحداث (موصى به)",
+        "webhook": "Webhook",
+        "both": "كلاهما"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "المسجل",
+        "camera": "الكاميرا"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 كما سُجّل (موصى به)",
+        "h264": "التحويل إلى H.264 (يعمل في كل مكان، حمل عالٍ على المعالج)",
+        "stream": "البث من الجهاز (RTSP إلى HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "تلقائي",
+        "recorder": "المسجل",
+        "card": "بطاقة الذاكرة"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 كما سُجّل",
+        "h264": "MP4 محوّل إلى H.264",
+        "ts": "MPEG-TS كما سُجّل",
+        "original": "الملف الأصلي (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "الكل",
+        "continuous": "مستمر",
+        "motion": "الحركة",
+        "alarm": "دخل الإنذار",
+        "event": "حدث ذكي",
+        "manual": "يدوي",
+        "other": "أخرى"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "تفعيل الإبلاغ عن الأحداث",
+      "description": "يفعّل الربط «إخطار مركز المراقبة» للاكتشافات التي تفتقده. يعمل كمعاينة ما لم يتم تعطيل «معاينة فقط».",
+      "fields": {
+        "device_id": {
+          "name": "الجهاز",
+          "description": "كاميرا أو قناة أو مسجل."
+        },
+        "dry_run": {
+          "name": "معاينة فقط",
+          "description": "عرض ما سيتغير فقط."
+        },
+        "kinds": {
+          "name": "الاكتشافات",
+          "description": "الحصر في هذه الأنواع؛ الفارغ يعني الكل."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "طلب ISAPI",
+      "description": "يرسل طلب ISAPI واحدًا ويعيد الإجابة بعد إزالة الأسرار. الطرق التي تُجري تغييرات تتطلب تأكيدًا.",
+      "fields": {
+        "device_id": {
+          "name": "الجهاز",
+          "description": "كاميرا أو قناة أو مسجل."
+        },
+        "method": {
+          "name": "الطريقة",
+          "description": "طريقة HTTP."
+        },
+        "path": {
+          "name": "المسار",
+          "description": "مسار يبدأ بـ /ISAPI/."
+        },
+        "body": {
+          "name": "المحتوى",
+          "description": "محتوى XML أو JSON للطرق التي تُجري تغييرات."
+        },
+        "confirm_write": {
+          "name": "تأكيد التغيير",
+          "description": "مطلوب لكل ما يغيّر الجهاز."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "تحريك PTZ",
+      "description": "يحرّك كاميرا PTZ لفترة قصيرة.",
+      "fields": {
+        "device_id": {
+          "name": "الجهاز",
+          "description": "كاميرا أو قناة أو مسجل."
+        },
+        "pan": {
+          "name": "التدوير",
+          "description": "السرعة، القيمة السالبة لليسار."
+        },
+        "tilt": {
+          "name": "الإمالة",
+          "description": "السرعة، القيمة السالبة للأسفل."
+        },
+        "zoom": {
+          "name": "التكبير",
+          "description": "السرعة، القيمة السالبة للتصغير."
+        },
+        "duration": {
+          "name": "المدة",
+          "description": "الثواني قبل التوقف."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "موضع PTZ المسبق",
+      "description": "يحرّك كاميرا PTZ إلى موضع مسبق محفوظ.",
+      "fields": {
+        "device_id": {
+          "name": "الجهاز",
+          "description": "كاميرا أو قناة أو مسجل."
+        },
+        "preset": {
+          "name": "موضع مسبق",
+          "description": "رقم الموضع المسبق."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "تعيين مضيف الإشعارات",
+      "description": "يوجّه خانة واحدة لمضيف الإشعارات في الجهاز إلى webhook هذا في Home Assistant.",
+      "fields": {
+        "device_id": {
+          "name": "الجهاز",
+          "description": "كاميرا أو قناة أو مسجل."
+        },
+        "slot": {
+          "name": "الخانة",
+          "description": "رقم مضيف الإشعارات على الجهاز."
+        },
+        "confirm_write": {
+          "name": "تأكيد التغيير",
+          "description": "مطلوب لكل ما يغيّر الجهاز."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "البحث عن التسجيلات",
+      "description": "يعرض الملفات المسجّلة لكاميرا أو قناة خلال فترة.",
+      "fields": {
+        "device_id": {
+          "name": "الجهاز",
+          "description": "كاميرا أو قناة."
+        },
+        "start": {
+          "name": "البداية",
+          "description": "بداية الفترة."
+        },
+        "end": {
+          "name": "النهاية",
+          "description": "نهاية الفترة، بحد أقصى يوم واحد بعد البداية."
+        },
+        "source": {
+          "name": "المصدر",
+          "description": "المسجّل أو بطاقة ذاكرة الكاميرا؛ الوضع التلقائي يجرّب المسجّل أولًا."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "حفظ التسجيل",
+      "description": "يحفظ تسجيلات فترة في مجلد الوسائط «hikvision_bridge».",
+      "fields": {
+        "device_id": {
+          "name": "الجهاز",
+          "description": "كاميرا أو قناة."
+        },
+        "start": {
+          "name": "البداية",
+          "description": "بداية الفترة."
+        },
+        "end": {
+          "name": "النهاية",
+          "description": "نهاية الفترة، بحد أقصى يوم واحد بعد البداية."
+        },
+        "source": {
+          "name": "المصدر",
+          "description": "المسجّل أو بطاقة ذاكرة الكاميرا؛ الوضع التلقائي يجرّب المسجّل أولًا."
+        },
+        "format": {
+          "name": "الصيغة",
+          "description": "يحتفظ MP4 وMPEG-TS بالفيديو المسجّل كما هو؛ أما H.264 فيحوّله، وهذا يستغرق وقتًا طويلًا على الأجهزة الصغيرة."
+        },
+        "trim": {
+          "name": "القص حسب الفترة",
+          "description": "يقص الملفات حسب الفترة؛ لا يُقص الملف الأصلي أبدًا."
+        }
+      }
+    }
+  }
+}

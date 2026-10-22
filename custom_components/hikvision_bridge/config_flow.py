@@ -46,10 +46,14 @@ from .const import (
     KIND_DEVICE,
     OPT_EVENT_PATH,
     OPT_HOLD_SECONDS,
+    OPT_PLAYBACK,
     OPT_RTSP_PORT,
     OPT_RTSP_TRANSPORT,
     OPT_TARGET_SENSORS,
     OPT_WEBHOOK_ID,
+    PLAYBACK_H264,
+    PLAYBACK_MP4,
+    PLAYBACK_STREAM,
     RTSP_TCP,
     RTSP_UDP,
     SCHEME_HTTP,
@@ -483,6 +487,14 @@ class BridgeOptionsFlow(OptionsFlow):
                 vol.Required(
                     OPT_TARGET_SENSORS, default=options.get(OPT_TARGET_SENSORS, False)
                 ): bool,
+                vol.Required(
+                    OPT_PLAYBACK, default=options.get(OPT_PLAYBACK, PLAYBACK_MP4)
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[PLAYBACK_MP4, PLAYBACK_H264, PLAYBACK_STREAM],
+                        translation_key="playback",
+                    )
+                ),
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)

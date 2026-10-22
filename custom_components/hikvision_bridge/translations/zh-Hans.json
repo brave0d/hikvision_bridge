@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "局域网中的摄像机或录像机",
+          "cloud": "Hik-Connect 账户（云）"
+        }
+      },
+      "device": {
+        "title": "连接设备",
+        "description": "设置期间仅使用读取权限。",
+        "data": {
+          "host": "主机",
+          "port": "端口（可选）",
+          "connection": "连接",
+          "verify_tls": "验证 HTTPS 证书",
+          "username": "用户名",
+          "password": "密码"
+        },
+        "data_description": {
+          "host": "摄像机或录像机的 IP 地址或主机名。",
+          "port": "留空则使用 80（HTTP）或 443（HTTPS）。",
+          "connection": "自动模式先尝试 HTTPS，仅在 HTTPS 无法连接时才回退到 HTTP。",
+          "username": "每台设备都可以使用自己的用户。建议使用专用的操作员用户。"
+        }
+      },
+      "duplicate": {
+        "title": "摄像机已知",
+        "description": "此摄像机已由 {recorder} 在通道 {channel} 上显示。要将其关联到该通道（一个设备，直接从摄像机取流），还是作为单独设备添加？",
+        "menu_options": {
+          "link_to_channel": "关联到录像机通道",
+          "keep_separate": "作为单独设备添加"
+        }
+      },
+      "reauth_confirm": {
+        "title": "登录失败",
+        "description": "{device}（{host}）拒绝了已保存的凭据。请输入当前凭据。",
+        "data": {
+          "username": "用户名",
+          "password": "密码"
+        }
+      },
+      "reconfigure": {
+        "title": "更改连接",
+        "description": "新地址必须指向同一台设备。",
+        "data": {
+          "host": "主机",
+          "port": "端口（可选）",
+          "connection": "连接",
+          "verify_tls": "验证 HTTPS 证书",
+          "username": "用户名",
+          "password": "密码"
+        },
+        "data_description": {
+          "host": "摄像机或录像机的 IP 地址或主机名。",
+          "port": "留空则使用 80（HTTP）或 443（HTTPS）。",
+          "connection": "自动模式先尝试 HTTPS，仅在 HTTPS 无法连接时才回退到 HTTP。",
+          "username": "每台设备都可以使用自己的用户。建议使用专用的操作员用户。"
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect 没有面向第三方的官方接口。本集成仅读取设备列表和状态；密码保存在 Home Assistant 中。",
+        "data": {
+          "account": "Hik-Connect 账户（邮箱或手机号）",
+          "password": "密码"
+        }
+      },
+      "cloud_captcha": {
+        "title": "验证码",
+        "description": "请输入此处显示的验证码：{image}",
+        "data": {
+          "captcha": "验证码"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Hik-Connect 登录",
+        "description": "请输入 {account} 的密码。",
+        "data": {
+          "password": "密码",
+          "captcha": "验证码（仅在要求时）"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "用户名或密码被拒绝。为避免被锁定，不会再次尝试。",
+      "locked_out": "登录失败后设备或账户已被临时锁定。请稍候再试。",
+      "name_not_resolved": "无法解析主机名。",
+      "tls_untrusted": "HTTPS 证书不受信任。请关闭证书验证或使用 HTTP。",
+      "cannot_connect": "无法连接。",
+      "not_isapi": "该地址有响应，但不像海康威视 ISAPI 设备。",
+      "forbidden": "该用户缺少所需权限。",
+      "unknown": "意外错误。",
+      "wrong_camera": "此地址属于另一台摄像机，而非所选通道上的摄像机。",
+      "captcha_required": "Hik-Connect 要求输入验证码。",
+      "cloud_unavailable": "Hik-Connect 当前不可用。",
+      "cloud_changed": "Hik-Connect 返回了意外格式的响应。",
+      "cloud_rejected": "Hik-Connect 拒绝了请求。"
+    },
+    "abort": {
+      "already_configured": "此设备或账户已设置。",
+      "reauth_successful": "凭据已更新。",
+      "reconfigure_successful": "连接已更新。",
+      "other_device": "此地址属于另一台设备。请将其作为新设备添加。",
+      "channel_already_linked": "此录像机通道已有直连。",
+      "linked_to_channel": "摄像机已关联到录像机通道。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "选项",
+        "data": {
+          "event_path": "事件接收方式",
+          "hold_seconds": "检测保持开启时长（秒）",
+          "rtsp_port": "RTSP 端口（可选）",
+          "rtsp_transport": "RTSP 传输",
+          "target_sensors": "为人员和车辆使用单独的传感器",
+          "playback": "在媒体浏览器中播放"
+        },
+        "data_description": {
+          "event_path": "事件流无需更改设备。Webhook 需要设备向 Home Assistant 发送数据。",
+          "hold_seconds": "许多检测设备只上报开始；传感器在最后一次上报后保持开启这么长时间。",
+          "playback": "录像为 H.265 或 H.264。“按录制的 MP4”会立即开始，但浏览器只有在硬件支持时才能播放 H.265。“转换为 H.264”到处可用，但需要大量 CPU。“从设备串流”让设备通过 RTSP 播放录像。"
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "通知在 {path} 接收（仅限局域网）。请使用“设置通知主机”操作或设备网页界面将设备指向此处。"
+      }
+    },
+    "abort": {
+      "no_options": "Hik-Connect 账户没有选项。"
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "直接连接摄像机"
+      },
+      "entry_type": "摄像机直连",
+      "step": {
+        "user": {
+          "title": "摄像机直连",
+          "description": "使用独立地址和凭据直接连接录像机通道上的摄像机。实时流将来自摄像机，这在录像机码流加密时也有帮助。",
+          "data": {
+            "channel_id": "录像机通道",
+            "host": "主机",
+            "port": "端口（可选）",
+            "connection": "连接",
+            "verify_tls": "验证 HTTPS 证书",
+            "username": "用户名",
+            "password": "密码",
+            "reuse_recorder_credentials": "使用录像机的用户名和密码",
+            "event_source": "检测来源"
+          },
+          "data_description": {
+            "host": "Home Assistant 直接访问摄像机的地址（例如录像机的 PoE 子网，前提是已路由）。",
+            "reuse_recorder_credentials": "如果摄像机有自己的凭据，请保持关闭。"
+          }
+        },
+        "reconfigure": {
+          "title": "更改摄像机直连",
+          "description": "使用独立地址和凭据直接连接录像机通道上的摄像机。实时流将来自摄像机，这在录像机码流加密时也有帮助。",
+          "data": {
+            "channel_id": "录像机通道",
+            "host": "主机",
+            "port": "端口（可选）",
+            "connection": "连接",
+            "verify_tls": "验证 HTTPS 证书",
+            "username": "用户名",
+            "password": "密码",
+            "reuse_recorder_credentials": "使用录像机的用户名和密码",
+            "event_source": "检测来源"
+          },
+          "data_description": {
+            "host": "Home Assistant 直接访问摄像机的地址（例如录像机的 PoE 子网，前提是已路由）。",
+            "reuse_recorder_credentials": "如果摄像机有自己的凭据，请保持关闭。"
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "用户名或密码被拒绝。为避免被锁定，不会再次尝试。",
+        "locked_out": "登录失败后设备或账户已被临时锁定。请稍候再试。",
+        "name_not_resolved": "无法解析主机名。",
+        "tls_untrusted": "HTTPS 证书不受信任。请关闭证书验证或使用 HTTP。",
+        "cannot_connect": "无法连接。",
+        "not_isapi": "该地址有响应，但不像海康威视 ISAPI 设备。",
+        "forbidden": "该用户缺少所需权限。",
+        "unknown": "意外错误。",
+        "wrong_camera": "此地址属于另一台摄像机，而非所选通道上的摄像机。",
+        "captcha_required": "Hik-Connect 要求输入验证码。",
+        "cloud_unavailable": "Hik-Connect 当前不可用。",
+        "cloud_changed": "Hik-Connect 返回了意外格式的响应。",
+        "cloud_rejected": "Hik-Connect 拒绝了请求。"
+      },
+      "abort": {
+        "not_loaded": "必须先加载录像机。",
+        "not_a_recorder": "只有录像机才有可关联的通道。",
+        "no_free_channel": "所有通道都已有直连。",
+        "reconfigure_successful": "直连已更新。"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "移动"
+      },
+      "tamper": {
+        "name": "遮挡"
+      },
+      "video_loss": {
+        "name": "视频丢失"
+      },
+      "scene_change": {
+        "name": "场景变更"
+      },
+      "intrusion": {
+        "name": "区域入侵"
+      },
+      "line_crossing": {
+        "name": "越界"
+      },
+      "region_entrance": {
+        "name": "进入区域"
+      },
+      "region_exiting": {
+        "name": "离开区域"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "虚焦"
+      },
+      "audio_exception": {
+        "name": "音频异常"
+      },
+      "target_human": {
+        "name": "人员"
+      },
+      "target_vehicle": {
+        "name": "车辆"
+      },
+      "alarm_input": {
+        "name": "报警输入 {port}"
+      },
+      "channel_online": {
+        "name": "摄像机已连接"
+      },
+      "storage_problem": {
+        "name": "存储故障"
+      },
+      "event_link": {
+        "name": "事件连接"
+      },
+      "stream_encryption": {
+        "name": "码流加密"
+      },
+      "cloud_online": {
+        "name": "云连接"
+      },
+      "cloud_stream_encryption": {
+        "name": "码流加密"
+      },
+      "recording": {
+        "name": "录像"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "移动侦测"
+      },
+      "tamper_detection": {
+        "name": "遮挡侦测"
+      },
+      "scene_change_detection": {
+        "name": "场景变更侦测"
+      },
+      "intrusion_detection": {
+        "name": "区域入侵侦测"
+      },
+      "line_crossing_detection": {
+        "name": "越界侦测"
+      },
+      "region_entrance_detection": {
+        "name": "进入区域侦测"
+      },
+      "region_exiting_detection": {
+        "name": "离开区域侦测"
+      },
+      "alarm_output": {
+        "name": "报警输出 {port}"
+      },
+      "blc": {
+        "name": "背光补偿"
+      },
+      "hlc": {
+        "name": "强光抑制"
+      },
+      "overexposure_suppression": {
+        "name": "过曝抑制"
+      },
+      "image_flip": {
+        "name": "图像翻转"
+      },
+      "stabilization": {
+        "name": "图像防抖"
+      },
+      "lens_correction": {
+        "name": "镜头畸变校正"
+      },
+      "video_loss_detection": {
+        "name": "视频丢失侦测"
+      },
+      "input_armed": {
+        "name": "报警输入 {port} 已布防"
+      },
+      "park_action": {
+        "name": "守望动作"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "主码流"
+      },
+      "sub_stream": {
+        "name": "子码流"
+      },
+      "third_stream": {
+        "name": "第三码流"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "检测",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "移动",
+              "intrusion": "区域入侵",
+              "line_crossing": "越界",
+              "region_entrance": "进入区域",
+              "region_exiting": "离开区域",
+              "face": "人脸",
+              "anpr": "车牌"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "云连接变化",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "在线",
+              "went_offline": "离线"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "存储 {unit}",
+        "state": {
+          "ok": "正常",
+          "unformatted": "未格式化",
+          "error": "错误",
+          "idle": "空闲",
+          "sleeping": "休眠",
+          "abnormal": "异常",
+          "full": "已满",
+          "unknown": "未知"
+        }
+      },
+      "storage_free": {
+        "name": "存储 {unit} 可用"
+      },
+      "storage_capacity": {
+        "name": "存储 {unit} 容量"
+      },
+      "event_latency": {
+        "name": "事件延迟"
+      },
+      "boot_time": {
+        "name": "上次启动"
+      },
+      "cpu_load": {
+        "name": "CPU 负载"
+      },
+      "memory_use": {
+        "name": "内存使用"
+      },
+      "reboots": {
+        "name": "重启次数",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "上报的时间戳"
+          }
+        }
+      },
+      "network_address": {
+        "name": "IP 地址"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "重启"
+      },
+      "rescan": {
+        "name": "重新读取能力"
+      },
+      "cloud_unlock": {
+        "name": "开门（云）"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ 向左转"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ 向右转"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ 向上"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ 向下"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ 放大"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ 缩小"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "PTZ 预置点"
+      },
+      "day_night": {
+        "name": "日夜模式",
+        "state": {
+          "day": "白天",
+          "night": "夜晚",
+          "auto": "自动",
+          "schedule": "定时",
+          "eventtrigger": "事件触发"
+        }
+      },
+      "supplement_light": {
+        "name": "补光灯",
+        "state": {
+          "eventintelligence": "智能（事件）",
+          "colorvuwhitelight": "白光",
+          "irlight": "红外灯",
+          "close": "关闭"
+        }
+      },
+      "light_brightness_control": {
+        "name": "补光亮度控制",
+        "state": {
+          "auto": "自动",
+          "manual": "手动"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "关闭",
+          "open": "开启",
+          "auto": "自动"
+        }
+      },
+      "blc_area": {
+        "name": "背光补偿区域",
+        "state": {
+          "close": "关闭",
+          "up": "上",
+          "down": "下",
+          "left": "左",
+          "right": "右",
+          "center": "中心",
+          "region": "自定义区域",
+          "auto": "自动"
+        }
+      },
+      "noise_reduction": {
+        "name": "降噪",
+        "state": {
+          "close": "关闭",
+          "general": "普通",
+          "advanced": "专家"
+        }
+      },
+      "defog": {
+        "name": "透雾",
+        "state": {
+          "close": "关闭",
+          "open": "开启",
+          "auto": "自动"
+        }
+      },
+      "white_balance": {
+        "name": "白平衡",
+        "state": {
+          "manual": "手动",
+          "auto1": "自动 1",
+          "auto2": "自动 2",
+          "locked": "锁定",
+          "daylightlamp": "荧光灯",
+          "incandescentlight": "白炽灯",
+          "warmlight": "暖光",
+          "naturallight": "自然光"
+        }
+      },
+      "exposure_mode": {
+        "name": "曝光模式",
+        "state": {
+          "auto": "自动",
+          "manual": "手动"
+        }
+      },
+      "shutter": {
+        "name": "快门"
+      },
+      "power_line_frequency": {
+        "name": "电源频率",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "翻转方向",
+        "state": {
+          "leftright": "左右",
+          "updown": "上下",
+          "center": "中心"
+        }
+      },
+      "strobe_frequency": {
+        "name": "爆闪灯频率",
+        "state": {
+          "high": "高",
+          "medium": "中",
+          "low": "低",
+          "normallyon": "常亮"
+        }
+      },
+      "siren_sound": {
+        "name": "警笛声音"
+      },
+      "park_action_type": {
+        "name": "守望动作类型",
+        "state": {
+          "autoscan": "自动扫描",
+          "framescan": "帧扫描",
+          "randomscan": "随机扫描",
+          "patrol": "巡航",
+          "pattern": "花样扫描",
+          "preset": "预置点",
+          "panoramascan": "全景扫描",
+          "tiltscan": "垂直扫描"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "日夜切换灵敏度"
+      },
+      "day_night_delay": {
+        "name": "日夜切换延迟"
+      },
+      "white_light_brightness": {
+        "name": "白光亮度"
+      },
+      "ir_light_brightness": {
+        "name": "红外灯亮度"
+      },
+      "white_light_duration": {
+        "name": "白光持续时间"
+      },
+      "brightness": {
+        "name": "亮度"
+      },
+      "contrast": {
+        "name": "对比度"
+      },
+      "saturation": {
+        "name": "饱和度"
+      },
+      "sharpness": {
+        "name": "锐度"
+      },
+      "wdr_level": {
+        "name": "WDR 等级"
+      },
+      "hlc_level": {
+        "name": "强光抑制等级"
+      },
+      "noise_reduction_level": {
+        "name": "降噪等级"
+      },
+      "defog_level": {
+        "name": "透雾等级"
+      },
+      "white_balance_red": {
+        "name": "白平衡红"
+      },
+      "white_balance_blue": {
+        "name": "白平衡蓝"
+      },
+      "gain_limit": {
+        "name": "增益上限"
+      },
+      "strobe_duration": {
+        "name": "爆闪灯持续时间"
+      },
+      "siren_volume": {
+        "name": "警笛音量"
+      },
+      "siren_repeats": {
+        "name": "警笛重复次数"
+      },
+      "speaker_volume": {
+        "name": "扬声器音量"
+      },
+      "microphone_volume": {
+        "name": "麦克风音量"
+      },
+      "park_time": {
+        "name": "守望时间"
+      },
+      "park_action_number": {
+        "name": "守望动作编号"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}：登录已锁定",
+      "description": "多次尝试失败后设备锁定了登录。本集成将暂停约 {minutes} 分钟，在此之前不会重试。"
+    },
+    "channel_link_auth": {
+      "title": "{device}：到 {channel} 的直连被拒绝",
+      "description": "摄像机拒绝了直连的凭据。将改用录像机。请更新此通道的直连。"
+    },
+    "channel_link_mismatch": {
+      "title": "{device}：{channel} 上是另一台摄像机",
+      "description": "此通道的直连指向的摄像机与当前接在录像机上的不同。修正之前不会使用。"
+    },
+    "center_link_missing": {
+      "title": "{device}：{channel} 上的 {kind} 未上报",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "启用上报",
+            "description": "设备检测到 {kind}，但由于联动“上传中心”已关闭，未将其发送到事件流。确认后仅开启该联动（触发器 {trigger}）；其他不变。{reason}"
+          }
+        },
+        "error": {
+          "write_failed": "设备未接受此更改。"
+        },
+        "abort": {
+          "not_loaded": "设备未加载。"
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}：{channel} 上的 {kind} 未绘制区域",
+      "description": "检测已开启，但未绘制线或区域，因此无法触发。请在设备网页界面中绘制。"
+    },
+    "detection_off": {
+      "title": "{device}：{channel} 上的 {kind} 已关闭",
+      "description": "此检测受支持但已关闭。如需使用，请通过其开关实体开启。"
+    },
+    "recorder_target_filter": {
+      "title": "{device}：{channel} 上的 {kind} 仅针对 {detail}",
+      "description": "录像机仅对所列目标类型上报此检测。其他移动不会触发。"
+    },
+    "stream_encrypted": {
+      "title": "{device}：视频流被 Hik-Connect 加密",
+      "description": "Hik-Connect 码流加密已开启。Home Assistant 无法解码此码流；抓图和事件仍可正常使用。请在设备的平台接入设置中关闭“码流加密”，或直接连接受影响的摄像机（摄像机直连）。"
+    },
+    "default_password": {
+      "title": "{device}：密码过弱或为默认密码",
+      "description": "设备报告其密码过弱或仍为默认密码。请在设备上修改。"
+    },
+    "basic_over_http": {
+      "title": "{device}：密码未加密传输",
+      "description": "设备仅接受通过 HTTP 的 Basic 认证，因此密码以明文传输。请在设备上启用 Digest 认证或 HTTPS。"
+    },
+    "clock_skew": {
+      "title": "{device}：时钟偏差 {detail} 秒",
+      "description": "设备时钟与 Home Assistant 明显不同。事件时间会被校正，但录像带有错误时间。请在设备上配置 NTP。"
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "设备拒绝了凭据。"
+    },
+    "locked_out": {
+      "message": "设备已锁定登录。为避免延长锁定，设置已暂停。"
+    },
+    "not_isapi": {
+      "message": "设备的响应不像海康威视 ISAPI 设备。"
+    },
+    "unreachable": {
+      "message": "{host} 无法访问。"
+    },
+    "other_device": {
+      "message": "{host} 上现在是另一台设备在响应。请使用“重新配置”或将其作为新设备添加。"
+    },
+    "write_failed": {
+      "message": "设备未接受此更改（{reason}）。"
+    },
+    "unknown_device": {
+      "message": "所选设备不属于 Hikvision Bridge。"
+    },
+    "channel_needed": {
+      "message": "请选择摄像机或通道设备。"
+    },
+    "confirm_needed": {
+      "message": "此操作会更改设备。请开启“确认更改”以执行。"
+    },
+    "bad_path": {
+      "message": "仅允许 /ISAPI/ 下的路径。"
+    },
+    "webhook_off": {
+      "message": "请先在选项中启用 webhook。"
+    },
+    "no_url": {
+      "message": "Home Assistant 未配置本地 URL。"
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect 拒绝了登录。"
+    },
+    "cloud_failed": {
+      "message": "Hik-Connect 请求失败（{reason}）。"
+    },
+    "cloud_gone": {
+      "message": "该设备已不在 Hik-Connect 账户中。"
+    },
+    "setting_inactive": {
+      "message": "此设置在摄像机当前模式下未启用。"
+    },
+    "read_failed": {
+      "message": "设备未响应请求（{reason}）。"
+    },
+    "bad_period": {
+      "message": "结束时间必须晚于开始时间，且最多晚一天。"
+    },
+    "no_recordings": {
+      "message": "此时间段内未找到录像。"
+    },
+    "too_many_recordings": {
+      "message": "该时间段包含 {count} 个录像；一次最多可保存 {limit} 个。"
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant 无权写入其媒体文件夹。"
+    },
+    "recording_encrypted": {
+      "message": "设备对录像进行了加密（码流加密），因此无法播放或转换。请关闭码流加密，或使用摄像机的存储卡。"
+    },
+    "conversion_failed": {
+      "message": "无法转换录像。"
+    },
+    "no_ffmpeg": {
+      "message": "Home Assistant 中没有可用的 ffmpeg。"
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "自动",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "事件流（推荐）",
+        "webhook": "Webhook",
+        "both": "两者"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "录像机",
+        "camera": "摄像机"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "按录制的 MP4（推荐）",
+        "h264": "转换为 H.264（到处可用，CPU 负载高）",
+        "stream": "从设备串流（RTSP 转 HLS）"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "自动",
+        "recorder": "录像机",
+        "card": "存储卡"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "按录制的 MP4",
+        "h264": "转换为 H.264 的 MP4",
+        "ts": "按录制的 MPEG-TS",
+        "original": "原始文件（MPEG-PS）"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "全部",
+        "continuous": "连续录像",
+        "motion": "移动",
+        "alarm": "报警输入",
+        "event": "智能事件",
+        "manual": "手动",
+        "other": "其他"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "启用事件上报",
+      "description": "为缺少“上传中心”联动的检测开启该联动。除非关闭“仅预览”，否则以预览方式运行。",
+      "fields": {
+        "device_id": {
+          "name": "设备",
+          "description": "摄像机、通道或录像机。"
+        },
+        "dry_run": {
+          "name": "仅预览",
+          "description": "仅列出将要更改的内容。"
+        },
+        "kinds": {
+          "name": "检测",
+          "description": "限定为这些类型；留空表示全部。"
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "ISAPI 请求",
+      "description": "发送一个 ISAPI 请求并返回去除敏感信息的响应。会更改设备的方法需要确认。",
+      "fields": {
+        "device_id": {
+          "name": "设备",
+          "description": "摄像机、通道或录像机。"
+        },
+        "method": {
+          "name": "方法",
+          "description": "HTTP 方法。"
+        },
+        "path": {
+          "name": "路径",
+          "description": "以 /ISAPI/ 开头的路径。"
+        },
+        "body": {
+          "name": "请求体",
+          "description": "用于更改类方法的 XML 或 JSON 请求体。"
+        },
+        "confirm_write": {
+          "name": "确认更改",
+          "description": "任何更改设备的操作都需要。"
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "PTZ 移动",
+      "description": "短时间移动 PTZ 摄像机。",
+      "fields": {
+        "device_id": {
+          "name": "设备",
+          "description": "摄像机、通道或录像机。"
+        },
+        "pan": {
+          "name": "水平",
+          "description": "速度，负值向左。"
+        },
+        "tilt": {
+          "name": "垂直",
+          "description": "速度，负值向下。"
+        },
+        "zoom": {
+          "name": "变倍",
+          "description": "速度，负值缩小。"
+        },
+        "duration": {
+          "name": "时长",
+          "description": "停止前的秒数。"
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ 预置点",
+      "description": "将 PTZ 摄像机移动到已保存的预置点。",
+      "fields": {
+        "device_id": {
+          "name": "设备",
+          "description": "摄像机、通道或录像机。"
+        },
+        "preset": {
+          "name": "预置点",
+          "description": "预置点编号。"
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "设置通知主机",
+      "description": "将设备的一个通知主机槽位指向此 Home Assistant webhook。",
+      "fields": {
+        "device_id": {
+          "name": "设备",
+          "description": "摄像机、通道或录像机。"
+        },
+        "slot": {
+          "name": "槽位",
+          "description": "设备上的通知主机编号。"
+        },
+        "confirm_write": {
+          "name": "确认更改",
+          "description": "任何更改设备的操作都需要。"
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "搜索录像",
+      "description": "列出摄像机或通道在某一时间段内的录像文件。",
+      "fields": {
+        "device_id": {
+          "name": "设备",
+          "description": "摄像机或通道。"
+        },
+        "start": {
+          "name": "开始",
+          "description": "时间段的开始。"
+        },
+        "end": {
+          "name": "结束",
+          "description": "时间段的结束，最多在开始后一天。"
+        },
+        "source": {
+          "name": "来源",
+          "description": "录像机或摄像机的存储卡；自动模式会先尝试录像机。"
+        }
+      }
+    },
+    "download_recording": {
+      "name": "保存录像",
+      "description": "将某一时间段的录像保存到媒体文件夹“hikvision_bridge”。",
+      "fields": {
+        "device_id": {
+          "name": "设备",
+          "description": "摄像机或通道。"
+        },
+        "start": {
+          "name": "开始",
+          "description": "时间段的开始。"
+        },
+        "end": {
+          "name": "结束",
+          "description": "时间段的结束，最多在开始后一天。"
+        },
+        "source": {
+          "name": "来源",
+          "description": "录像机或摄像机的存储卡；自动模式会先尝试录像机。"
+        },
+        "format": {
+          "name": "格式",
+          "description": "MP4 和 MPEG-TS 保留原始录制的视频；H.264 会进行转换，在小型设备上耗时较长。"
+        },
+        "trim": {
+          "name": "裁剪到时间段",
+          "description": "将文件裁剪到时间段；原始文件从不裁剪。"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,283 @@
+"""Recording search, day overview and the shape of downloaded recordings.
+
+Search results carry an RTSP ``playbackURI`` that names one recorded file (start, end,
+file name, size). The same URI is handed back to ``/ISAPI/ContentMgmt/download``, which
+answers with that whole file. Devices write their recordings as MPEG program stream,
+usually behind a 40 byte ``IMKH`` header; the codec field of search results is not
+reliable and is therefore not used.
+"""
+
+from __future__ import annotations
+
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from urllib.parse import parse_qsl, urlsplit
+import uuid
+from xml.sax.saxutils import escape
+
+from aiohttp import ClientResponse
+
+from ...wire.faults import DeviceRejected, Unsupported
+from ...wire.link import IsapiLink
+from ...wire.xmlview import XmlNode
+
+SEARCH_PATH = "/ISAPI/ContentMgmt/search"
+DOWNLOAD_PATH = "/ISAPI/ContentMgmt/download"
+DAYS_PATH = "/ISAPI/ContentMgmt/record/tracks/{track}/dailyDistribution"
+PAGE_SIZE = 50
+# A day of ten-minute files on one track stays far below this; it only stops runaway paging.
+MAX_RESULTS = 2000
+HEADER_MAGIC = b"IMKH"
+HEADER_SIZE = 40
+
+KIND_CONTINUOUS = "continuous"
+KIND_MOTION = "motion"
+KIND_ALARM = "alarm"
+KIND_EVENT = "event"
+KIND_MANUAL = "manual"
+KIND_OTHER = "other"
+KINDS = (KIND_CONTINUOUS, KIND_MOTION, KIND_ALARM, KIND_EVENT, KIND_MANUAL, KIND_OTHER)
+
+# Last segment of the recordType metadata of a search result.
+_KIND_OF = {
+    "timing": KIND_CONTINUOUS,
+    "time": KIND_CONTINUOUS,
+    "cmr": KIND_CONTINUOUS,
+    "continuous": KIND_CONTINUOUS,
+    "motion": KIND_MOTION,
+    "vmd": KIND_MOTION,
+    "alarm": KIND_ALARM,
+    "alarminput": KIND_ALARM,
+    "io": KIND_ALARM,
+    "manual": KIND_MANUAL,
+    "command": KIND_MANUAL,
+    "smart": KIND_EVENT,
+    "vca": KIND_EVENT,
+    "allevent": KIND_EVENT,
+    "linedetection": KIND_EVENT,
+    "fielddetection": KIND_EVENT,
+    "regionentrance": KIND_EVENT,
+    "regionexiting": KIND_EVENT,
+    "facedetection": KIND_EVENT,
+    "humanrecognition": KIND_EVENT,
+    "vehicledetection": KIND_EVENT,
+    "eventtrigger": KIND_EVENT,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class Recording:
+    """One recorded file on a track."""
+
+    track: str
+    start: datetime
+    end: datetime
+    kind: str
+    playback_uri: str
+    name: str | None = None
+    size: int | None = None
+    locked: bool = False
+
+    @property
+    def duration(self) -> timedelta:
+        return self.end - self.start
+
+
+def track_of(channel_id: str) -> str:
+    """Main stream track of a channel (channel 2 records on track 201)."""
+    return f"{int(channel_id) * 100 + 1}" if channel_id.isdigit() else "101"
+
+
+def parse_time(text: str | None) -> datetime | None:
+    """Device time stamp; one without a zone is taken as UTC, like the devices send it."""
+    if not text:
+        return None
+    text = text.strip()
+    for pattern in ("%Y%m%dT%H%M%SZ", "%Y%m%dT%H%M%S"):
+        try:
+            return datetime.strptime(text, pattern).replace(tzinfo=UTC)
+        except ValueError:
+            continue
+    try:
+        moment = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
+
+
+def _iso(moment: datetime) -> str:
+    return f"{moment.astimezone(UTC):%Y-%m-%dT%H:%M:%SZ}"
+
+
+def compact(moment: datetime) -> str:
+    """Time stamp in the form of playback URIs."""
+    return f"{moment.astimezone(UTC):%Y%m%dT%H%M%SZ}"
+
+
+def search_body(track: str, start: datetime, end: datetime, position: int = 0) -> str:
+    """Search for all recordings of a track; the kind is read from the results."""
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<CMSearchDescription version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">'
+        f"<searchID>{{{uuid.uuid4()}}}</searchID>"
+        f"<trackList><trackID>{escape(track)}</trackID></trackList>"
+        "<timeSpanList><timeSpan>"
+        f"<startTime>{_iso(start)}</startTime><endTime>{_iso(end)}</endTime>"
+        "</timeSpan></timeSpanList>"
+        f"<maxResults>{PAGE_SIZE}</maxResults>"
+        f"<searchResultPostion>{position}</searchResultPostion>"
+        "<metadataList><metadataDescriptor>//recordType.meta.std-cgi.com</metadataDescriptor>"
+        "</metadataList></CMSearchDescription>"
+    )
+
+
+def kind_of(descriptor: str | None) -> str:
+    if not descriptor:
+        return KIND_OTHER
+    last = descriptor.rstrip("/").rsplit("/", 1)[-1].lower()
+    return _KIND_OF.get(last, KIND_OTHER)
+
+
+def parse_results(document: XmlNode, fallback_track: str) -> tuple[list[Recording], bool]:
+    """Recordings of one result page and whether the device has more."""
+    status = (document.text("responseStatusStrg") or "").upper()
+    found: list[Recording] = []
+    for item in document.all("matchList/searchMatchItem"):
+        start = parse_time(item.text("timeSpan/startTime"))
+        end = parse_time(item.text("timeSpan/endTime"))
+        uri = item.text("mediaSegmentDescriptor/playbackURI")
+        if start is None or end is None or not uri:
+            continue
+        query = dict(parse_qsl(urlsplit(uri).query))
+        size = query.get("size")
+        found.append(
+            Recording(
+                track=item.text("trackID") or fallback_track,
+                start=start,
+                end=end,
+                kind=kind_of(item.text("metadataMatches/metadataDescriptor")),
+                playback_uri=uri,
+                name=item.text("mediaSegmentDescriptor/name") or query.get("name"),
+                size=int(size) if size and size.isdigit() else None,
+                locked=(item.text("mediaSegmentDescriptor/lockStatus") or "").lower() == "lock",
+            )
+        )
+    return found, status == "MORE"
+
+
+async def search(link: IsapiLink, track: str, start: datetime, end: datetime) -> list[Recording]:
+    """All recordings of a track overlapping the period, oldest first.
+
+    Some devices page by ``maxResults``, others answer everything at once and still say
+    MORE; paging stops as soon as a page brings nothing new.
+    """
+    found: dict[tuple[str, datetime, str], Recording] = {}
+    position = 0
+    while position < MAX_RESULTS:
+        reply = await link.call("POST", SEARCH_PATH, body=search_body(track, start, end, position))
+        page, more = parse_results(reply.xml(), track)
+        fresh = 0
+        for item in page:
+            key = (item.track, item.start, item.name or item.playback_uri)
+            if key not in found:
+                found[key] = item
+                fresh += 1
+        if not more or not fresh:
+            break
+        position += len(page)
+    return sorted(
+        (r for r in found.values() if r.end > start and r.start < end), key=lambda r: r.start
+    )
+
+
+def days_body(year: int, month: int) -> str:
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        f"<trackDailyParam><year>{year}</year><monthOfYear>{month}</monthOfYear></trackDailyParam>"
+    )
+
+
+def parse_days(document: XmlNode) -> list[int]:
+    days: list[int] = []
+    for day in document.all("dayList/day"):
+        number = day.numeric("dayOfMonth")
+        if number and (day.text("record") or "").lower() == "true":
+            days.append(number)
+    return sorted(days)
+
+
+async def recorded_days(link: IsapiLink, track: str, year: int, month: int) -> list[int] | None:
+    """Days of a month (device calendar) with recordings, or None if the device can't tell."""
+    path = DAYS_PATH.format(track=track)
+    if path in link.unsupported:
+        return None
+    try:
+        reply = await link.call("POST", path, body=days_body(year, month))
+        return parse_days(reply.xml())
+    except Unsupported:
+        return None
+    except DeviceRejected as err:
+        if err.status in (400, 404, 500, 501):
+            link.unsupported.add(path)
+            return None
+        raise
+
+
+def download_body(playback_uri: str) -> str:
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        f"<downloadRequest><playbackURI>{escape(playback_uri)}</playbackURI></downloadRequest>"
+    )
+
+
+@asynccontextmanager
+async def open_download(link: IsapiLink, playback_uri: str) -> AsyncIterator[ClientResponse]:
+    """Open the download of one recorded file; the body streams from the response."""
+    async with link.open_stream(
+        DOWNLOAD_PATH, method="GET", body=download_body(playback_uri)
+    ) as response:
+        yield response
+
+
+@dataclass(frozen=True, slots=True)
+class MediaHead:
+    """What the first bytes of a download tell about it."""
+
+    header: bool
+    codec: str | None
+    scrambled: bool
+
+
+def inspect_head(data: bytes) -> MediaHead:
+    """Look at the first video packets: codec and whether the payload is scrambled.
+
+    Devices with stream encryption on set the PES scrambling bits; such recordings
+    cannot be played or converted without the device's encryption key.
+    """
+    header = data[:4] == HEADER_MAGIC
+    codec = None
+    scrambled = False
+    position = data.find(b"\x00\x00\x01\xe0")
+    checked = 0
+    while position >= 0 and checked < 8 and position + 9 < len(data):
+        flags = data[position + 6]
+        if flags & 0xC0 == 0x80:  # MPEG-2 PES header
+            scrambled = scrambled or bool(flags & 0x30)
+            start = position + 9 + data[position + 8]
+            payload = data[start : start + 64]
+            nal = payload.find(b"\x00\x00\x01")
+            if codec is None and 0 <= nal < len(payload) - 1:
+                first = payload[nal + 3]
+                if (first >> 1) & 0x3F in (32, 33, 34, 35):
+                    codec = "hevc"
+                elif first & 0x1F in (7, 8, 9):
+                    codec = "h264"
+        checked += 1
+        position = data.find(b"\x00\x00\x01\xe0", position + 4)
+    return MediaHead(header, codec, scrambled)
+
+
+def strip_header(data: bytes) -> bytes:
+    return data[HEADER_SIZE:] if data[:4] == HEADER_MAGIC else data

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from homeassistant.const import ATTR_DEVICE_ID
@@ -9,11 +11,12 @@ from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, Supp
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.util import dt as dt_util, slugify
 import voluptuous as vol
 from yarl import URL
 
 from .const import DOMAIN, OPT_WEBHOOK_ID
-from .model.features import linkage, patch_and_verify, ptz
+from .model.features import linkage, patch_and_verify, ptz, recordings
 from .model.vocabulary import Kind
 from .wire.faults import BridgeFault
 from .wire.scrub import scrub_text
@@ -30,6 +33,15 @@ FIELD_ZOOM = "zoom"
 FIELD_DURATION = "duration"
 FIELD_PRESET = "preset"
 FIELD_SLOT = "slot"
+FIELD_START = "start"
+FIELD_END = "end"
+FIELD_SOURCE = "source"
+FIELD_FORMAT = "format"
+FIELD_TRIM = "trim"
+
+MAX_PERIOD = timedelta(days=1)
+MAX_FILES = 50
+MEDIA_FOLDER = DOMAIN
 
 MAX_RESPONSE = 65536
 
@@ -55,10 +67,10 @@ def _target_of(hass: HomeAssistant, device_id: str) -> tuple[Any, str | None]:
     return bridge, None
 
 
-def _fail(err: BridgeFault) -> HomeAssistantError:
+def _fail(err: BridgeFault, key: str = "write_failed") -> HomeAssistantError:
     return HomeAssistantError(
         translation_domain=DOMAIN,
-        translation_key="write_failed",
+        translation_key=key,
         translation_placeholders={"reason": type(err).__name__},
     )
 
@@ -167,6 +179,137 @@ async def _set_notification_host(call: ServiceCall) -> ServiceResponse:
     return {"slot": slot, "target": f"{url.scheme}://{url.host}:{url.port}/api/webhook/***"}
 
 
+def _period(call: ServiceCall) -> tuple[datetime, datetime]:
+    start = dt_util.as_utc(call.data[FIELD_START])
+    end = dt_util.as_utc(call.data[FIELD_END])
+    if end <= start or end - start > MAX_PERIOD:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="bad_period")
+    return start, end
+
+
+async def _find_recordings(call: ServiceCall) -> tuple[Any, str, Any, list]:
+    """Bridge, channel, source and recordings of the requested period.
+
+    With the automatic source, the camera's memory card is searched when the recorder has
+    nothing for the period.
+    """
+    from .runtime import playback  # noqa: PLC0415 - avoid import cycle at load
+
+    bridge, channel = _target_of(call.hass, call.data[ATTR_DEVICE_ID])
+    if channel is None:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="channel_needed")
+    start, end = _period(call)
+    wanted = call.data[FIELD_SOURCE]
+    candidates = [
+        s for s in playback.sources(bridge, channel) if wanted in (playback.SOURCE_AUTO, s.key)
+    ]
+    if not candidates:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="no_recordings")
+    for source in candidates:
+        try:
+            found = await recordings.search(source.link, source.track, start, end)
+        except BridgeFault as err:
+            raise _fail(err, "read_failed") from err
+        if found:
+            return bridge, channel, source, found
+    return bridge, channel, candidates[0], []
+
+
+async def _search_recordings(call: ServiceCall) -> ServiceResponse:
+    _, _, source, found = await _find_recordings(call)
+    return {
+        "source": source.key,
+        "recordings": [
+            {
+                "start": r.start.isoformat(),
+                "end": r.end.isoformat(),
+                "kind": r.kind,
+                "size": r.size,
+                "locked": r.locked,
+            }
+            for r in found
+        ],
+    }
+
+
+async def _download_recording(call: ServiceCall) -> ServiceResponse:
+    from .runtime import playback  # noqa: PLC0415 - avoid import cycle at load
+
+    hass = call.hass
+    bridge, channel, source, found = await _find_recordings(call)
+    if not found:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="no_recordings")
+    if len(found) > MAX_FILES:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="too_many_recordings",
+            translation_placeholders={"count": str(len(found)), "limit": str(MAX_FILES)},
+        )
+    fmt = call.data[FIELD_FORMAT]
+    start, end = _period(call)
+    root = Path(hass.config.media_dirs.get("local") or hass.config.path("media"))
+    folder = root / MEDIA_FOLDER / slugify(bridge.entry.title)
+    if not hass.config.is_allowed_path(str(folder)):
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="media_not_allowed")
+    await hass.async_add_executor_job(lambda: folder.mkdir(parents=True, exist_ok=True))
+    name = slugify(bridge.profile.channels[channel].name) or f"channel_{channel}"
+    saved: list[str] = []
+    for recording in found:
+        stamp = dt_util.as_local(recording.start).strftime("%Y%m%d_%H%M%S")
+        target = folder / f"{name}_{stamp}.{playback.EXTENSION[fmt]}"
+        partial = target.with_name(f".{target.name}.part")
+        offset, duration = (
+            playback.trim(recording, start, end) if call.data[FIELD_TRIM] else (None, None)
+        )
+        try:
+            async with playback.open_recording(source.link, recording.playback_uri) as (
+                head,
+                chunks,
+            ):
+                if fmt == playback.FORMAT_ORIGINAL:
+                    await _save_chunks(hass, chunks, partial)
+                else:
+                    args = playback.ffmpeg_args(
+                        fmt, head.codec, target=str(partial), offset=offset, duration=duration
+                    )
+                    await playback.run_ffmpeg(playback.ffmpeg_binary(hass), args, chunks)
+        except BaseException as err:
+            await hass.async_add_executor_job(_remove, partial)
+            raise _download_fault(err) from err
+        await hass.async_add_executor_job(partial.replace, target)
+        saved.append(str(target))
+    return {"source": source.key, "files": saved}
+
+
+def _remove(path: Path) -> None:
+    path.unlink(missing_ok=True)
+
+
+def _download_fault(err: BaseException) -> BaseException:
+    from .runtime import playback  # noqa: PLC0415 - avoid import cycle at load
+
+    keys = (
+        (playback.RecordingEncrypted, "recording_encrypted"),
+        (playback.NoRecording, "conversion_failed"),
+        (FileNotFoundError, "no_ffmpeg"),
+    )
+    for kind, key in keys:
+        if isinstance(err, kind):
+            return HomeAssistantError(translation_domain=DOMAIN, translation_key=key)
+    if isinstance(err, BridgeFault):
+        return _fail(err, "read_failed")
+    return err
+
+
+async def _save_chunks(hass: HomeAssistant, chunks: Any, path: Path) -> None:
+    handle = await hass.async_add_executor_job(path.open, "wb")
+    try:
+        async for chunk in chunks:
+            await hass.async_add_executor_job(handle.write, chunk)
+    finally:
+        await hass.async_add_executor_job(handle.close)
+
+
 def async_register_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
@@ -227,6 +370,34 @@ def async_register_services(hass: HomeAssistant) -> None:
             {
                 vol.Optional(FIELD_SLOT, default=1): vol.All(vol.Coerce(int), vol.Range(1, 8)),
                 vol.Required(FIELD_CONFIRM): cv.boolean,
+            }
+        ),
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    period = _DEVICE.extend(
+        {
+            vol.Required(FIELD_START): cv.datetime,
+            vol.Required(FIELD_END): cv.datetime,
+            vol.Optional(FIELD_SOURCE, default="auto"): vol.In(["auto", "recorder", "card"]),
+        }
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "search_recordings",
+        _search_recordings,
+        schema=period,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "download_recording",
+        _download_recording,
+        schema=period.extend(
+            {
+                vol.Optional(FIELD_FORMAT, default="mp4"): vol.In(
+                    ["mp4", "h264", "ts", "original"]
+                ),
+                vol.Optional(FIELD_TRIM, default=True): cv.boolean,
             }
         ),
         supports_response=SupportsResponse.OPTIONAL,

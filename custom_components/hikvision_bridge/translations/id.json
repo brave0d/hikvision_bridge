@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "Kamera atau perekam di jaringan lokal",
+          "cloud": "Akun Hik-Connect (cloud)"
+        }
+      },
+      "device": {
+        "title": "Hubungkan perangkat",
+        "description": "Selama penyiapan hanya akses baca yang digunakan.",
+        "data": {
+          "host": "Host",
+          "port": "Port (opsional)",
+          "connection": "Koneksi",
+          "verify_tls": "Verifikasi sertifikat HTTPS",
+          "username": "Nama pengguna",
+          "password": "Kata sandi"
+        },
+        "data_description": {
+          "host": "Alamat IP atau nama host kamera atau perekam.",
+          "port": "Kosongkan untuk 80 (HTTP) atau 443 (HTTPS).",
+          "connection": "Otomatis mencoba HTTPS terlebih dahulu dan hanya beralih ke HTTP jika HTTPS tidak dapat terhubung.",
+          "username": "Setiap perangkat dapat memakai penggunanya sendiri. Disarankan pengguna operator khusus."
+        }
+      },
+      "duplicate": {
+        "title": "Kamera sudah dikenal",
+        "description": "Kamera ini sudah ditampilkan oleh {recorder} pada kanal {channel}. Tautkan ke kanal tersebut (satu perangkat, stream langsung dari kamera) atau tambahkan sebagai perangkat terpisah?",
+        "menu_options": {
+          "link_to_channel": "Tautkan ke kanal perekam",
+          "keep_separate": "Tambahkan sebagai perangkat terpisah"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Login gagal",
+        "description": "{device} ({host}) menolak kredensial yang tersimpan. Masukkan yang saat ini berlaku.",
+        "data": {
+          "username": "Nama pengguna",
+          "password": "Kata sandi"
+        }
+      },
+      "reconfigure": {
+        "title": "Ubah koneksi",
+        "description": "Alamat baru harus mengarah ke perangkat yang sama.",
+        "data": {
+          "host": "Host",
+          "port": "Port (opsional)",
+          "connection": "Koneksi",
+          "verify_tls": "Verifikasi sertifikat HTTPS",
+          "username": "Nama pengguna",
+          "password": "Kata sandi"
+        },
+        "data_description": {
+          "host": "Alamat IP atau nama host kamera atau perekam.",
+          "port": "Kosongkan untuk 80 (HTTP) atau 443 (HTTPS).",
+          "connection": "Otomatis mencoba HTTPS terlebih dahulu dan hanya beralih ke HTTP jika HTTPS tidak dapat terhubung.",
+          "username": "Setiap perangkat dapat memakai penggunanya sendiri. Disarankan pengguna operator khusus."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect tidak memiliki antarmuka resmi untuk pihak ketiga. Integrasi hanya membaca daftar perangkat dan statusnya; kata sandi disimpan di Home Assistant.",
+        "data": {
+          "account": "Akun Hik-Connect (e-mail atau telepon)",
+          "password": "Kata sandi"
+        }
+      },
+      "cloud_captcha": {
+        "title": "Kode verifikasi",
+        "description": "Masukkan kode yang ditampilkan di sini: {image}",
+        "data": {
+          "captcha": "Kode"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Login Hik-Connect",
+        "description": "Masukkan kata sandi {account}.",
+        "data": {
+          "password": "Kata sandi",
+          "captcha": "Kode verifikasi (hanya jika diminta)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Nama pengguna atau kata sandi ditolak. Tidak ada percobaan lagi, untuk menghindari penguncian.",
+      "locked_out": "Perangkat atau akun terkunci sementara setelah login gagal. Tunggu sebelum mencoba lagi.",
+      "name_not_resolved": "Nama host tidak dapat diresolusi.",
+      "tls_untrusted": "Sertifikat HTTPS tidak tepercaya. Nonaktifkan verifikasi sertifikat atau gunakan HTTP.",
+      "cannot_connect": "Tidak dapat terhubung.",
+      "not_isapi": "Alamat merespons, tetapi tidak seperti perangkat Hikvision ISAPI.",
+      "forbidden": "Pengguna tidak memiliki hak yang diperlukan.",
+      "unknown": "Kesalahan tak terduga.",
+      "wrong_camera": "Alamat ini milik kamera lain, bukan kamera pada kanal yang dipilih.",
+      "captcha_required": "Hik-Connect meminta kode verifikasi.",
+      "cloud_unavailable": "Hik-Connect saat ini tidak tersedia.",
+      "cloud_changed": "Hik-Connect menjawab dalam format yang tidak terduga.",
+      "cloud_rejected": "Hik-Connect menolak permintaan."
+    },
+    "abort": {
+      "already_configured": "Perangkat atau akun ini sudah disiapkan.",
+      "reauth_successful": "Kredensial diperbarui.",
+      "reconfigure_successful": "Koneksi diperbarui.",
+      "other_device": "Alamat ini milik perangkat lain. Tambahkan sebagai perangkat baru saja.",
+      "channel_already_linked": "Kanal perekam ini sudah memiliki koneksi langsung.",
+      "linked_to_channel": "Kamera telah ditautkan ke kanal perekam."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opsi",
+        "data": {
+          "event_path": "Cara peristiwa diterima",
+          "hold_seconds": "Tahan deteksi aktif selama (detik)",
+          "rtsp_port": "Port RTSP (opsional)",
+          "rtsp_transport": "Transport RTSP",
+          "target_sensors": "Sensor terpisah untuk orang dan kendaraan",
+          "playback": "Pemutaran di peramban media"
+        },
+        "data_description": {
+          "event_path": "Aliran peristiwa tidak memerlukan perubahan pada perangkat. Webhook mengharuskan perangkat mengirim ke Home Assistant.",
+          "hold_seconds": "Perangkat hanya melaporkan awal dari banyak deteksi; sensor tetap aktif selama ini setelah laporan terakhir.",
+          "playback": "Rekaman berformat H.265 atau H.264. 'MP4 sesuai rekaman' langsung dimulai, tetapi peramban hanya memutar H.265 dengan dukungan perangkat keras. 'Ubah ke H.264' bisa diputar di mana saja dan butuh banyak CPU. 'Streaming dari perangkat' membiarkan perangkat memutar rekaman melalui RTSP."
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "Notifikasi diterima di {path} (hanya jaringan lokal). Gunakan aksi 'Atur host notifikasi' atau antarmuka web perangkat untuk mengarahkan perangkat ke sana."
+      }
+    },
+    "abort": {
+      "no_options": "Akun Hik-Connect tidak memiliki opsi."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "Hubungkan kamera secara langsung"
+      },
+      "entry_type": "Koneksi kamera langsung",
+      "step": {
+        "user": {
+          "title": "Koneksi kamera langsung",
+          "description": "Menghubungkan kamera pada kanal perekam secara langsung, dengan alamat dan kredensialnya sendiri. Stream langsung lalu berasal dari kamera, yang juga membantu saat stream perekam dienkripsi.",
+          "data": {
+            "channel_id": "Kanal perekam",
+            "host": "Host",
+            "port": "Port (opsional)",
+            "connection": "Koneksi",
+            "verify_tls": "Verifikasi sertifikat HTTPS",
+            "username": "Nama pengguna",
+            "password": "Kata sandi",
+            "reuse_recorder_credentials": "Gunakan nama pengguna dan kata sandi perekam",
+            "event_source": "Ambil deteksi dari"
+          },
+          "data_description": {
+            "host": "Alamat yang digunakan Home Assistant untuk menjangkau kamera secara langsung (misalnya di subnet PoE perekam, jika dirutekan).",
+            "reuse_recorder_credentials": "Biarkan nonaktif jika kamera memiliki kredensialnya sendiri."
+          }
+        },
+        "reconfigure": {
+          "title": "Ubah koneksi kamera langsung",
+          "description": "Menghubungkan kamera pada kanal perekam secara langsung, dengan alamat dan kredensialnya sendiri. Stream langsung lalu berasal dari kamera, yang juga membantu saat stream perekam dienkripsi.",
+          "data": {
+            "channel_id": "Kanal perekam",
+            "host": "Host",
+            "port": "Port (opsional)",
+            "connection": "Koneksi",
+            "verify_tls": "Verifikasi sertifikat HTTPS",
+            "username": "Nama pengguna",
+            "password": "Kata sandi",
+            "reuse_recorder_credentials": "Gunakan nama pengguna dan kata sandi perekam",
+            "event_source": "Ambil deteksi dari"
+          },
+          "data_description": {
+            "host": "Alamat yang digunakan Home Assistant untuk menjangkau kamera secara langsung (misalnya di subnet PoE perekam, jika dirutekan).",
+            "reuse_recorder_credentials": "Biarkan nonaktif jika kamera memiliki kredensialnya sendiri."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "Nama pengguna atau kata sandi ditolak. Tidak ada percobaan lagi, untuk menghindari penguncian.",
+        "locked_out": "Perangkat atau akun terkunci sementara setelah login gagal. Tunggu sebelum mencoba lagi.",
+        "name_not_resolved": "Nama host tidak dapat diresolusi.",
+        "tls_untrusted": "Sertifikat HTTPS tidak tepercaya. Nonaktifkan verifikasi sertifikat atau gunakan HTTP.",
+        "cannot_connect": "Tidak dapat terhubung.",
+        "not_isapi": "Alamat merespons, tetapi tidak seperti perangkat Hikvision ISAPI.",
+        "forbidden": "Pengguna tidak memiliki hak yang diperlukan.",
+        "unknown": "Kesalahan tak terduga.",
+        "wrong_camera": "Alamat ini milik kamera lain, bukan kamera pada kanal yang dipilih.",
+        "captcha_required": "Hik-Connect meminta kode verifikasi.",
+        "cloud_unavailable": "Hik-Connect saat ini tidak tersedia.",
+        "cloud_changed": "Hik-Connect menjawab dalam format yang tidak terduga.",
+        "cloud_rejected": "Hik-Connect menolak permintaan."
+      },
+      "abort": {
+        "not_loaded": "Perekam harus dimuat terlebih dahulu.",
+        "not_a_recorder": "Hanya perekam yang memiliki kanal untuk ditautkan.",
+        "no_free_channel": "Setiap kanal sudah memiliki koneksi langsung.",
+        "reconfigure_successful": "Koneksi langsung diperbarui."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Gerakan"
+      },
+      "tamper": {
+        "name": "Sabotase"
+      },
+      "video_loss": {
+        "name": "Kehilangan video"
+      },
+      "scene_change": {
+        "name": "Perubahan adegan"
+      },
+      "intrusion": {
+        "name": "Penyusupan"
+      },
+      "line_crossing": {
+        "name": "Lintas garis"
+      },
+      "region_entrance": {
+        "name": "Masuk area"
+      },
+      "region_exiting": {
+        "name": "Keluar area"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "Tidak fokus"
+      },
+      "audio_exception": {
+        "name": "Anomali audio"
+      },
+      "target_human": {
+        "name": "Orang"
+      },
+      "target_vehicle": {
+        "name": "Kendaraan"
+      },
+      "alarm_input": {
+        "name": "Input alarm {port}"
+      },
+      "channel_online": {
+        "name": "Kamera terhubung"
+      },
+      "storage_problem": {
+        "name": "Masalah penyimpanan"
+      },
+      "event_link": {
+        "name": "Koneksi peristiwa"
+      },
+      "stream_encryption": {
+        "name": "Enkripsi stream"
+      },
+      "cloud_online": {
+        "name": "Koneksi cloud"
+      },
+      "cloud_stream_encryption": {
+        "name": "Enkripsi stream"
+      },
+      "recording": {
+        "name": "Perekaman"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Deteksi gerakan"
+      },
+      "tamper_detection": {
+        "name": "Deteksi sabotase"
+      },
+      "scene_change_detection": {
+        "name": "Deteksi perubahan adegan"
+      },
+      "intrusion_detection": {
+        "name": "Deteksi penyusupan"
+      },
+      "line_crossing_detection": {
+        "name": "Deteksi lintas garis"
+      },
+      "region_entrance_detection": {
+        "name": "Deteksi masuk area"
+      },
+      "region_exiting_detection": {
+        "name": "Deteksi keluar area"
+      },
+      "alarm_output": {
+        "name": "Output alarm {port}"
+      },
+      "blc": {
+        "name": "Kompensasi cahaya latar"
+      },
+      "hlc": {
+        "name": "Kompensasi cahaya terang"
+      },
+      "overexposure_suppression": {
+        "name": "Penekanan pencahayaan berlebih"
+      },
+      "image_flip": {
+        "name": "Balik gambar"
+      },
+      "stabilization": {
+        "name": "Stabilisasi gambar"
+      },
+      "lens_correction": {
+        "name": "Koreksi distorsi lensa"
+      },
+      "video_loss_detection": {
+        "name": "Deteksi kehilangan video"
+      },
+      "input_armed": {
+        "name": "Input alarm {port} aktif"
+      },
+      "park_action": {
+        "name": "Aksi parkir"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "Stream utama"
+      },
+      "sub_stream": {
+        "name": "Sub stream"
+      },
+      "third_stream": {
+        "name": "Stream ketiga"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "Deteksi",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Gerakan",
+              "intrusion": "Penyusupan",
+              "line_crossing": "Lintas garis",
+              "region_entrance": "Masuk area",
+              "region_exiting": "Keluar area",
+              "face": "Wajah",
+              "anpr": "Pelat nomor"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "Perubahan koneksi cloud",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "Online",
+              "went_offline": "Offline"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "Penyimpanan {unit}",
+        "state": {
+          "ok": "OK",
+          "unformatted": "Belum diformat",
+          "error": "Kesalahan",
+          "idle": "Diam",
+          "sleeping": "Tidur",
+          "abnormal": "Tidak normal",
+          "full": "Penuh",
+          "unknown": "Tidak diketahui"
+        }
+      },
+      "storage_free": {
+        "name": "Penyimpanan {unit} bebas"
+      },
+      "storage_capacity": {
+        "name": "Penyimpanan {unit} kapasitas"
+      },
+      "event_latency": {
+        "name": "Penundaan peristiwa"
+      },
+      "boot_time": {
+        "name": "Boot terakhir"
+      },
+      "cpu_load": {
+        "name": "Beban CPU"
+      },
+      "memory_use": {
+        "name": "Penggunaan memori"
+      },
+      "reboots": {
+        "name": "Jumlah mulai ulang",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "Stempel waktu yang dilaporkan"
+          }
+        }
+      },
+      "network_address": {
+        "name": "Alamat IP"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Mulai ulang"
+      },
+      "rescan": {
+        "name": "Baca ulang kemampuan"
+      },
+      "cloud_unlock": {
+        "name": "Buka pintu (cloud)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ geser kiri"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ geser kanan"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ miring ke atas"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ miring ke bawah"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ perbesar"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ perkecil"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "Preset PTZ"
+      },
+      "day_night": {
+        "name": "Mode siang/malam",
+        "state": {
+          "day": "Siang",
+          "night": "Malam",
+          "auto": "Otomatis",
+          "schedule": "Jadwal",
+          "eventtrigger": "Pemicu peristiwa"
+        }
+      },
+      "supplement_light": {
+        "name": "Cahaya tambahan",
+        "state": {
+          "eventintelligence": "Pintar (peristiwa)",
+          "colorvuwhitelight": "Cahaya putih",
+          "irlight": "Cahaya IR",
+          "close": "Mati"
+        }
+      },
+      "light_brightness_control": {
+        "name": "Kontrol kecerahan cahaya",
+        "state": {
+          "auto": "Otomatis",
+          "manual": "Manual"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "Mati",
+          "open": "Nyala",
+          "auto": "Otomatis"
+        }
+      },
+      "blc_area": {
+        "name": "Area kompensasi cahaya latar",
+        "state": {
+          "close": "Mati",
+          "up": "Atas",
+          "down": "Bawah",
+          "left": "Kiri",
+          "right": "Kanan",
+          "center": "Tengah",
+          "region": "Area khusus",
+          "auto": "Otomatis"
+        }
+      },
+      "noise_reduction": {
+        "name": "Pengurangan derau",
+        "state": {
+          "close": "Mati",
+          "general": "Normal",
+          "advanced": "Ahli"
+        }
+      },
+      "defog": {
+        "name": "Penghilang kabut",
+        "state": {
+          "close": "Mati",
+          "open": "Nyala",
+          "auto": "Otomatis"
+        }
+      },
+      "white_balance": {
+        "name": "Keseimbangan putih",
+        "state": {
+          "manual": "Manual",
+          "auto1": "Otomatis 1",
+          "auto2": "Otomatis 2",
+          "locked": "Terkunci",
+          "daylightlamp": "Lampu neon",
+          "incandescentlight": "Lampu pijar",
+          "warmlight": "Cahaya hangat",
+          "naturallight": "Cahaya alami"
+        }
+      },
+      "exposure_mode": {
+        "name": "Mode eksposur",
+        "state": {
+          "auto": "Otomatis",
+          "manual": "Manual"
+        }
+      },
+      "shutter": {
+        "name": "Rana"
+      },
+      "power_line_frequency": {
+        "name": "Frekuensi listrik",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "Arah balik",
+        "state": {
+          "leftright": "Kiri/kanan",
+          "updown": "Atas/bawah",
+          "center": "Tengah"
+        }
+      },
+      "strobe_frequency": {
+        "name": "Frekuensi lampu strobo",
+        "state": {
+          "high": "Tinggi",
+          "medium": "Sedang",
+          "low": "Rendah",
+          "normallyon": "Selalu menyala"
+        }
+      },
+      "siren_sound": {
+        "name": "Suara sirene"
+      },
+      "park_action_type": {
+        "name": "Jenis aksi parkir",
+        "state": {
+          "autoscan": "Pindai otomatis",
+          "framescan": "Pindai bingkai",
+          "randomscan": "Pindai acak",
+          "patrol": "Patroli",
+          "pattern": "Pola",
+          "preset": "Preset",
+          "panoramascan": "Pindai panorama",
+          "tiltscan": "Pindai kemiringan"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "Sensitivitas siang/malam"
+      },
+      "day_night_delay": {
+        "name": "Penundaan siang/malam"
+      },
+      "white_light_brightness": {
+        "name": "Kecerahan cahaya putih"
+      },
+      "ir_light_brightness": {
+        "name": "Kecerahan cahaya IR"
+      },
+      "white_light_duration": {
+        "name": "Durasi cahaya putih"
+      },
+      "brightness": {
+        "name": "Kecerahan"
+      },
+      "contrast": {
+        "name": "Kontras"
+      },
+      "saturation": {
+        "name": "Saturasi"
+      },
+      "sharpness": {
+        "name": "Ketajaman"
+      },
+      "wdr_level": {
+        "name": "Level WDR"
+      },
+      "hlc_level": {
+        "name": "Level kompensasi cahaya terang"
+      },
+      "noise_reduction_level": {
+        "name": "Level pengurangan derau"
+      },
+      "defog_level": {
+        "name": "Level penghilang kabut"
+      },
+      "white_balance_red": {
+        "name": "Keseimbangan putih merah"
+      },
+      "white_balance_blue": {
+        "name": "Keseimbangan putih biru"
+      },
+      "gain_limit": {
+        "name": "Batas gain"
+      },
+      "strobe_duration": {
+        "name": "Durasi lampu strobo"
+      },
+      "siren_volume": {
+        "name": "Volume sirene"
+      },
+      "siren_repeats": {
+        "name": "Pengulangan sirene"
+      },
+      "speaker_volume": {
+        "name": "Volume speaker"
+      },
+      "microphone_volume": {
+        "name": "Volume mikrofon"
+      },
+      "park_time": {
+        "name": "Waktu parkir"
+      },
+      "park_action_number": {
+        "name": "Nomor aksi parkir"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: login terkunci",
+      "description": "Perangkat mengunci login setelah percobaan gagal. Integrasi berhenti sekitar {minutes} menit dan tidak mencoba lagi sebelumnya."
+    },
+    "channel_link_auth": {
+      "title": "{device}: koneksi langsung ke {channel} ditolak",
+      "description": "Kamera menolak kredensial koneksi langsung. Perekam digunakan sebagai gantinya. Perbarui koneksi langsung kanal ini."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: kamera lain di {channel}",
+      "description": "Koneksi langsung kanal ini mengarah ke kamera yang berbeda dari kamera yang kini terhubung ke perekam. Tidak digunakan sampai diperbaiki."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} di {channel} tidak dilaporkan",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Aktifkan pelaporan",
+            "description": "Perangkat mendeteksi {kind} tetapi tidak mengirimkannya ke aliran peristiwa, karena tautan 'Beri tahu pusat pengawasan' nonaktif. Konfirmasi untuk mengaktifkan hanya tautan itu (pemicu {trigger}); tidak ada yang lain berubah. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "Perangkat tidak menerima perubahan."
+        },
+        "abort": {
+          "not_loaded": "Perangkat tidak dimuat."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: tidak ada area yang digambar untuk {kind} di {channel}",
+      "description": "Deteksi aktif, tetapi tidak ada garis atau area yang digambar, sehingga tidak dapat terpicu. Gambar di antarmuka web perangkat."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} nonaktif di {channel}",
+      "description": "Deteksi ini didukung tetapi dimatikan. Nyalakan dengan entitas sakelarnya jika ingin menggunakannya."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} di {channel} hanya untuk {detail}",
+      "description": "Perekam hanya melaporkan deteksi ini untuk jenis target yang tercantum. Gerakan lain tidak akan memicunya."
+    },
+    "stream_encrypted": {
+      "title": "{device}: stream video dienkripsi oleh Hik-Connect",
+      "description": "Enkripsi stream untuk Hik-Connect aktif. Home Assistant tidak dapat mendekode stream ini; snapshot dan peristiwa tetap berfungsi. Matikan 'Enkripsi stream' di pengaturan akses platform perangkat, atau hubungkan kamera yang terdampak secara langsung (koneksi kamera langsung)."
+    },
+    "default_password": {
+      "title": "{device}: kata sandi lemah atau bawaan",
+      "description": "Perangkat melaporkan bahwa kata sandinya lemah atau masih bawaan. Ubah di perangkat."
+    },
+    "basic_over_http": {
+      "title": "{device}: kata sandi dikirim tanpa perlindungan",
+      "description": "Perangkat hanya menerima autentikasi Basic melalui HTTP, sehingga kata sandi dikirim sebagai teks biasa. Aktifkan autentikasi Digest atau HTTPS di perangkat."
+    },
+    "clock_skew": {
+      "title": "{device}: jam meleset {detail} d",
+      "description": "Jam perangkat berbeda cukup jauh dari Home Assistant. Waktu peristiwa dikoreksi, tetapi rekaman memiliki waktu yang salah. Konfigurasikan NTP di perangkat."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "Perangkat menolak kredensial."
+    },
+    "locked_out": {
+      "message": "Perangkat telah mengunci login. Penyiapan dijeda agar penguncian tidak diperpanjang."
+    },
+    "not_isapi": {
+      "message": "Perangkat tidak merespons seperti perangkat Hikvision ISAPI."
+    },
+    "unreachable": {
+      "message": "{host} tidak dapat dijangkau."
+    },
+    "other_device": {
+      "message": "Perangkat lain kini merespons di {host}. Gunakan 'Konfigurasi ulang' atau tambahkan sebagai perangkat baru."
+    },
+    "write_failed": {
+      "message": "Perangkat tidak menerima perubahan ({reason})."
+    },
+    "unknown_device": {
+      "message": "Perangkat yang dipilih bukan milik Hikvision Bridge."
+    },
+    "channel_needed": {
+      "message": "Pilih kamera atau perangkat kanal."
+    },
+    "confirm_needed": {
+      "message": "Aksi ini mengubah perangkat. Aktifkan 'Konfirmasi perubahan' untuk menjalankannya."
+    },
+    "bad_path": {
+      "message": "Hanya jalur di bawah /ISAPI/ yang diizinkan."
+    },
+    "webhook_off": {
+      "message": "Aktifkan webhook di opsi terlebih dahulu."
+    },
+    "no_url": {
+      "message": "Home Assistant tidak memiliki URL lokal yang dikonfigurasi."
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect menolak login."
+    },
+    "cloud_failed": {
+      "message": "Permintaan Hik-Connect gagal ({reason})."
+    },
+    "cloud_gone": {
+      "message": "Perangkat sudah tidak ada di akun Hik-Connect."
+    },
+    "setting_inactive": {
+      "message": "Pengaturan ini tidak aktif dalam mode kamera saat ini."
+    },
+    "read_failed": {
+      "message": "Perangkat tidak menjawab permintaan ({reason})."
+    },
+    "bad_period": {
+      "message": "Akhir harus setelah awal dan paling lambat satu hari kemudian."
+    },
+    "no_recordings": {
+      "message": "Tidak ada rekaman untuk periode ini."
+    },
+    "too_many_recordings": {
+      "message": "Periode ini berisi {count} rekaman; paling banyak {limit} dapat disimpan sekaligus."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant tidak boleh menulis ke folder medianya."
+    },
+    "recording_encrypted": {
+      "message": "Perangkat mengenkripsi rekamannya (enkripsi stream), sehingga tidak dapat diputar atau diubah. Matikan enkripsi stream atau gunakan kartu memori kamera."
+    },
+    "conversion_failed": {
+      "message": "Rekaman tidak dapat diubah."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg tidak tersedia di Home Assistant."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "Otomatis",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "Aliran peristiwa (disarankan)",
+        "webhook": "Webhook",
+        "both": "Keduanya"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "Perekam",
+        "camera": "Kamera"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 sesuai rekaman (disarankan)",
+        "h264": "Ubah ke H.264 (bisa di mana saja, beban CPU tinggi)",
+        "stream": "Streaming dari perangkat (RTSP ke HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "Otomatis",
+        "recorder": "Perekam",
+        "card": "Kartu memori"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 sesuai rekaman",
+        "h264": "MP4 yang diubah ke H.264",
+        "ts": "MPEG-TS sesuai rekaman",
+        "original": "File asli (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "Semua",
+        "continuous": "Berkelanjutan",
+        "motion": "Gerakan",
+        "alarm": "Input alarm",
+        "event": "Peristiwa cerdas",
+        "manual": "Manual",
+        "other": "Lainnya"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "Aktifkan pelaporan peristiwa",
+      "description": "Mengaktifkan tautan 'Beri tahu pusat pengawasan' untuk deteksi yang belum memilikinya. Berjalan sebagai pratinjau kecuali 'Hanya pratinjau' dimatikan.",
+      "fields": {
+        "device_id": {
+          "name": "Perangkat",
+          "description": "Kamera, kanal, atau perekam."
+        },
+        "dry_run": {
+          "name": "Hanya pratinjau",
+          "description": "Hanya cantumkan apa yang akan berubah."
+        },
+        "kinds": {
+          "name": "Deteksi",
+          "description": "Batasi ke jenis ini; kosong berarti semua."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "Permintaan ISAPI",
+      "description": "Mengirim satu permintaan ISAPI dan mengembalikan jawaban tanpa rahasia. Metode yang mengubah memerlukan konfirmasi.",
+      "fields": {
+        "device_id": {
+          "name": "Perangkat",
+          "description": "Kamera, kanal, atau perekam."
+        },
+        "method": {
+          "name": "Metode",
+          "description": "Metode HTTP."
+        },
+        "path": {
+          "name": "Jalur",
+          "description": "Jalur yang diawali /ISAPI/."
+        },
+        "body": {
+          "name": "Isi",
+          "description": "Isi XML atau JSON untuk metode yang mengubah."
+        },
+        "confirm_write": {
+          "name": "Konfirmasi perubahan",
+          "description": "Diperlukan untuk apa pun yang mengubah perangkat."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "Gerakkan PTZ",
+      "description": "Menggerakkan kamera PTZ sebentar.",
+      "fields": {
+        "device_id": {
+          "name": "Perangkat",
+          "description": "Kamera, kanal, atau perekam."
+        },
+        "pan": {
+          "name": "Geser",
+          "description": "Kecepatan, negatif berarti kiri."
+        },
+        "tilt": {
+          "name": "Miring",
+          "description": "Kecepatan, negatif berarti bawah."
+        },
+        "zoom": {
+          "name": "Zoom",
+          "description": "Kecepatan, negatif memperkecil."
+        },
+        "duration": {
+          "name": "Durasi",
+          "description": "Detik sebelum berhenti."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "Preset PTZ",
+      "description": "Memindahkan kamera PTZ ke preset yang tersimpan.",
+      "fields": {
+        "device_id": {
+          "name": "Perangkat",
+          "description": "Kamera, kanal, atau perekam."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "Nomor preset."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "Atur host notifikasi",
+      "description": "Mengarahkan satu slot host notifikasi perangkat ke webhook Home Assistant ini.",
+      "fields": {
+        "device_id": {
+          "name": "Perangkat",
+          "description": "Kamera, kanal, atau perekam."
+        },
+        "slot": {
+          "name": "Slot",
+          "description": "Nomor host notifikasi pada perangkat."
+        },
+        "confirm_write": {
+          "name": "Konfirmasi perubahan",
+          "description": "Diperlukan untuk apa pun yang mengubah perangkat."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "Cari rekaman",
+      "description": "Menampilkan file rekaman kamera atau saluran dalam suatu periode.",
+      "fields": {
+        "device_id": {
+          "name": "Perangkat",
+          "description": "Kamera atau saluran."
+        },
+        "start": {
+          "name": "Mulai",
+          "description": "Awal periode."
+        },
+        "end": {
+          "name": "Akhir",
+          "description": "Akhir periode, paling lambat satu hari setelah mulai."
+        },
+        "source": {
+          "name": "Sumber",
+          "description": "Perekam atau kartu memori kamera; mode otomatis mencoba perekam terlebih dahulu."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "Simpan rekaman",
+      "description": "Menyimpan rekaman suatu periode ke folder media 'hikvision_bridge'.",
+      "fields": {
+        "device_id": {
+          "name": "Perangkat",
+          "description": "Kamera atau saluran."
+        },
+        "start": {
+          "name": "Mulai",
+          "description": "Awal periode."
+        },
+        "end": {
+          "name": "Akhir",
+          "description": "Akhir periode, paling lambat satu hari setelah mulai."
+        },
+        "source": {
+          "name": "Sumber",
+          "description": "Perekam atau kartu memori kamera; mode otomatis mencoba perekam terlebih dahulu."
+        },
+        "format": {
+          "name": "Format",
+          "description": "MP4 dan MPEG-TS mempertahankan video rekaman; H.264 mengubahnya, yang memakan waktu lama di mesin kecil."
+        },
+        "trim": {
+          "name": "Potong sesuai periode",
+          "description": "Memotong file sesuai periode; file asli tidak pernah dipotong."
+        }
+      }
+    }
+  }
+}

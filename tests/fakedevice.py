@@ -7,6 +7,7 @@ logins and locks like a real device, records writes, and streams alert parts.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 import hashlib
 import json
@@ -47,6 +48,8 @@ class FakeDevice:
     # Refuse a request whose nonce count is not above the last one seen for its nonce.
     strict_count: bool = True
     counts: dict[str, int] = field(default_factory=dict)
+    # Answers computed from the request body, by path (search, download).
+    responders: dict[str, Callable[[str, str], web.StreamResponse]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         folder = FIXTURES / self.profile
@@ -112,6 +115,10 @@ class FakeDevice:
         path = request.path_qs
         if request.path == "/ISAPI/Event/notification/alertStream":
             return await self._stream(request)
+        if request.path in self.responders:
+            body = await request.text()
+            self.writes.append((request.method, path, body))
+            return self.responders[request.path](request.method, body)
         if request.method in ("PUT", "POST"):
             body = await request.text()
             self.writes.append((request.method, path, body))

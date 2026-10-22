@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from custom_components.hikvision_bridge.model.features import ptz
+from custom_components.hikvision_bridge.model.features import park, ptz
+from custom_components.hikvision_bridge.model.features.image import ImageValue
 from custom_components.hikvision_bridge.wire.xmlview import parse
 
 NS = 'version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema"'
@@ -41,3 +42,32 @@ def test_zoom_only_lens() -> None:
 def test_no_ptz() -> None:
     assert ptz.parse_capabilities(None, None) is None
     assert ptz.parse_capabilities(parse(f"<PTZChanelCap {NS}/>"), None) is None
+
+
+PARK = (
+    f"<ParkAction {NS}><enabled>false</enabled><Parktime>30</Parktime>"
+    "<Action><ActionType>preset</ActionType><ActionNum>1</ActionNum></Action></ParkAction>"
+)
+PARK_CAPS = (
+    f'<ParkAction {NS}><enabled opt="true,false"/><Parktime min="5" max="300"/>'
+    '<Action><ActionType opt="patrol,pattern,preset"/><ActionNum min="1" max="8"/></Action>'
+    "</ParkAction>"
+)
+
+
+def test_park_action() -> None:
+    found = park.parse_capabilities(parse(PARK), parse(PARK_CAPS))
+    assert set(found) == {"park_action", "park_time", "park_action_type", "park_action_number"}
+    assert (found["park_time"].minimum, found["park_time"].maximum) == (5, 300)
+    assert found["park_action_type"].options == ("patrol", "pattern", "preset")
+    assert found["park_action_number"].maximum == 8
+    values = park.parse_values(parse(PARK))
+    assert values["park_action_type"] == ImageValue("Action/ActionType", "preset")
+    assert values["park_time"].value == "30"
+
+
+def test_park_action_without_capabilities() -> None:
+    found = park.parse_capabilities(parse(PARK), None)
+    assert (found["park_time"].minimum, found["park_time"].maximum) == park.DEFAULT_TIME
+    assert found["park_action_type"].options == park.DEFAULT_TYPES
+    assert park.parse_capabilities(None, parse(PARK_CAPS)) == {}

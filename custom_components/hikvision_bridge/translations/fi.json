@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "Kamera tai tallennin lähiverkossa",
+          "cloud": "Hik-Connect-tili (pilvi)"
+        }
+      },
+      "device": {
+        "title": "Yhdistä laite",
+        "description": "Asennuksen aikana käytetään vain lukuoikeutta.",
+        "data": {
+          "host": "Isäntä",
+          "port": "Portti (valinnainen)",
+          "connection": "Yhteys",
+          "verify_tls": "Tarkista HTTPS-varmenne",
+          "username": "Käyttäjätunnus",
+          "password": "Salasana"
+        },
+        "data_description": {
+          "host": "Kameran tai tallentimen IP-osoite tai isäntänimi.",
+          "port": "Jätä tyhjäksi käyttääksesi porttia 80 (HTTP) tai 443 (HTTPS).",
+          "connection": "Automaattinen kokeilee ensin HTTPS:ää ja siirtyy HTTP:hen vain, jos HTTPS ei saa yhteyttä.",
+          "username": "Jokaisella laitteella voi olla oma käyttäjänsä. Erillistä operaattorikäyttäjää suositellaan."
+        }
+      },
+      "duplicate": {
+        "title": "Kamera on jo tunnettu",
+        "description": "Tämä kamera näkyy jo laitteessa {recorder} kanavalla {channel}. Linkitetäänkö se tähän kanavaan (yksi laite, suoratoisto suoraan kamerasta) vai lisätäänkö erillisenä laitteena?",
+        "menu_options": {
+          "link_to_channel": "Linkitä tallentimen kanavaan",
+          "keep_separate": "Lisää erillisenä laitteena"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Kirjautuminen epäonnistui",
+        "description": "{device} ({host}) hylkäsi tallennetut tunnukset. Anna nykyiset.",
+        "data": {
+          "username": "Käyttäjätunnus",
+          "password": "Salasana"
+        }
+      },
+      "reconfigure": {
+        "title": "Muuta yhteyttä",
+        "description": "Uuden osoitteen on johdettava samaan laitteeseen.",
+        "data": {
+          "host": "Isäntä",
+          "port": "Portti (valinnainen)",
+          "connection": "Yhteys",
+          "verify_tls": "Tarkista HTTPS-varmenne",
+          "username": "Käyttäjätunnus",
+          "password": "Salasana"
+        },
+        "data_description": {
+          "host": "Kameran tai tallentimen IP-osoite tai isäntänimi.",
+          "port": "Jätä tyhjäksi käyttääksesi porttia 80 (HTTP) tai 443 (HTTPS).",
+          "connection": "Automaattinen kokeilee ensin HTTPS:ää ja siirtyy HTTP:hen vain, jos HTTPS ei saa yhteyttä.",
+          "username": "Jokaisella laitteella voi olla oma käyttäjänsä. Erillistä operaattorikäyttäjää suositellaan."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connectilla ei ole virallista rajapintaa kolmansille osapuolille. Integraatio lukee vain laiteluettelon ja tilan; salasana tallennetaan Home Assistantiin.",
+        "data": {
+          "account": "Hik-Connect-tili (sähköposti tai puhelin)",
+          "password": "Salasana"
+        }
+      },
+      "cloud_captcha": {
+        "title": "Vahvistuskoodi",
+        "description": "Anna tässä näkyvä koodi: {image}",
+        "data": {
+          "captcha": "Koodi"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Hik-Connect-kirjautuminen",
+        "description": "Anna tilin {account} salasana.",
+        "data": {
+          "password": "Salasana",
+          "captcha": "Vahvistuskoodi (vain jos pyydetään)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Käyttäjätunnus tai salasana hylättiin. Uusia yrityksiä ei tehdä lukituksen välttämiseksi.",
+      "locked_out": "Laite tai tili on tilapäisesti lukittu epäonnistuneiden kirjautumisten jälkeen. Odota ennen uutta yritystä.",
+      "name_not_resolved": "Isäntänimeä ei voitu selvittää.",
+      "tls_untrusted": "HTTPS-varmenteeseen ei luoteta. Poista varmenteen tarkistus käytöstä tai käytä HTTP:tä.",
+      "cannot_connect": "Yhteyttä ei voi muodostaa.",
+      "not_isapi": "Osoite vastaa, mutta ei kuten Hikvision ISAPI -laite.",
+      "forbidden": "Käyttäjällä ei ole tarvittavia oikeuksia.",
+      "unknown": "Odottamaton virhe.",
+      "wrong_camera": "Tämä osoite kuuluu eri kameralle kuin valitulla kanavalla oleva.",
+      "captcha_required": "Hik-Connect pyytää vahvistuskoodia.",
+      "cloud_unavailable": "Hik-Connect ei ole tällä hetkellä käytettävissä.",
+      "cloud_changed": "Hik-Connect vastasi odottamattomassa muodossa.",
+      "cloud_rejected": "Hik-Connect hylkäsi pyynnön."
+    },
+    "abort": {
+      "already_configured": "Tämä laite tai tili on jo määritetty.",
+      "reauth_successful": "Tunnukset päivitetty.",
+      "reconfigure_successful": "Yhteys päivitetty.",
+      "other_device": "Tämä osoite kuuluu toiselle laitteelle. Lisää se sen sijaan uutena laitteena.",
+      "channel_already_linked": "Tällä tallentimen kanavalla on jo suora yhteys.",
+      "linked_to_channel": "Kamera linkitettiin tallentimen kanavaan."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Asetukset",
+        "data": {
+          "event_path": "Miten tapahtumat saapuvat",
+          "hold_seconds": "Pidä tunnistukset päällä (sekuntia)",
+          "rtsp_port": "RTSP-portti (valinnainen)",
+          "rtsp_transport": "RTSP-siirto",
+          "target_sensors": "Erilliset anturit ihmisille ja ajoneuvoille",
+          "playback": "Toisto mediaselaimessa"
+        },
+        "data_description": {
+          "event_path": "Tapahtumavirta ei vaadi muutoksia laitteeseen. Webhook edellyttää, että laite lähettää Home Assistantiin.",
+          "hold_seconds": "Laitteet ilmoittavat monista tunnistuksista vain alun; anturi pysyy päällä näin kauan viimeisen ilmoituksen jälkeen.",
+          "playback": "Tallenteet ovat H.265- tai H.264-muodossa. ”MP4 tallennettuna” alkaa heti, mutta selaimet toistavat H.265:tä vain laitteistotuella. ”Muunna H.264:ksi” toimii kaikkialla ja vaatii paljon suoritinta. ”Suoratoista laitteelta” antaa laitteen toistaa tallenteen RTSP:n kautta."
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "Ilmoitukset vastaanotetaan osoitteessa {path} (vain lähiverkko). Ohjaa laite sinne toiminnolla 'Aseta ilmoitusisäntä' tai laitteen verkkokäyttöliittymässä."
+      }
+    },
+    "abort": {
+      "no_options": "Hik-Connect-tilillä ei ole asetuksia."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "Yhdistä kamera suoraan"
+      },
+      "entry_type": "Suora kamerayhteys",
+      "step": {
+        "user": {
+          "title": "Suora kamerayhteys",
+          "description": "Yhdistää tallentimen kanavan kameran suoraan omalla osoitteella ja tunnuksilla. Suora kuva tulee silloin kamerasta, mikä auttaa myös, kun tallentimen virta on salattu.",
+          "data": {
+            "channel_id": "Tallentimen kanava",
+            "host": "Isäntä",
+            "port": "Portti (valinnainen)",
+            "connection": "Yhteys",
+            "verify_tls": "Tarkista HTTPS-varmenne",
+            "username": "Käyttäjätunnus",
+            "password": "Salasana",
+            "reuse_recorder_credentials": "Käytä tallentimen käyttäjätunnusta ja salasanaa",
+            "event_source": "Ota tunnistukset kohteesta"
+          },
+          "data_description": {
+            "host": "Osoite, josta Home Assistant tavoittaa kameran suoraan (esimerkiksi tallentimen PoE-aliverkossa, jos se on reititetty).",
+            "reuse_recorder_credentials": "Jätä pois päältä, jos kameralla on omat tunnukset."
+          }
+        },
+        "reconfigure": {
+          "title": "Muuta suoraa kamerayhteyttä",
+          "description": "Yhdistää tallentimen kanavan kameran suoraan omalla osoitteella ja tunnuksilla. Suora kuva tulee silloin kamerasta, mikä auttaa myös, kun tallentimen virta on salattu.",
+          "data": {
+            "channel_id": "Tallentimen kanava",
+            "host": "Isäntä",
+            "port": "Portti (valinnainen)",
+            "connection": "Yhteys",
+            "verify_tls": "Tarkista HTTPS-varmenne",
+            "username": "Käyttäjätunnus",
+            "password": "Salasana",
+            "reuse_recorder_credentials": "Käytä tallentimen käyttäjätunnusta ja salasanaa",
+            "event_source": "Ota tunnistukset kohteesta"
+          },
+          "data_description": {
+            "host": "Osoite, josta Home Assistant tavoittaa kameran suoraan (esimerkiksi tallentimen PoE-aliverkossa, jos se on reititetty).",
+            "reuse_recorder_credentials": "Jätä pois päältä, jos kameralla on omat tunnukset."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "Käyttäjätunnus tai salasana hylättiin. Uusia yrityksiä ei tehdä lukituksen välttämiseksi.",
+        "locked_out": "Laite tai tili on tilapäisesti lukittu epäonnistuneiden kirjautumisten jälkeen. Odota ennen uutta yritystä.",
+        "name_not_resolved": "Isäntänimeä ei voitu selvittää.",
+        "tls_untrusted": "HTTPS-varmenteeseen ei luoteta. Poista varmenteen tarkistus käytöstä tai käytä HTTP:tä.",
+        "cannot_connect": "Yhteyttä ei voi muodostaa.",
+        "not_isapi": "Osoite vastaa, mutta ei kuten Hikvision ISAPI -laite.",
+        "forbidden": "Käyttäjällä ei ole tarvittavia oikeuksia.",
+        "unknown": "Odottamaton virhe.",
+        "wrong_camera": "Tämä osoite kuuluu eri kameralle kuin valitulla kanavalla oleva.",
+        "captcha_required": "Hik-Connect pyytää vahvistuskoodia.",
+        "cloud_unavailable": "Hik-Connect ei ole tällä hetkellä käytettävissä.",
+        "cloud_changed": "Hik-Connect vastasi odottamattomassa muodossa.",
+        "cloud_rejected": "Hik-Connect hylkäsi pyynnön."
+      },
+      "abort": {
+        "not_loaded": "Tallennin on ladattava ensin.",
+        "not_a_recorder": "Vain tallentimilla on linkitettäviä kanavia.",
+        "no_free_channel": "Jokaisella kanavalla on jo suora yhteys.",
+        "reconfigure_successful": "Suora yhteys päivitetty."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Liike"
+      },
+      "tamper": {
+        "name": "Sabotointi"
+      },
+      "video_loss": {
+        "name": "Kuvan menetys"
+      },
+      "scene_change": {
+        "name": "Näkymän muutos"
+      },
+      "intrusion": {
+        "name": "Tunkeutuminen"
+      },
+      "line_crossing": {
+        "name": "Linjan ylitys"
+      },
+      "region_entrance": {
+        "name": "Alueelle saapuminen"
+      },
+      "region_exiting": {
+        "name": "Alueelta poistuminen"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "Epätarkkuus"
+      },
+      "audio_exception": {
+        "name": "Äänipoikkeama"
+      },
+      "target_human": {
+        "name": "Henkilö"
+      },
+      "target_vehicle": {
+        "name": "Ajoneuvo"
+      },
+      "alarm_input": {
+        "name": "Hälytystulo {port}"
+      },
+      "channel_online": {
+        "name": "Kamera yhdistetty"
+      },
+      "storage_problem": {
+        "name": "Tallennusongelma"
+      },
+      "event_link": {
+        "name": "Tapahtumayhteys"
+      },
+      "stream_encryption": {
+        "name": "Virran salaus"
+      },
+      "cloud_online": {
+        "name": "Pilviyhteys"
+      },
+      "cloud_stream_encryption": {
+        "name": "Virran salaus"
+      },
+      "recording": {
+        "name": "Tallennus"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Liiketunnistus"
+      },
+      "tamper_detection": {
+        "name": "Sabotoinnin tunnistus"
+      },
+      "scene_change_detection": {
+        "name": "Näkymän muutoksen tunnistus"
+      },
+      "intrusion_detection": {
+        "name": "Tunkeutumisen tunnistus"
+      },
+      "line_crossing_detection": {
+        "name": "Linjan ylityksen tunnistus"
+      },
+      "region_entrance_detection": {
+        "name": "Alueelle saapumisen tunnistus"
+      },
+      "region_exiting_detection": {
+        "name": "Alueelta poistumisen tunnistus"
+      },
+      "alarm_output": {
+        "name": "Hälytyslähtö {port}"
+      },
+      "blc": {
+        "name": "Vastavalon kompensointi"
+      },
+      "hlc": {
+        "name": "Kirkkaan valon kompensointi"
+      },
+      "overexposure_suppression": {
+        "name": "Ylivalotuksen vaimennus"
+      },
+      "image_flip": {
+        "name": "Kuvan kääntö"
+      },
+      "stabilization": {
+        "name": "Kuvanvakautus"
+      },
+      "lens_correction": {
+        "name": "Objektiivin vääristymän korjaus"
+      },
+      "video_loss_detection": {
+        "name": "Kuvan menetyksen tunnistus"
+      },
+      "input_armed": {
+        "name": "Hälytystulo {port} viritetty"
+      },
+      "park_action": {
+        "name": "Pysäköintitoiminto"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "Päävirta"
+      },
+      "sub_stream": {
+        "name": "Alivirta"
+      },
+      "third_stream": {
+        "name": "Kolmas virta"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "Tunnistus",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Liike",
+              "intrusion": "Tunkeutuminen",
+              "line_crossing": "Linjan ylitys",
+              "region_entrance": "Alueelle saapuminen",
+              "region_exiting": "Alueelta poistuminen",
+              "face": "Kasvot",
+              "anpr": "Rekisterikilpi"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "Pilviyhteyden muutos",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "Yhteydessä",
+              "went_offline": "Ei yhteyttä"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "Tallennustila {unit}",
+        "state": {
+          "ok": "OK",
+          "unformatted": "Alustamaton",
+          "error": "Virhe",
+          "idle": "Käyttämätön",
+          "sleeping": "Lepotila",
+          "abnormal": "Poikkeava",
+          "full": "Täynnä",
+          "unknown": "Tuntematon"
+        }
+      },
+      "storage_free": {
+        "name": "Tallennustila {unit} vapaana"
+      },
+      "storage_capacity": {
+        "name": "Tallennustila {unit} kapasiteetti"
+      },
+      "event_latency": {
+        "name": "Tapahtumaviive"
+      },
+      "boot_time": {
+        "name": "Viimeisin käynnistys"
+      },
+      "cpu_load": {
+        "name": "Suorittimen kuormitus"
+      },
+      "memory_use": {
+        "name": "Muistin käyttö"
+      },
+      "reboots": {
+        "name": "Uudelleenkäynnistykset",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "Ilmoitettu aikaleima"
+          }
+        }
+      },
+      "network_address": {
+        "name": "IP-osoite"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Käynnistä uudelleen"
+      },
+      "rescan": {
+        "name": "Lue ominaisuudet uudelleen"
+      },
+      "cloud_unlock": {
+        "name": "Avaa ovi (pilvi)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ panoroi vasemmalle"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ panoroi oikealle"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ kallista ylös"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ kallista alas"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ lähennä"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ loitonna"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "PTZ-esiasetus"
+      },
+      "day_night": {
+        "name": "Päivä/yö-tila",
+        "state": {
+          "day": "Päivä",
+          "night": "Yö",
+          "auto": "Auto",
+          "schedule": "Aikataulu",
+          "eventtrigger": "Tapahtumalaukaisu"
+        }
+      },
+      "supplement_light": {
+        "name": "Lisävalo",
+        "state": {
+          "eventintelligence": "Älykäs (tapahtuma)",
+          "colorvuwhitelight": "Valkoinen valo",
+          "irlight": "IR-valo",
+          "close": "Pois"
+        }
+      },
+      "light_brightness_control": {
+        "name": "Valon kirkkauden säätö",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manuaalinen"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "Pois",
+          "open": "Päällä",
+          "auto": "Auto"
+        }
+      },
+      "blc_area": {
+        "name": "Vastavalon kompensoinnin alue",
+        "state": {
+          "close": "Pois",
+          "up": "Ylä",
+          "down": "Ala",
+          "left": "Vasen",
+          "right": "Oikea",
+          "center": "Keskellä",
+          "region": "Mukautettu alue",
+          "auto": "Auto"
+        }
+      },
+      "noise_reduction": {
+        "name": "Kohinanvaimennus",
+        "state": {
+          "close": "Pois",
+          "general": "Normaali",
+          "advanced": "Asiantuntija"
+        }
+      },
+      "defog": {
+        "name": "Usvanpoisto",
+        "state": {
+          "close": "Pois",
+          "open": "Päällä",
+          "auto": "Auto"
+        }
+      },
+      "white_balance": {
+        "name": "Valkotasapaino",
+        "state": {
+          "manual": "Manuaalinen",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "locked": "Lukittu",
+          "daylightlamp": "Loisteputki",
+          "incandescentlight": "Hehkulamppu",
+          "warmlight": "Lämmin valo",
+          "naturallight": "Luonnonvalo"
+        }
+      },
+      "exposure_mode": {
+        "name": "Valotustila",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manuaalinen"
+        }
+      },
+      "shutter": {
+        "name": "Suljin"
+      },
+      "power_line_frequency": {
+        "name": "Verkkotaajuus",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "Kääntösuunta",
+        "state": {
+          "leftright": "Vasen/oikea",
+          "updown": "Ylös/alas",
+          "center": "Keskellä"
+        }
+      },
+      "strobe_frequency": {
+        "name": "Välkkyvalon taajuus",
+        "state": {
+          "high": "Korkea",
+          "medium": "Keskitaso",
+          "low": "Matala",
+          "normallyon": "Jatkuvasti päällä"
+        }
+      },
+      "siren_sound": {
+        "name": "Sireenin ääni"
+      },
+      "park_action_type": {
+        "name": "Pysäköintitoiminnon tyyppi",
+        "state": {
+          "autoscan": "Automaattinen skannaus",
+          "framescan": "Kuvaskannaus",
+          "randomscan": "Satunnainen skannaus",
+          "patrol": "Partio",
+          "pattern": "Kuvio",
+          "preset": "Esiasetus",
+          "panoramascan": "Panoraamaskannaus",
+          "tiltscan": "Kallistusskannaus"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "Päivä/yö-herkkyys"
+      },
+      "day_night_delay": {
+        "name": "Päivä/yö-viive"
+      },
+      "white_light_brightness": {
+        "name": "Valkoisen valon kirkkaus"
+      },
+      "ir_light_brightness": {
+        "name": "IR-valon kirkkaus"
+      },
+      "white_light_duration": {
+        "name": "Valkoisen valon kesto"
+      },
+      "brightness": {
+        "name": "Kirkkaus"
+      },
+      "contrast": {
+        "name": "Kontrasti"
+      },
+      "saturation": {
+        "name": "Kylläisyys"
+      },
+      "sharpness": {
+        "name": "Terävyys"
+      },
+      "wdr_level": {
+        "name": "WDR-taso"
+      },
+      "hlc_level": {
+        "name": "Kirkkaan valon kompensoinnin taso"
+      },
+      "noise_reduction_level": {
+        "name": "Kohinanvaimennuksen taso"
+      },
+      "defog_level": {
+        "name": "Usvanpoiston taso"
+      },
+      "white_balance_red": {
+        "name": "Valkotasapaino punainen"
+      },
+      "white_balance_blue": {
+        "name": "Valkotasapaino sininen"
+      },
+      "gain_limit": {
+        "name": "Vahvistuksen raja"
+      },
+      "strobe_duration": {
+        "name": "Välkkyvalon kesto"
+      },
+      "siren_volume": {
+        "name": "Sireenin äänenvoimakkuus"
+      },
+      "siren_repeats": {
+        "name": "Sireenin toistot"
+      },
+      "speaker_volume": {
+        "name": "Kaiuttimen äänenvoimakkuus"
+      },
+      "microphone_volume": {
+        "name": "Mikrofonin äänenvoimakkuus"
+      },
+      "park_time": {
+        "name": "Pysäköintiaika"
+      },
+      "park_action_number": {
+        "name": "Pysäköintitoiminnon numero"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: kirjautuminen lukittu",
+      "description": "Laite lukitsi kirjautumisen epäonnistuneiden yritysten jälkeen. Integraatio pitää noin {minutes} minuutin tauon eikä yritä aiemmin uudelleen."
+    },
+    "channel_link_auth": {
+      "title": "{device}: suora yhteys kanavaan {channel} hylätty",
+      "description": "Kamera hylkäsi suoran yhteyden tunnukset. Sen sijaan käytetään tallenninta. Päivitä tämän kanavan suora yhteys."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: eri kamera kanavalla {channel}",
+      "description": "Tämän kanavan suora yhteys johtaa eri kameraan kuin tallentimeen nyt kytketty. Sitä ei käytetä ennen kuin se on korjattu."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} kanavalla {channel} ei ilmoiteta",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Ota ilmoitus käyttöön",
+            "description": "Laite tunnistaa kohteen {kind}, mutta ei lähetä sitä tapahtumavirtaan, koska linkitys 'Ilmoita valvontakeskukselle' on pois päältä. Vahvista, niin vain tämä linkitys kytketään päälle (laukaisin {trigger}); mikään muu ei muutu. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "Laite ei hyväksynyt muutosta."
+        },
+        "abort": {
+          "not_loaded": "Laitetta ei ole ladattu."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: aluetta ei ole piirretty kohteelle {kind} kanavalla {channel}",
+      "description": "Tunnistus on päällä, mutta linjaa tai aluetta ei ole piirretty, joten se ei voi laueta. Piirrä se laitteen verkkokäyttöliittymässä."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} on pois päältä kanavalla {channel}",
+      "description": "Tätä tunnistusta tuetaan, mutta se on pois päältä. Kytke se päälle sen kytkimellä, jos haluat käyttää sitä."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} kanavalla {channel} vain kohteille {detail}",
+      "description": "Tallennin ilmoittaa tästä tunnistuksesta vain luetelluille kohdetyypeille. Muu liike ei laukaise sitä."
+    },
+    "stream_encrypted": {
+      "title": "{device}: Hik-Connect salaa videovirran",
+      "description": "Hik-Connectin virran salaus on päällä. Home Assistant ei voi purkaa tätä virtaa; tilannekuvat ja tapahtumat toimivat edelleen. Poista 'Virran salaus' käytöstä laitteen alustakäytön asetuksista tai yhdistä kyseiset kamerat suoraan (suora kamerayhteys)."
+    },
+    "default_password": {
+      "title": "{device}: heikko tai oletussalasana",
+      "description": "Laite ilmoittaa, että sen salasana on heikko tai edelleen oletus. Vaihda se laitteessa."
+    },
+    "basic_over_http": {
+      "title": "{device}: salasana lähetetään suojaamatta",
+      "description": "Laite hyväksyy vain Basic-todennuksen HTTP:n kautta, joten salasana kulkee selväkielisenä. Ota laitteessa käyttöön Digest-todennus tai HTTPS."
+    },
+    "clock_skew": {
+      "title": "{device}: kello poikkeaa {detail} s",
+      "description": "Laitteen kello poikkeaa selvästi Home Assistantista. Tapahtumien ajat korjataan, mutta tallenteissa on väärä aika. Määritä laitteeseen NTP."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "Laite hylkäsi tunnukset."
+    },
+    "locked_out": {
+      "message": "Laite on lukinnut kirjautumisen. Asennus on keskeytetty, jotta lukitus ei pitene."
+    },
+    "not_isapi": {
+      "message": "Laite ei vastaa kuten Hikvision ISAPI -laite."
+    },
+    "unreachable": {
+      "message": "{host} ei ole tavoitettavissa."
+    },
+    "other_device": {
+      "message": "Osoitteessa {host} vastaa nyt eri laite. Käytä toimintoa 'Määritä uudelleen' tai lisää se uutena laitteena."
+    },
+    "write_failed": {
+      "message": "Laite ei hyväksynyt muutosta ({reason})."
+    },
+    "unknown_device": {
+      "message": "Valittu laite ei kuulu Hikvision Bridgeen."
+    },
+    "channel_needed": {
+      "message": "Valitse kamera tai kanavalaite."
+    },
+    "confirm_needed": {
+      "message": "Tämä toiminto muuttaa laitetta. Kytke 'Vahvista muutos' päälle suorittaaksesi sen."
+    },
+    "bad_path": {
+      "message": "Vain polut kohteen /ISAPI/ alla ovat sallittuja."
+    },
+    "webhook_off": {
+      "message": "Ota webhook ensin käyttöön asetuksissa."
+    },
+    "no_url": {
+      "message": "Home Assistantiin ei ole määritetty paikallista URL-osoitetta."
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect hylkäsi kirjautumisen."
+    },
+    "cloud_failed": {
+      "message": "Hik-Connect-pyyntö epäonnistui ({reason})."
+    },
+    "cloud_gone": {
+      "message": "Laite ei ole enää Hik-Connect-tilillä."
+    },
+    "setting_inactive": {
+      "message": "Tämä asetus ei ole aktiivinen kameran nykyisessä tilassa."
+    },
+    "read_failed": {
+      "message": "Laite ei vastannut pyyntöön ({reason})."
+    },
+    "bad_period": {
+      "message": "Lopun on oltava alun jälkeen ja enintään päivän myöhemmin."
+    },
+    "no_recordings": {
+      "message": "Tältä ajalta ei löytynyt tallenteita."
+    },
+    "too_many_recordings": {
+      "message": "Ajanjaksolla on {count} tallennetta; kerralla voi tallentaa enintään {limit}."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant ei saa kirjoittaa mediakansioonsa."
+    },
+    "recording_encrypted": {
+      "message": "Laite salaa tallenteensa (suoratoiston salaus), joten niitä ei voi toistaa eikä muuntaa. Poista suoratoiston salaus käytöstä tai käytä kameran muistikorttia."
+    },
+    "conversion_failed": {
+      "message": "Tallennetta ei voitu muuntaa."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg ei ole käytettävissä Home Assistantissa."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "Automaattinen",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "Tapahtumavirta (suositeltu)",
+        "webhook": "Webhook",
+        "both": "Molemmat"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "Tallennin",
+        "camera": "Kamera"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 tallennettuna (suositus)",
+        "h264": "Muunna H.264:ksi (toimii kaikkialla, suuri suoritinkuorma)",
+        "stream": "Suoratoista laitteelta (RTSP:stä HLS:ksi)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "Automaattinen",
+        "recorder": "Tallennin",
+        "card": "Muistikortti"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 tallennettuna",
+        "h264": "MP4 muunnettuna H.264:ksi",
+        "ts": "MPEG-TS tallennettuna",
+        "original": "Alkuperäinen tiedosto (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "Kaikki",
+        "continuous": "Jatkuva",
+        "motion": "Liike",
+        "alarm": "Hälytystulo",
+        "event": "Älykäs tapahtuma",
+        "manual": "Manuaalinen",
+        "other": "Muu"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "Ota tapahtumien ilmoitus käyttöön",
+      "description": "Kytkee linkityksen 'Ilmoita valvontakeskukselle' päälle tunnistuksille, joilta se puuttuu. Suoritetaan esikatseluna, ellei 'Vain esikatselu' ole pois päältä.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Kamera, kanava tai tallennin."
+        },
+        "dry_run": {
+          "name": "Vain esikatselu",
+          "description": "Listaa vain, mikä muuttuisi."
+        },
+        "kinds": {
+          "name": "Tunnistukset",
+          "description": "Rajaa näihin tyyppeihin; tyhjä tarkoittaa kaikkia."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "ISAPI-pyyntö",
+      "description": "Lähettää yhden ISAPI-pyynnön ja palauttaa vastauksen ilman salaisuuksia. Muuttavat metodit vaativat vahvistuksen.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Kamera, kanava tai tallennin."
+        },
+        "method": {
+          "name": "Metodi",
+          "description": "HTTP-metodi."
+        },
+        "path": {
+          "name": "Polku",
+          "description": "Polku, joka alkaa /ISAPI/."
+        },
+        "body": {
+          "name": "Runko",
+          "description": "XML- tai JSON-runko muuttaville metodeille."
+        },
+        "confirm_write": {
+          "name": "Vahvista muutos",
+          "description": "Vaaditaan kaikkeen, mikä muuttaa laitetta."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "PTZ-liike",
+      "description": "Liikuttaa PTZ-kameraa hetken.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Kamera, kanava tai tallennin."
+        },
+        "pan": {
+          "name": "Panorointi",
+          "description": "Nopeus, negatiivinen on vasemmalle."
+        },
+        "tilt": {
+          "name": "Kallistus",
+          "description": "Nopeus, negatiivinen on alas."
+        },
+        "zoom": {
+          "name": "Zoom",
+          "description": "Nopeus, negatiivinen loitontaa."
+        },
+        "duration": {
+          "name": "Kesto",
+          "description": "Sekuntia ennen pysähtymistä."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ-esiasetus",
+      "description": "Siirtää PTZ-kameran tallennettuun esiasetukseen.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Kamera, kanava tai tallennin."
+        },
+        "preset": {
+          "name": "Esiasetus",
+          "description": "Esiasetuksen numero."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "Aseta ilmoitusisäntä",
+      "description": "Ohjaa laitteen yhden ilmoitusisäntäpaikan tähän Home Assistantin webhookiin.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Kamera, kanava tai tallennin."
+        },
+        "slot": {
+          "name": "Paikka",
+          "description": "Ilmoitusisännän numero laitteessa."
+        },
+        "confirm_write": {
+          "name": "Vahvista muutos",
+          "description": "Vaaditaan kaikkeen, mikä muuttaa laitetta."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "Hae tallenteita",
+      "description": "Luettelee kameran tai kanavan tallennetut tiedostot ajanjaksolta.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Kamera tai kanava."
+        },
+        "start": {
+          "name": "Alku",
+          "description": "Ajanjakson alku."
+        },
+        "end": {
+          "name": "Loppu",
+          "description": "Ajanjakson loppu, enintään päivä alun jälkeen."
+        },
+        "source": {
+          "name": "Lähde",
+          "description": "Tallennin tai kameran muistikortti; automaattinen kokeilee ensin tallenninta."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "Tallenna tallenne",
+      "description": "Tallentaa ajanjakson tallenteet mediakansioon ”hikvision_bridge”.",
+      "fields": {
+        "device_id": {
+          "name": "Laite",
+          "description": "Kamera tai kanava."
+        },
+        "start": {
+          "name": "Alku",
+          "description": "Ajanjakson alku."
+        },
+        "end": {
+          "name": "Loppu",
+          "description": "Ajanjakson loppu, enintään päivä alun jälkeen."
+        },
+        "source": {
+          "name": "Lähde",
+          "description": "Tallennin tai kameran muistikortti; automaattinen kokeilee ensin tallenninta."
+        },
+        "format": {
+          "name": "Muoto",
+          "description": "MP4 ja MPEG-TS säilyttävät tallennetun videon; H.264 muuntaa sen, mikä kestää pienillä koneilla kauan."
+        },
+        "trim": {
+          "name": "Rajaa ajanjaksoon",
+          "description": "Leikkaa tiedostot ajanjaksoon; alkuperäistä tiedostoa ei koskaan leikata."
+        }
+      }
+    }
+  }
+}

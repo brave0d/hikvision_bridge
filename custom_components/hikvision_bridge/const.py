@@ -46,6 +46,10 @@ OPT_RTSP_PORT: Final = "rtsp_port"
 OPT_RTSP_TRANSPORT: Final = "rtsp_transport"
 OPT_TARGET_SENSORS: Final = "target_sensors"
 OPT_WEBHOOK_ID: Final = "webhook_id"
+OPT_PLAYBACK: Final = "playback"
+PLAYBACK_MP4: Final = "mp4"
+PLAYBACK_H264: Final = "h264"
+PLAYBACK_STREAM: Final = "stream"
 
 DEFAULT_HOLD_SECONDS: Final = 5
 RTSP_PORT_DEFAULT: Final = 554

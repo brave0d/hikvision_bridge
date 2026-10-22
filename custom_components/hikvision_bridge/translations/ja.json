@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "ローカルネットワーク内のカメラまたはレコーダー",
+          "cloud": "Hik-Connect アカウント（クラウド）"
+        }
+      },
+      "device": {
+        "title": "デバイスを接続",
+        "description": "セットアップ中は読み取りアクセスのみを使用します。",
+        "data": {
+          "host": "ホスト",
+          "port": "ポート（任意）",
+          "connection": "接続",
+          "verify_tls": "HTTPS 証明書を検証",
+          "username": "ユーザー名",
+          "password": "パスワード"
+        },
+        "data_description": {
+          "host": "カメラまたはレコーダーの IP アドレスまたはホスト名。",
+          "port": "空欄の場合は 80（HTTP）または 443（HTTPS）を使用します。",
+          "connection": "自動は最初に HTTPS を試し、HTTPS で接続できない場合のみ HTTP に切り替えます。",
+          "username": "デバイスごとに個別のユーザーを使用できます。専用のオペレーターユーザーをお勧めします。"
+        }
+      },
+      "duplicate": {
+        "title": "既知のカメラ",
+        "description": "このカメラはすでに {recorder} のチャンネル {channel} に表示されています。このチャンネルに関連付けますか（1 台のデバイス、カメラから直接ストリーム）、それとも別のデバイスとして追加しますか？",
+        "menu_options": {
+          "link_to_channel": "レコーダーのチャンネルに関連付ける",
+          "keep_separate": "別のデバイスとして追加"
+        }
+      },
+      "reauth_confirm": {
+        "title": "ログインに失敗しました",
+        "description": "{device}（{host}）が保存された認証情報を拒否しました。現在の認証情報を入力してください。",
+        "data": {
+          "username": "ユーザー名",
+          "password": "パスワード"
+        }
+      },
+      "reconfigure": {
+        "title": "接続を変更",
+        "description": "新しいアドレスは同じデバイスにつながる必要があります。",
+        "data": {
+          "host": "ホスト",
+          "port": "ポート（任意）",
+          "connection": "接続",
+          "verify_tls": "HTTPS 証明書を検証",
+          "username": "ユーザー名",
+          "password": "パスワード"
+        },
+        "data_description": {
+          "host": "カメラまたはレコーダーの IP アドレスまたはホスト名。",
+          "port": "空欄の場合は 80（HTTP）または 443（HTTPS）を使用します。",
+          "connection": "自動は最初に HTTPS を試し、HTTPS で接続できない場合のみ HTTP に切り替えます。",
+          "username": "デバイスごとに個別のユーザーを使用できます。専用のオペレーターユーザーをお勧めします。"
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect にはサードパーティ向けの公式インターフェースがありません。この統合はデバイス一覧と状態のみを読み取り、パスワードは Home Assistant に保存されます。",
+        "data": {
+          "account": "Hik-Connect アカウント（メールまたは電話番号）",
+          "password": "パスワード"
+        }
+      },
+      "cloud_captcha": {
+        "title": "認証コード",
+        "description": "ここに表示されたコードを入力してください: {image}",
+        "data": {
+          "captcha": "コード"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Hik-Connect ログイン",
+        "description": "{account} のパスワードを入力してください。",
+        "data": {
+          "password": "パスワード",
+          "captcha": "認証コード（求められた場合のみ）"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "ユーザー名またはパスワードが拒否されました。ロックを避けるため、再試行は行いません。",
+      "locked_out": "ログインの失敗によりデバイスまたはアカウントが一時的にロックされています。しばらく待ってから再試行してください。",
+      "name_not_resolved": "ホスト名を解決できませんでした。",
+      "tls_untrusted": "HTTPS 証明書が信頼されていません。証明書の検証を無効にするか、HTTP を使用してください。",
+      "cannot_connect": "接続できません。",
+      "not_isapi": "アドレスは応答しますが、Hikvision ISAPI デバイスとしての応答ではありません。",
+      "forbidden": "ユーザーに必要な権限がありません。",
+      "unknown": "予期しないエラーです。",
+      "wrong_camera": "このアドレスは、選択したチャンネルのカメラとは別のカメラのものです。",
+      "captcha_required": "Hik-Connect が認証コードを求めています。",
+      "cloud_unavailable": "Hik-Connect は現在利用できません。",
+      "cloud_changed": "Hik-Connect が予期しない形式で応答しました。",
+      "cloud_rejected": "Hik-Connect がリクエストを拒否しました。"
+    },
+    "abort": {
+      "already_configured": "このデバイスまたはアカウントはすでに設定されています。",
+      "reauth_successful": "認証情報を更新しました。",
+      "reconfigure_successful": "接続を更新しました。",
+      "other_device": "このアドレスは別のデバイスのものです。代わりに新しいデバイスとして追加してください。",
+      "channel_already_linked": "このレコーダーチャンネルにはすでに直接接続があります。",
+      "linked_to_channel": "カメラをレコーダーのチャンネルに関連付けました。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "オプション",
+        "data": {
+          "event_path": "イベントの受信方法",
+          "hold_seconds": "検知をオンに保つ時間（秒）",
+          "rtsp_port": "RTSP ポート（任意）",
+          "rtsp_transport": "RTSP トランスポート",
+          "target_sensors": "人と車両に個別のセンサーを使用",
+          "playback": "メディアブラウザーでの再生"
+        },
+        "data_description": {
+          "event_path": "イベントストリームはデバイスの変更が不要です。Webhook ではデバイスから Home Assistant へ送信する必要があります。",
+          "hold_seconds": "多くの検知でデバイスは開始のみを通知します。センサーは最後の通知からこの時間オンのままになります。",
+          "playback": "録画は H.265 または H.264 です。「録画どおりの MP4」はすぐに始まりますが、ブラウザーが H.265 を再生できるのはハードウェア対応時のみです。「H.264 に変換」はどこでも再生でき、CPU を多く使います。「デバイスからストリーミング」はデバイスに RTSP で録画を再生させます。"
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "通知は {path} で受け付けます（ローカルネットワークのみ）。「通知ホストを設定」アクションまたはデバイスの Web インターフェースで、デバイスの送信先をここに設定してください。"
+      }
+    },
+    "abort": {
+      "no_options": "Hik-Connect アカウントにはオプションがありません。"
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "カメラを直接接続"
+      },
+      "entry_type": "カメラ直接接続",
+      "step": {
+        "user": {
+          "title": "カメラ直接接続",
+          "description": "レコーダーのチャンネル上のカメラを、独自のアドレスと認証情報で直接接続します。ライブストリームはカメラから取得されるため、レコーダーのストリームが暗号化されている場合にも役立ちます。",
+          "data": {
+            "channel_id": "レコーダーのチャンネル",
+            "host": "ホスト",
+            "port": "ポート（任意）",
+            "connection": "接続",
+            "verify_tls": "HTTPS 証明書を検証",
+            "username": "ユーザー名",
+            "password": "パスワード",
+            "reuse_recorder_credentials": "レコーダーのユーザー名とパスワードを使用",
+            "event_source": "検知の取得元"
+          },
+          "data_description": {
+            "host": "Home Assistant がカメラに直接到達するアドレス（例: ルーティングされている場合はレコーダーの PoE サブネット）。",
+            "reuse_recorder_credentials": "カメラに独自の認証情報がある場合はオフのままにしてください。"
+          }
+        },
+        "reconfigure": {
+          "title": "カメラ直接接続を変更",
+          "description": "レコーダーのチャンネル上のカメラを、独自のアドレスと認証情報で直接接続します。ライブストリームはカメラから取得されるため、レコーダーのストリームが暗号化されている場合にも役立ちます。",
+          "data": {
+            "channel_id": "レコーダーのチャンネル",
+            "host": "ホスト",
+            "port": "ポート（任意）",
+            "connection": "接続",
+            "verify_tls": "HTTPS 証明書を検証",
+            "username": "ユーザー名",
+            "password": "パスワード",
+            "reuse_recorder_credentials": "レコーダーのユーザー名とパスワードを使用",
+            "event_source": "検知の取得元"
+          },
+          "data_description": {
+            "host": "Home Assistant がカメラに直接到達するアドレス（例: ルーティングされている場合はレコーダーの PoE サブネット）。",
+            "reuse_recorder_credentials": "カメラに独自の認証情報がある場合はオフのままにしてください。"
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "ユーザー名またはパスワードが拒否されました。ロックを避けるため、再試行は行いません。",
+        "locked_out": "ログインの失敗によりデバイスまたはアカウントが一時的にロックされています。しばらく待ってから再試行してください。",
+        "name_not_resolved": "ホスト名を解決できませんでした。",
+        "tls_untrusted": "HTTPS 証明書が信頼されていません。証明書の検証を無効にするか、HTTP を使用してください。",
+        "cannot_connect": "接続できません。",
+        "not_isapi": "アドレスは応答しますが、Hikvision ISAPI デバイスとしての応答ではありません。",
+        "forbidden": "ユーザーに必要な権限がありません。",
+        "unknown": "予期しないエラーです。",
+        "wrong_camera": "このアドレスは、選択したチャンネルのカメラとは別のカメラのものです。",
+        "captcha_required": "Hik-Connect が認証コードを求めています。",
+        "cloud_unavailable": "Hik-Connect は現在利用できません。",
+        "cloud_changed": "Hik-Connect が予期しない形式で応答しました。",
+        "cloud_rejected": "Hik-Connect がリクエストを拒否しました。"
+      },
+      "abort": {
+        "not_loaded": "先にレコーダーを読み込む必要があります。",
+        "not_a_recorder": "関連付けるチャンネルがあるのはレコーダーのみです。",
+        "no_free_channel": "すべてのチャンネルにすでに直接接続があります。",
+        "reconfigure_successful": "直接接続を更新しました。"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "動き"
+      },
+      "tamper": {
+        "name": "いたずら"
+      },
+      "video_loss": {
+        "name": "映像消失"
+      },
+      "scene_change": {
+        "name": "シーン変化"
+      },
+      "intrusion": {
+        "name": "侵入"
+      },
+      "line_crossing": {
+        "name": "ライン横断"
+      },
+      "region_entrance": {
+        "name": "エリア進入"
+      },
+      "region_exiting": {
+        "name": "エリア退出"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "ピンぼけ"
+      },
+      "audio_exception": {
+        "name": "音声異常"
+      },
+      "target_human": {
+        "name": "人"
+      },
+      "target_vehicle": {
+        "name": "車両"
+      },
+      "alarm_input": {
+        "name": "アラーム入力 {port}"
+      },
+      "channel_online": {
+        "name": "カメラ接続"
+      },
+      "storage_problem": {
+        "name": "ストレージの問題"
+      },
+      "event_link": {
+        "name": "イベント接続"
+      },
+      "stream_encryption": {
+        "name": "ストリーム暗号化"
+      },
+      "cloud_online": {
+        "name": "クラウド接続"
+      },
+      "cloud_stream_encryption": {
+        "name": "ストリーム暗号化"
+      },
+      "recording": {
+        "name": "録画"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "動体検知"
+      },
+      "tamper_detection": {
+        "name": "いたずら検知"
+      },
+      "scene_change_detection": {
+        "name": "シーン変化検知"
+      },
+      "intrusion_detection": {
+        "name": "侵入検知"
+      },
+      "line_crossing_detection": {
+        "name": "ライン横断検知"
+      },
+      "region_entrance_detection": {
+        "name": "エリア進入検知"
+      },
+      "region_exiting_detection": {
+        "name": "エリア退出検知"
+      },
+      "alarm_output": {
+        "name": "アラーム出力 {port}"
+      },
+      "blc": {
+        "name": "逆光補正"
+      },
+      "hlc": {
+        "name": "強い光の補正"
+      },
+      "overexposure_suppression": {
+        "name": "露出オーバー抑制"
+      },
+      "image_flip": {
+        "name": "映像反転"
+      },
+      "stabilization": {
+        "name": "手ぶれ補正"
+      },
+      "lens_correction": {
+        "name": "レンズ歪み補正"
+      },
+      "video_loss_detection": {
+        "name": "映像消失検知"
+      },
+      "input_armed": {
+        "name": "アラーム入力 {port} 警戒中"
+      },
+      "park_action": {
+        "name": "パークアクション"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "メインストリーム"
+      },
+      "sub_stream": {
+        "name": "サブストリーム"
+      },
+      "third_stream": {
+        "name": "第 3 ストリーム"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "検知",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "動き",
+              "intrusion": "侵入",
+              "line_crossing": "ライン横断",
+              "region_entrance": "エリア進入",
+              "region_exiting": "エリア退出",
+              "face": "顔",
+              "anpr": "ナンバープレート"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "クラウド接続の変化",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "オンライン",
+              "went_offline": "オフライン"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "ストレージ {unit}",
+        "state": {
+          "ok": "OK",
+          "unformatted": "未フォーマット",
+          "error": "エラー",
+          "idle": "アイドル",
+          "sleeping": "スリープ",
+          "abnormal": "異常",
+          "full": "満杯",
+          "unknown": "不明"
+        }
+      },
+      "storage_free": {
+        "name": "ストレージ {unit} 空き容量"
+      },
+      "storage_capacity": {
+        "name": "ストレージ {unit} 容量"
+      },
+      "event_latency": {
+        "name": "イベント遅延"
+      },
+      "boot_time": {
+        "name": "最終起動"
+      },
+      "cpu_load": {
+        "name": "CPU 負荷"
+      },
+      "memory_use": {
+        "name": "メモリ使用率"
+      },
+      "reboots": {
+        "name": "再起動回数",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "報告されたタイムスタンプ"
+          }
+        }
+      },
+      "network_address": {
+        "name": "IP アドレス"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "再起動"
+      },
+      "rescan": {
+        "name": "機能を再読み込み"
+      },
+      "cloud_unlock": {
+        "name": "ドアを開ける（クラウド）"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ 左にパン"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ 右にパン"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ 上にチルト"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ 下にチルト"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ ズームイン"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ ズームアウト"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "PTZ プリセット"
+      },
+      "day_night": {
+        "name": "昼夜モード",
+        "state": {
+          "day": "昼",
+          "night": "夜",
+          "auto": "自動",
+          "schedule": "スケジュール",
+          "eventtrigger": "イベントトリガー"
+        }
+      },
+      "supplement_light": {
+        "name": "補助照明",
+        "state": {
+          "eventintelligence": "スマート（イベント）",
+          "colorvuwhitelight": "白色光",
+          "irlight": "IR ライト",
+          "close": "オフ"
+        }
+      },
+      "light_brightness_control": {
+        "name": "照明の明るさ制御",
+        "state": {
+          "auto": "自動",
+          "manual": "手動"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "オフ",
+          "open": "オン",
+          "auto": "自動"
+        }
+      },
+      "blc_area": {
+        "name": "逆光補正エリア",
+        "state": {
+          "close": "オフ",
+          "up": "上",
+          "down": "下",
+          "left": "左",
+          "right": "右",
+          "center": "中央",
+          "region": "カスタム領域",
+          "auto": "自動"
+        }
+      },
+      "noise_reduction": {
+        "name": "ノイズ低減",
+        "state": {
+          "close": "オフ",
+          "general": "標準",
+          "advanced": "エキスパート"
+        }
+      },
+      "defog": {
+        "name": "霧除去",
+        "state": {
+          "close": "オフ",
+          "open": "オン",
+          "auto": "自動"
+        }
+      },
+      "white_balance": {
+        "name": "ホワイトバランス",
+        "state": {
+          "manual": "手動",
+          "auto1": "自動 1",
+          "auto2": "自動 2",
+          "locked": "ロック",
+          "daylightlamp": "蛍光灯",
+          "incandescentlight": "白熱灯",
+          "warmlight": "暖色光",
+          "naturallight": "自然光"
+        }
+      },
+      "exposure_mode": {
+        "name": "露出モード",
+        "state": {
+          "auto": "自動",
+          "manual": "手動"
+        }
+      },
+      "shutter": {
+        "name": "シャッター"
+      },
+      "power_line_frequency": {
+        "name": "電源周波数",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "反転方向",
+        "state": {
+          "leftright": "左右",
+          "updown": "上下",
+          "center": "中央"
+        }
+      },
+      "strobe_frequency": {
+        "name": "ストロボライトの周波数",
+        "state": {
+          "high": "高",
+          "medium": "中",
+          "low": "低",
+          "normallyon": "常時点灯"
+        }
+      },
+      "siren_sound": {
+        "name": "サイレン音"
+      },
+      "park_action_type": {
+        "name": "パークアクションの種類",
+        "state": {
+          "autoscan": "オートスキャン",
+          "framescan": "フレームスキャン",
+          "randomscan": "ランダムスキャン",
+          "patrol": "パトロール",
+          "pattern": "パターン",
+          "preset": "プリセット",
+          "panoramascan": "パノラマスキャン",
+          "tiltscan": "チルトスキャン"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "昼夜切替感度"
+      },
+      "day_night_delay": {
+        "name": "昼夜切替遅延"
+      },
+      "white_light_brightness": {
+        "name": "白色光の明るさ"
+      },
+      "ir_light_brightness": {
+        "name": "IR ライトの明るさ"
+      },
+      "white_light_duration": {
+        "name": "白色光の点灯時間"
+      },
+      "brightness": {
+        "name": "明るさ"
+      },
+      "contrast": {
+        "name": "コントラスト"
+      },
+      "saturation": {
+        "name": "彩度"
+      },
+      "sharpness": {
+        "name": "シャープネス"
+      },
+      "wdr_level": {
+        "name": "WDR レベル"
+      },
+      "hlc_level": {
+        "name": "強い光の補正レベル"
+      },
+      "noise_reduction_level": {
+        "name": "ノイズ低減レベル"
+      },
+      "defog_level": {
+        "name": "霧除去レベル"
+      },
+      "white_balance_red": {
+        "name": "ホワイトバランス 赤"
+      },
+      "white_balance_blue": {
+        "name": "ホワイトバランス 青"
+      },
+      "gain_limit": {
+        "name": "ゲイン上限"
+      },
+      "strobe_duration": {
+        "name": "ストロボライトの点灯時間"
+      },
+      "siren_volume": {
+        "name": "サイレン音量"
+      },
+      "siren_repeats": {
+        "name": "サイレンの繰り返し回数"
+      },
+      "speaker_volume": {
+        "name": "スピーカー音量"
+      },
+      "microphone_volume": {
+        "name": "マイク音量"
+      },
+      "park_time": {
+        "name": "パーク時間"
+      },
+      "park_action_number": {
+        "name": "パークアクション番号"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: ログインがロックされました",
+      "description": "試行の失敗によりデバイスがログインをロックしました。この統合は約 {minutes} 分間一時停止し、それまで再試行しません。"
+    },
+    "channel_link_auth": {
+      "title": "{device}: {channel} への直接接続が拒否されました",
+      "description": "カメラが直接接続の認証情報を拒否しました。代わりにレコーダーを使用します。このチャンネルの直接接続を更新してください。"
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: {channel} に別のカメラがあります",
+      "description": "このチャンネルの直接接続は、現在レコーダーに接続されているカメラとは別のカメラにつながっています。修正されるまで使用されません。"
+    },
+    "center_link_missing": {
+      "title": "{device}: {channel} の {kind} が通知されていません",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "通知を有効化",
+            "description": "デバイスは {kind} を検知していますが、連動「監視センターに通知」がオフのため、イベントストリームに送信していません。確認すると、この連動のみをオンにします（トリガー {trigger}）。その他は変更されません。{reason}"
+          }
+        },
+        "error": {
+          "write_failed": "デバイスが変更を受け付けませんでした。"
+        },
+        "abort": {
+          "not_loaded": "デバイスが読み込まれていません。"
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: {channel} の {kind} にエリアが描画されていません",
+      "description": "検知はオンですが、ラインまたはエリアが描画されていないため作動できません。デバイスの Web インターフェースで描画してください。"
+    },
+    "detection_off": {
+      "title": "{device}: {channel} の {kind} がオフです",
+      "description": "この検知はサポートされていますがオフになっています。使用する場合はスイッチエンティティでオンにしてください。"
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {channel} の {kind} は {detail} のみ",
+      "description": "レコーダーはこの検知を、記載されたターゲット種別に対してのみ通知します。その他の動きでは作動しません。"
+    },
+    "stream_encrypted": {
+      "title": "{device}: 映像ストリームが Hik-Connect により暗号化されています",
+      "description": "Hik-Connect のストリーム暗号化がオンです。Home Assistant はこのストリームをデコードできません。スナップショットとイベントは引き続き動作します。デバイスのプラットフォームアクセス設定で「ストリーム暗号化」をオフにするか、対象のカメラを直接接続してください（カメラ直接接続）。"
+    },
+    "default_password": {
+      "title": "{device}: 弱いまたは初期設定のパスワード",
+      "description": "デバイスのパスワードが弱いか、初期設定のままであると報告されています。デバイスで変更してください。"
+    },
+    "basic_over_http": {
+      "title": "{device}: パスワードが保護されずに送信されています",
+      "description": "デバイスは HTTP 経由の Basic 認証のみを受け付けるため、パスワードが平文で送信されます。デバイスで Digest 認証または HTTPS を有効にしてください。"
+    },
+    "clock_skew": {
+      "title": "{device}: 時計が {detail} 秒ずれています",
+      "description": "デバイスの時計が Home Assistant と大きくずれています。イベント時刻は補正されますが、録画には誤った時刻が記録されます。デバイスで NTP を設定してください。"
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "デバイスが認証情報を拒否しました。"
+    },
+    "locked_out": {
+      "message": "デバイスがログインをロックしました。ロックを延長しないよう、セットアップを一時停止しています。"
+    },
+    "not_isapi": {
+      "message": "デバイスが Hikvision ISAPI デバイスとして応答しません。"
+    },
+    "unreachable": {
+      "message": "{host} に到達できません。"
+    },
+    "other_device": {
+      "message": "{host} では現在別のデバイスが応答しています。「再設定」を使用するか、新しいデバイスとして追加してください。"
+    },
+    "write_failed": {
+      "message": "デバイスが変更を受け付けませんでした（{reason}）。"
+    },
+    "unknown_device": {
+      "message": "選択したデバイスは Hikvision Bridge に属していません。"
+    },
+    "channel_needed": {
+      "message": "カメラまたはチャンネルデバイスを選択してください。"
+    },
+    "confirm_needed": {
+      "message": "このアクションはデバイスを変更します。実行するには「変更を確認」をオンにしてください。"
+    },
+    "bad_path": {
+      "message": "/ISAPI/ 以下のパスのみ許可されています。"
+    },
+    "webhook_off": {
+      "message": "先にオプションで Webhook を有効にしてください。"
+    },
+    "no_url": {
+      "message": "Home Assistant にローカル URL が設定されていません。"
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect がログインを拒否しました。"
+    },
+    "cloud_failed": {
+      "message": "Hik-Connect のリクエストに失敗しました（{reason}）。"
+    },
+    "cloud_gone": {
+      "message": "このデバイスはもう Hik-Connect アカウントにありません。"
+    },
+    "setting_inactive": {
+      "message": "この設定はカメラの現在のモードでは有効ではありません。"
+    },
+    "read_failed": {
+      "message": "デバイスが要求に応答しませんでした（{reason}）。"
+    },
+    "bad_period": {
+      "message": "終了は開始より後で、最大 1 日後でなければなりません。"
+    },
+    "no_recordings": {
+      "message": "この期間の録画は見つかりませんでした。"
+    },
+    "too_many_recordings": {
+      "message": "この期間には {count} 件の録画があります。一度に保存できるのは最大 {limit} 件です。"
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant はメディアフォルダーに書き込めません。"
+    },
+    "recording_encrypted": {
+      "message": "デバイスが録画を暗号化している（ストリーム暗号化）ため、再生も変換もできません。ストリーム暗号化をオフにするか、カメラのメモリーカードを使用してください。"
+    },
+    "conversion_failed": {
+      "message": "録画を変換できませんでした。"
+    },
+    "no_ffmpeg": {
+      "message": "Home Assistant で ffmpeg を利用できません。"
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "自動",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "イベントストリーム（推奨）",
+        "webhook": "Webhook",
+        "both": "両方"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "レコーダー",
+        "camera": "カメラ"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "録画どおりの MP4（推奨）",
+        "h264": "H.264 に変換（どこでも再生可、CPU 負荷大）",
+        "stream": "デバイスからストリーミング（RTSP から HLS）"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "自動",
+        "recorder": "レコーダー",
+        "card": "メモリーカード"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "録画どおりの MP4",
+        "h264": "H.264 に変換した MP4",
+        "ts": "録画どおりの MPEG-TS",
+        "original": "元のファイル（MPEG-PS）"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "すべて",
+        "continuous": "常時録画",
+        "motion": "動き",
+        "alarm": "アラーム入力",
+        "event": "スマートイベント",
+        "manual": "手動",
+        "other": "その他"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "イベント通知を有効化",
+      "description": "連動「監視センターに通知」がない検知に対してオンにします。「プレビューのみ」をオフにしない限り、プレビューとして実行されます。",
+      "fields": {
+        "device_id": {
+          "name": "デバイス",
+          "description": "カメラ、チャンネル、またはレコーダー。"
+        },
+        "dry_run": {
+          "name": "プレビューのみ",
+          "description": "変更内容の一覧のみを表示します。"
+        },
+        "kinds": {
+          "name": "検知",
+          "description": "これらの種類に限定します。空の場合はすべてです。"
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "ISAPI リクエスト",
+      "description": "ISAPI リクエストを 1 件送信し、機密情報を除いた応答を返します。変更を伴うメソッドには確認が必要です。",
+      "fields": {
+        "device_id": {
+          "name": "デバイス",
+          "description": "カメラ、チャンネル、またはレコーダー。"
+        },
+        "method": {
+          "name": "メソッド",
+          "description": "HTTP メソッド。"
+        },
+        "path": {
+          "name": "パス",
+          "description": "/ISAPI/ で始まるパス。"
+        },
+        "body": {
+          "name": "本文",
+          "description": "変更を伴うメソッド用の XML または JSON 本文。"
+        },
+        "confirm_write": {
+          "name": "変更を確認",
+          "description": "デバイスを変更するすべての操作に必要です。"
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "PTZ 移動",
+      "description": "PTZ カメラを短時間動かします。",
+      "fields": {
+        "device_id": {
+          "name": "デバイス",
+          "description": "カメラ、チャンネル、またはレコーダー。"
+        },
+        "pan": {
+          "name": "パン",
+          "description": "速度。負の値は左。"
+        },
+        "tilt": {
+          "name": "チルト",
+          "description": "速度。負の値は下。"
+        },
+        "zoom": {
+          "name": "ズーム",
+          "description": "速度。負の値はズームアウト。"
+        },
+        "duration": {
+          "name": "時間",
+          "description": "停止までの秒数。"
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ プリセット",
+      "description": "PTZ カメラを保存されたプリセットに移動します。",
+      "fields": {
+        "device_id": {
+          "name": "デバイス",
+          "description": "カメラ、チャンネル、またはレコーダー。"
+        },
+        "preset": {
+          "name": "プリセット",
+          "description": "プリセット番号。"
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "通知ホストを設定",
+      "description": "デバイスの通知ホストスロットの 1 つをこの Home Assistant Webhook に向けます。",
+      "fields": {
+        "device_id": {
+          "name": "デバイス",
+          "description": "カメラ、チャンネル、またはレコーダー。"
+        },
+        "slot": {
+          "name": "スロット",
+          "description": "デバイス上の通知ホスト番号。"
+        },
+        "confirm_write": {
+          "name": "変更を確認",
+          "description": "デバイスを変更するすべての操作に必要です。"
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "録画を検索",
+      "description": "カメラまたはチャンネルの期間内の録画ファイルを一覧表示します。",
+      "fields": {
+        "device_id": {
+          "name": "デバイス",
+          "description": "カメラまたはチャンネル。"
+        },
+        "start": {
+          "name": "開始",
+          "description": "期間の始まり。"
+        },
+        "end": {
+          "name": "終了",
+          "description": "期間の終わり。開始から最大 1 日後まで。"
+        },
+        "source": {
+          "name": "ソース",
+          "description": "レコーダーまたはカメラのメモリーカード。自動ではまずレコーダーを試します。"
+        }
+      }
+    },
+    "download_recording": {
+      "name": "録画を保存",
+      "description": "期間内の録画をメディアフォルダー「hikvision_bridge」に保存します。",
+      "fields": {
+        "device_id": {
+          "name": "デバイス",
+          "description": "カメラまたはチャンネル。"
+        },
+        "start": {
+          "name": "開始",
+          "description": "期間の始まり。"
+        },
+        "end": {
+          "name": "終了",
+          "description": "期間の終わり。開始から最大 1 日後まで。"
+        },
+        "source": {
+          "name": "ソース",
+          "description": "レコーダーまたはカメラのメモリーカード。自動ではまずレコーダーを試します。"
+        },
+        "format": {
+          "name": "形式",
+          "description": "MP4 と MPEG-TS は録画された映像をそのまま保持します。H.264 は変換するため、小型のマシンでは時間がかかります。"
+        },
+        "trim": {
+          "name": "期間に合わせてカット",
+          "description": "ファイルを期間に合わせてカットします。元のファイルはカットされません。"
+        }
+      }
+    }
+  }
+}

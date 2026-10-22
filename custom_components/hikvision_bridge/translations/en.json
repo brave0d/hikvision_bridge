@@ -118,11 +118,13 @@
           "hold_seconds": "Hold detections on for (seconds)",
           "rtsp_port": "RTSP port (optional)",
           "rtsp_transport": "RTSP transport",
-          "target_sensors": "Separate sensors for people and vehicles"
+          "target_sensors": "Separate sensors for people and vehicles",
+          "playback": "Playback in the media browser"
         },
         "data_description": {
           "event_path": "The event stream needs no device change. The webhook requires the device to send to Home Assistant.",
-          "hold_seconds": "Devices only report the start of many detections; the sensor stays on this long after the last report."
+          "hold_seconds": "Devices only report the start of many detections; the sensor stays on this long after the last report.",
+          "playback": "Recordings are H.265 or H.264. 'MP4 as recorded' starts at once, but browsers play H.265 only with hardware support. 'Convert to H.264' plays everywhere and needs a lot of CPU. 'Stream from the device' lets the device play the recording over RTSP."
         }
       },
       "webhook": {
@@ -317,6 +319,9 @@
       },
       "input_armed": {
         "name": "Alarm input {port} armed"
+      },
+      "park_action": {
+        "name": "Park action"
       }
     },
     "camera": {
@@ -548,6 +553,19 @@
       },
       "siren_sound": {
         "name": "Siren sound"
+      },
+      "park_action_type": {
+        "name": "Park action type",
+        "state": {
+          "autoscan": "Auto scan",
+          "framescan": "Frame scan",
+          "randomscan": "Random scan",
+          "patrol": "Patrol",
+          "pattern": "Pattern",
+          "preset": "Preset",
+          "panoramascan": "Panorama scan",
+          "tiltscan": "Tilt scan"
+        }
       }
     },
     "number": {
@@ -613,6 +631,12 @@
       },
       "microphone_volume": {
         "name": "Microphone volume"
+      },
+      "park_time": {
+        "name": "Park time"
+      },
+      "park_action_number": {
+        "name": "Park action number"
       }
     }
   },
@@ -723,6 +747,30 @@
     },
     "setting_inactive": {
       "message": "This setting is not active in the camera's current mode."
+    },
+    "read_failed": {
+      "message": "The device did not answer the request ({reason})."
+    },
+    "bad_period": {
+      "message": "The end must be after the start and at most one day later."
+    },
+    "no_recordings": {
+      "message": "No recordings found for this period."
+    },
+    "too_many_recordings": {
+      "message": "The period contains {count} recordings; at most {limit} can be saved at once."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant may not write to its media folder."
+    },
+    "recording_encrypted": {
+      "message": "The device encrypts its recordings (stream encryption), so they cannot be played or converted. Switch stream encryption off or use the camera's memory card."
+    },
+    "conversion_failed": {
+      "message": "The recording could not be converted."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg is not available in Home Assistant."
     }
   },
   "selector": {
@@ -750,6 +798,39 @@
       "options": {
         "recorder": "Recorder",
         "camera": "Camera"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 as recorded (recommended)",
+        "h264": "Convert to H.264 (works everywhere, high CPU load)",
+        "stream": "Stream from the device (RTSP to HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "Automatic",
+        "recorder": "Recorder",
+        "card": "Memory card"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 as recorded",
+        "h264": "MP4 converted to H.264",
+        "ts": "MPEG-TS as recorded",
+        "original": "Original file (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "All",
+        "continuous": "Continuous",
+        "motion": "Motion",
+        "alarm": "Alarm input",
+        "event": "Smart event",
+        "manual": "Manual",
+        "other": "Other"
       }
     }
   },
@@ -853,6 +934,58 @@
         "confirm_write": {
           "name": "Confirm change",
           "description": "Required for anything that changes the device."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "Search recordings",
+      "description": "Lists the recorded files of a camera or channel in a period.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Camera or channel."
+        },
+        "start": {
+          "name": "Start",
+          "description": "Beginning of the period."
+        },
+        "end": {
+          "name": "End",
+          "description": "End of the period, at most one day after the start."
+        },
+        "source": {
+          "name": "Source",
+          "description": "Recorder or the camera's memory card; automatic tries the recorder first."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "Save recording",
+      "description": "Saves the recordings of a period to the media folder 'hikvision_bridge'.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Camera or channel."
+        },
+        "start": {
+          "name": "Start",
+          "description": "Beginning of the period."
+        },
+        "end": {
+          "name": "End",
+          "description": "End of the period, at most one day after the start."
+        },
+        "source": {
+          "name": "Source",
+          "description": "Recorder or the camera's memory card; automatic tries the recorder first."
+        },
+        "format": {
+          "name": "Format",
+          "description": "MP4 and MPEG-TS keep the recorded video; H.264 converts it, which takes long on small machines."
+        },
+        "trim": {
+          "name": "Trim to period",
+          "description": "Cut the files to the period; the original file is never cut."
         }
       }
     }

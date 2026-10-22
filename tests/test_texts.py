@@ -1,4 +1,4 @@
-"""German and English texts cover the same keys, and every key the code uses exists."""
+"""All languages cover the same keys and placeholders, and every key the code uses exists."""
 
 from __future__ import annotations
 
@@ -11,7 +11,10 @@ from custom_components.hikvision_bridge.model.vocabulary import SMART, SWITCHABL
 
 PACKAGE = Path(__file__).parent.parent / "custom_components" / "hikvision_bridge"
 EN = json.loads((PACKAGE / "translations" / "en.json").read_text(encoding="utf-8"))
-DE = json.loads((PACKAGE / "translations" / "de.json").read_text(encoding="utf-8"))
+LANGUAGES = {
+    path.stem: json.loads(path.read_text(encoding="utf-8"))
+    for path in sorted((PACKAGE / "translations").glob("*.json"))
+}
 SOURCE = "\n".join(p.read_text(encoding="utf-8") for p in PACKAGE.rglob("*.py"))
 
 
@@ -38,10 +41,14 @@ def _leaves(tree: object, prefix: str = "") -> dict[str, str]:
 
 
 def test_languages_have_identical_keys_and_placeholders() -> None:
-    assert _keys(EN) == _keys(DE)
-    en, de = _leaves(EN), _leaves(DE)
-    for key, text in en.items():
-        assert _placeholders(text) == _placeholders(de[key]), key
+    assert len(LANGUAGES) >= 30
+    en = _leaves(EN)
+    for language, tree in LANGUAGES.items():
+        assert _keys(tree) == _keys(EN), language
+        texts = _leaves(tree)
+        for key, text in en.items():
+            assert texts[key].strip(), (language, key)
+            assert _placeholders(text) == _placeholders(texts[key]), (language, key)
 
 
 def test_exception_keys_used_in_code_exist() -> None:

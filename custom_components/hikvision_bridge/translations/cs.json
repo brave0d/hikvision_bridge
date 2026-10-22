@@ -1,0 +1,993 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hikvision Bridge",
+        "menu_options": {
+          "device": "Kamera nebo rekordér v místní síti",
+          "cloud": "Účet Hik-Connect (cloud)"
+        }
+      },
+      "device": {
+        "title": "Připojit zařízení",
+        "description": "Během nastavení se používá pouze přístup pro čtení.",
+        "data": {
+          "host": "Hostitel",
+          "port": "Port (volitelný)",
+          "connection": "Připojení",
+          "verify_tls": "Ověřovat certifikát HTTPS",
+          "username": "Uživatelské jméno",
+          "password": "Heslo"
+        },
+        "data_description": {
+          "host": "IP adresa nebo název hostitele kamery či rekordéru.",
+          "port": "Ponechte prázdné pro 80 (HTTP) nebo 443 (HTTPS).",
+          "connection": "Automaticky nejprve zkouší HTTPS a na HTTP přejde jen tehdy, když se přes HTTPS nelze připojit.",
+          "username": "Každé zařízení může používat vlastního uživatele. Doporučuje se samostatný uživatel s rolí operátora."
+        }
+      },
+      "duplicate": {
+        "title": "Kamera je již známá",
+        "description": "Tuto kameru již zobrazuje {recorder} na kanálu {channel}. Propojit ji s tímto kanálem (jedno zařízení, stream přímo z kamery), nebo ji přidat jako samostatné zařízení?",
+        "menu_options": {
+          "link_to_channel": "Propojit s kanálem rekordéru",
+          "keep_separate": "Přidat jako samostatné zařízení"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Přihlášení selhalo",
+        "description": "{device} ({host}) odmítlo uložené přihlašovací údaje. Zadejte aktuální.",
+        "data": {
+          "username": "Uživatelské jméno",
+          "password": "Heslo"
+        }
+      },
+      "reconfigure": {
+        "title": "Změnit připojení",
+        "description": "Nová adresa musí vést ke stejnému zařízení.",
+        "data": {
+          "host": "Hostitel",
+          "port": "Port (volitelný)",
+          "connection": "Připojení",
+          "verify_tls": "Ověřovat certifikát HTTPS",
+          "username": "Uživatelské jméno",
+          "password": "Heslo"
+        },
+        "data_description": {
+          "host": "IP adresa nebo název hostitele kamery či rekordéru.",
+          "port": "Ponechte prázdné pro 80 (HTTP) nebo 443 (HTTPS).",
+          "connection": "Automaticky nejprve zkouší HTTPS a na HTTP přejde jen tehdy, když se přes HTTPS nelze připojit.",
+          "username": "Každé zařízení může používat vlastního uživatele. Doporučuje se samostatný uživatel s rolí operátora."
+        }
+      },
+      "cloud": {
+        "title": "Hik-Connect",
+        "description": "Hik-Connect nemá oficiální rozhraní pro třetí strany. Integrace pouze čte seznam zařízení a jejich stav; heslo je uloženo v Home Assistant.",
+        "data": {
+          "account": "Účet Hik-Connect (e-mail nebo telefon)",
+          "password": "Heslo"
+        }
+      },
+      "cloud_captcha": {
+        "title": "Ověřovací kód",
+        "description": "Zadejte kód zobrazený zde: {image}",
+        "data": {
+          "captcha": "Kód"
+        }
+      },
+      "cloud_reauth": {
+        "title": "Přihlášení k Hik-Connect",
+        "description": "Zadejte heslo k účtu {account}.",
+        "data": {
+          "password": "Heslo",
+          "captcha": "Ověřovací kód (jen pokud je vyžádán)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Uživatelské jméno nebo heslo odmítnuto. Další pokus se neprovádí, aby nedošlo k zablokování.",
+      "locked_out": "Zařízení nebo účet je po neúspěšných přihlášeních dočasně zablokován. Před dalším pokusem počkejte.",
+      "name_not_resolved": "Název hostitele nelze přeložit.",
+      "tls_untrusted": "Certifikát HTTPS není důvěryhodný. Vypněte ověřování certifikátu nebo použijte HTTP.",
+      "cannot_connect": "Nelze se připojit.",
+      "not_isapi": "Adresa odpovídá, ale ne jako zařízení Hikvision ISAPI.",
+      "forbidden": "Uživatel nemá potřebná oprávnění.",
+      "unknown": "Neočekávaná chyba.",
+      "wrong_camera": "Tato adresa patří jiné kameře než té na vybraném kanálu.",
+      "captcha_required": "Hik-Connect žádá ověřovací kód.",
+      "cloud_unavailable": "Hik-Connect je momentálně nedostupný.",
+      "cloud_changed": "Hik-Connect odpověděl v neočekávaném formátu.",
+      "cloud_rejected": "Hik-Connect požadavek odmítl."
+    },
+    "abort": {
+      "already_configured": "Toto zařízení nebo účet je již nastaveno.",
+      "reauth_successful": "Přihlašovací údaje aktualizovány.",
+      "reconfigure_successful": "Připojení aktualizováno.",
+      "other_device": "Tato adresa patří jinému zařízení. Přidejte jej raději jako nové zařízení.",
+      "channel_already_linked": "Tento kanál rekordéru již má přímé připojení.",
+      "linked_to_channel": "Kamera byla propojena s kanálem rekordéru."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Možnosti",
+        "data": {
+          "event_path": "Jak přicházejí události",
+          "hold_seconds": "Držet detekce zapnuté po dobu (sekundy)",
+          "rtsp_port": "Port RTSP (volitelný)",
+          "rtsp_transport": "Přenos RTSP",
+          "target_sensors": "Samostatné senzory pro osoby a vozidla",
+          "playback": "Přehrávání v prohlížeči médií"
+        },
+        "data_description": {
+          "event_path": "Stream událostí nevyžaduje žádnou změnu v zařízení. Webhook vyžaduje, aby zařízení odesílalo do Home Assistant.",
+          "hold_seconds": "Zařízení u mnoha detekcí hlásí jen začátek; senzor zůstane zapnutý tak dlouho po posledním hlášení.",
+          "playback": "Záznamy jsou v H.265 nebo H.264. „MP4 jak bylo nahráno“ začne hned, ale prohlížeče přehrávají H.265 jen s hardwarovou podporou. „Převést na H.264“ funguje všude a hodně zatěžuje procesor. „Streamovat ze zařízení“ nechá zařízení přehrát záznam přes RTSP."
+        }
+      },
+      "webhook": {
+        "title": "Webhook",
+        "description": "Oznámení jsou přijímána na {path} (pouze místní síť). Pomocí akce „Nastavit hostitele oznámení“ nebo webového rozhraní zařízení jej tam nasměrujte."
+      }
+    },
+    "abort": {
+      "no_options": "Účet Hik-Connect nemá žádné možnosti."
+    }
+  },
+  "config_subentries": {
+    "channel_link": {
+      "initiate_flow": {
+        "user": "Připojit kameru přímo"
+      },
+      "entry_type": "Přímé připojení kamery",
+      "step": {
+        "user": {
+          "title": "Přímé připojení kamery",
+          "description": "Připojí kameru na kanálu rekordéru přímo, s vlastní adresou a přihlašovacími údaji. Živý stream pak pochází z kamery, což pomáhá i tehdy, když je stream rekordéru šifrovaný.",
+          "data": {
+            "channel_id": "Kanál rekordéru",
+            "host": "Hostitel",
+            "port": "Port (volitelný)",
+            "connection": "Připojení",
+            "verify_tls": "Ověřovat certifikát HTTPS",
+            "username": "Uživatelské jméno",
+            "password": "Heslo",
+            "reuse_recorder_credentials": "Použít uživatelské jméno a heslo rekordéru",
+            "event_source": "Přebírat detekce z"
+          },
+          "data_description": {
+            "host": "Adresa, na které Home Assistant kameru přímo dosáhne (například v PoE podsíti rekordéru, pokud je směrována).",
+            "reuse_recorder_credentials": "Ponechte vypnuté, pokud má kamera vlastní přihlašovací údaje."
+          }
+        },
+        "reconfigure": {
+          "title": "Změnit přímé připojení kamery",
+          "description": "Připojí kameru na kanálu rekordéru přímo, s vlastní adresou a přihlašovacími údaji. Živý stream pak pochází z kamery, což pomáhá i tehdy, když je stream rekordéru šifrovaný.",
+          "data": {
+            "channel_id": "Kanál rekordéru",
+            "host": "Hostitel",
+            "port": "Port (volitelný)",
+            "connection": "Připojení",
+            "verify_tls": "Ověřovat certifikát HTTPS",
+            "username": "Uživatelské jméno",
+            "password": "Heslo",
+            "reuse_recorder_credentials": "Použít uživatelské jméno a heslo rekordéru",
+            "event_source": "Přebírat detekce z"
+          },
+          "data_description": {
+            "host": "Adresa, na které Home Assistant kameru přímo dosáhne (například v PoE podsíti rekordéru, pokud je směrována).",
+            "reuse_recorder_credentials": "Ponechte vypnuté, pokud má kamera vlastní přihlašovací údaje."
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "Uživatelské jméno nebo heslo odmítnuto. Další pokus se neprovádí, aby nedošlo k zablokování.",
+        "locked_out": "Zařízení nebo účet je po neúspěšných přihlášeních dočasně zablokován. Před dalším pokusem počkejte.",
+        "name_not_resolved": "Název hostitele nelze přeložit.",
+        "tls_untrusted": "Certifikát HTTPS není důvěryhodný. Vypněte ověřování certifikátu nebo použijte HTTP.",
+        "cannot_connect": "Nelze se připojit.",
+        "not_isapi": "Adresa odpovídá, ale ne jako zařízení Hikvision ISAPI.",
+        "forbidden": "Uživatel nemá potřebná oprávnění.",
+        "unknown": "Neočekávaná chyba.",
+        "wrong_camera": "Tato adresa patří jiné kameře než té na vybraném kanálu.",
+        "captcha_required": "Hik-Connect žádá ověřovací kód.",
+        "cloud_unavailable": "Hik-Connect je momentálně nedostupný.",
+        "cloud_changed": "Hik-Connect odpověděl v neočekávaném formátu.",
+        "cloud_rejected": "Hik-Connect požadavek odmítl."
+      },
+      "abort": {
+        "not_loaded": "Nejprve musí být načten rekordér.",
+        "not_a_recorder": "Kanály k propojení mají jen rekordéry.",
+        "no_free_channel": "Každý kanál již má přímé připojení.",
+        "reconfigure_successful": "Přímé připojení aktualizováno."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Pohyb"
+      },
+      "tamper": {
+        "name": "Sabotáž"
+      },
+      "video_loss": {
+        "name": "Ztráta videa"
+      },
+      "scene_change": {
+        "name": "Změna scény"
+      },
+      "intrusion": {
+        "name": "Vniknutí"
+      },
+      "line_crossing": {
+        "name": "Překročení čáry"
+      },
+      "region_entrance": {
+        "name": "Vstup do oblasti"
+      },
+      "region_exiting": {
+        "name": "Výstup z oblasti"
+      },
+      "pir": {
+        "name": "PIR"
+      },
+      "defocus": {
+        "name": "Rozostření"
+      },
+      "audio_exception": {
+        "name": "Anomálie zvuku"
+      },
+      "target_human": {
+        "name": "Osoba"
+      },
+      "target_vehicle": {
+        "name": "Vozidlo"
+      },
+      "alarm_input": {
+        "name": "Alarmový vstup {port}"
+      },
+      "channel_online": {
+        "name": "Kamera připojena"
+      },
+      "storage_problem": {
+        "name": "Problém s úložištěm"
+      },
+      "event_link": {
+        "name": "Připojení událostí"
+      },
+      "stream_encryption": {
+        "name": "Šifrování streamu"
+      },
+      "cloud_online": {
+        "name": "Cloudové připojení"
+      },
+      "cloud_stream_encryption": {
+        "name": "Šifrování streamu"
+      },
+      "recording": {
+        "name": "Nahrávání"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Detekce pohybu"
+      },
+      "tamper_detection": {
+        "name": "Detekce sabotáže"
+      },
+      "scene_change_detection": {
+        "name": "Detekce změny scény"
+      },
+      "intrusion_detection": {
+        "name": "Detekce vniknutí"
+      },
+      "line_crossing_detection": {
+        "name": "Detekce překročení čáry"
+      },
+      "region_entrance_detection": {
+        "name": "Detekce vstupu do oblasti"
+      },
+      "region_exiting_detection": {
+        "name": "Detekce výstupu z oblasti"
+      },
+      "alarm_output": {
+        "name": "Alarmový výstup {port}"
+      },
+      "blc": {
+        "name": "Kompenzace protisvětla"
+      },
+      "hlc": {
+        "name": "Kompenzace silného světla"
+      },
+      "overexposure_suppression": {
+        "name": "Potlačení přeexponování"
+      },
+      "image_flip": {
+        "name": "Převrácení obrazu"
+      },
+      "stabilization": {
+        "name": "Stabilizace obrazu"
+      },
+      "lens_correction": {
+        "name": "Korekce zkreslení objektivu"
+      },
+      "video_loss_detection": {
+        "name": "Detekce ztráty videa"
+      },
+      "input_armed": {
+        "name": "Alarmový vstup {port} zastřežen"
+      },
+      "park_action": {
+        "name": "Parkovací akce"
+      }
+    },
+    "camera": {
+      "main_stream": {
+        "name": "Hlavní stream"
+      },
+      "sub_stream": {
+        "name": "Vedlejší stream"
+      },
+      "third_stream": {
+        "name": "Třetí stream"
+      }
+    },
+    "event": {
+      "detection": {
+        "name": "Detekce",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Pohyb",
+              "intrusion": "Vniknutí",
+              "line_crossing": "Překročení čáry",
+              "region_entrance": "Vstup do oblasti",
+              "region_exiting": "Výstup z oblasti",
+              "face": "Obličej",
+              "anpr": "SPZ"
+            }
+          }
+        }
+      },
+      "cloud_connection": {
+        "name": "Změna cloudového připojení",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "went_online": "Online",
+              "went_offline": "Offline"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "storage_status": {
+        "name": "Úložiště {unit}",
+        "state": {
+          "ok": "OK",
+          "unformatted": "Nenaformátováno",
+          "error": "Chyba",
+          "idle": "Nečinné",
+          "sleeping": "Spánek",
+          "abnormal": "Abnormální",
+          "full": "Plné",
+          "unknown": "Neznámé"
+        }
+      },
+      "storage_free": {
+        "name": "Úložiště {unit} volné"
+      },
+      "storage_capacity": {
+        "name": "Úložiště {unit} kapacita"
+      },
+      "event_latency": {
+        "name": "Zpoždění událostí"
+      },
+      "boot_time": {
+        "name": "Poslední spuštění"
+      },
+      "cpu_load": {
+        "name": "Zatížení CPU"
+      },
+      "memory_use": {
+        "name": "Využití paměti"
+      },
+      "reboots": {
+        "name": "Restarty",
+        "state_attributes": {
+          "reported_timestamp": {
+            "name": "Hlášené časové razítko"
+          }
+        }
+      },
+      "network_address": {
+        "name": "IP adresa"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Restartovat"
+      },
+      "rescan": {
+        "name": "Znovu načíst schopnosti"
+      },
+      "cloud_unlock": {
+        "name": "Otevřít dveře (cloud)"
+      },
+      "ptz_pan_left": {
+        "name": "PTZ otočit vlevo"
+      },
+      "ptz_pan_right": {
+        "name": "PTZ otočit vpravo"
+      },
+      "ptz_tilt_up": {
+        "name": "PTZ naklonit nahoru"
+      },
+      "ptz_tilt_down": {
+        "name": "PTZ naklonit dolů"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ přiblížit"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ oddálit"
+      }
+    },
+    "select": {
+      "ptz_preset": {
+        "name": "Předvolba PTZ"
+      },
+      "day_night": {
+        "name": "Režim den/noc",
+        "state": {
+          "day": "Den",
+          "night": "Noc",
+          "auto": "Auto",
+          "schedule": "Plán",
+          "eventtrigger": "Spuštění událostí"
+        }
+      },
+      "supplement_light": {
+        "name": "Doplňkové světlo",
+        "state": {
+          "eventintelligence": "Chytré (událost)",
+          "colorvuwhitelight": "Bílé světlo",
+          "irlight": "IR světlo",
+          "close": "Vypnuto"
+        }
+      },
+      "light_brightness_control": {
+        "name": "Řízení jasu světla",
+        "state": {
+          "auto": "Auto",
+          "manual": "Ručně"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "close": "Vypnuto",
+          "open": "Zapnuto",
+          "auto": "Auto"
+        }
+      },
+      "blc_area": {
+        "name": "Oblast kompenzace protisvětla",
+        "state": {
+          "close": "Vypnuto",
+          "up": "Nahoře",
+          "down": "Dole",
+          "left": "Vlevo",
+          "right": "Vpravo",
+          "center": "Uprostřed",
+          "region": "Vlastní oblast",
+          "auto": "Auto"
+        }
+      },
+      "noise_reduction": {
+        "name": "Redukce šumu",
+        "state": {
+          "close": "Vypnuto",
+          "general": "Normální",
+          "advanced": "Expertní"
+        }
+      },
+      "defog": {
+        "name": "Odmlžení",
+        "state": {
+          "close": "Vypnuto",
+          "open": "Zapnuto",
+          "auto": "Auto"
+        }
+      },
+      "white_balance": {
+        "name": "Vyvážení bílé",
+        "state": {
+          "manual": "Ručně",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "locked": "Uzamčeno",
+          "daylightlamp": "Zářivka",
+          "incandescentlight": "Žárovka",
+          "warmlight": "Teplé světlo",
+          "naturallight": "Přirozené světlo"
+        }
+      },
+      "exposure_mode": {
+        "name": "Režim expozice",
+        "state": {
+          "auto": "Auto",
+          "manual": "Ručně"
+        }
+      },
+      "shutter": {
+        "name": "Závěrka"
+      },
+      "power_line_frequency": {
+        "name": "Frekvence sítě",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "flip_direction": {
+        "name": "Směr převrácení",
+        "state": {
+          "leftright": "Vlevo/vpravo",
+          "updown": "Nahoru/dolů",
+          "center": "Uprostřed"
+        }
+      },
+      "strobe_frequency": {
+        "name": "Frekvence stroboskopu",
+        "state": {
+          "high": "Vysoká",
+          "medium": "Střední",
+          "low": "Nízká",
+          "normallyon": "Trvale zapnuto"
+        }
+      },
+      "siren_sound": {
+        "name": "Zvuk sirény"
+      },
+      "park_action_type": {
+        "name": "Typ parkovací akce",
+        "state": {
+          "autoscan": "Automatické skenování",
+          "framescan": "Skenování snímku",
+          "randomscan": "Náhodné skenování",
+          "patrol": "Hlídka",
+          "pattern": "Vzor",
+          "preset": "Předvolba",
+          "panoramascan": "Panoramatické skenování",
+          "tiltscan": "Skenování náklonu"
+        }
+      }
+    },
+    "number": {
+      "day_night_sensitivity": {
+        "name": "Citlivost den/noc"
+      },
+      "day_night_delay": {
+        "name": "Zpoždění den/noc"
+      },
+      "white_light_brightness": {
+        "name": "Jas bílého světla"
+      },
+      "ir_light_brightness": {
+        "name": "Jas IR světla"
+      },
+      "white_light_duration": {
+        "name": "Doba bílého světla"
+      },
+      "brightness": {
+        "name": "Jas"
+      },
+      "contrast": {
+        "name": "Kontrast"
+      },
+      "saturation": {
+        "name": "Sytost"
+      },
+      "sharpness": {
+        "name": "Ostrost"
+      },
+      "wdr_level": {
+        "name": "Úroveň WDR"
+      },
+      "hlc_level": {
+        "name": "Úroveň kompenzace silného světla"
+      },
+      "noise_reduction_level": {
+        "name": "Úroveň redukce šumu"
+      },
+      "defog_level": {
+        "name": "Úroveň odmlžení"
+      },
+      "white_balance_red": {
+        "name": "Vyvážení bílé červená"
+      },
+      "white_balance_blue": {
+        "name": "Vyvážení bílé modrá"
+      },
+      "gain_limit": {
+        "name": "Limit zesílení"
+      },
+      "strobe_duration": {
+        "name": "Doba stroboskopu"
+      },
+      "siren_volume": {
+        "name": "Hlasitost sirény"
+      },
+      "siren_repeats": {
+        "name": "Opakování sirény"
+      },
+      "speaker_volume": {
+        "name": "Hlasitost reproduktoru"
+      },
+      "microphone_volume": {
+        "name": "Hlasitost mikrofonu"
+      },
+      "park_time": {
+        "name": "Doba do parkování"
+      },
+      "park_action_number": {
+        "name": "Číslo parkovací akce"
+      }
+    }
+  },
+  "issues": {
+    "locked_out": {
+      "title": "{device}: přihlášení zablokováno",
+      "description": "Zařízení po neúspěšných pokusech zablokovalo přihlášení. Integrace se pozastaví přibližně na {minutes} minut a dříve to nezkouší."
+    },
+    "channel_link_auth": {
+      "title": "{device}: přímé připojení k {channel} odmítnuto",
+      "description": "Kamera odmítla přihlašovací údaje přímého připojení. Místo toho se používá rekordér. Aktualizujte přímé připojení tohoto kanálu."
+    },
+    "channel_link_mismatch": {
+      "title": "{device}: jiná kamera na {channel}",
+      "description": "Přímé připojení tohoto kanálu vede k jiné kameře než té, která je nyní připojena k rekordéru. Nepoužívá se, dokud nebude opraveno."
+    },
+    "center_link_missing": {
+      "title": "{device}: {kind} na {channel} se nehlásí",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Zapnout hlášení",
+            "description": "Zařízení detekuje {kind}, ale neposílá to do streamu událostí, protože propojení „Upozornit dohledové centrum“ je vypnuté. Potvrďte pro zapnutí pouze tohoto propojení (spouštěč {trigger}); nic jiného se nezmění. {reason}"
+          }
+        },
+        "error": {
+          "write_failed": "Zařízení změnu nepřijalo."
+        },
+        "abort": {
+          "not_loaded": "Zařízení není načteno."
+        }
+      }
+    },
+    "area_missing": {
+      "title": "{device}: pro {kind} na {channel} není nakreslena oblast",
+      "description": "Detekce je zapnutá, ale není nakreslena žádná čára ani oblast, takže se nemůže spustit. Nakreslete ji ve webovém rozhraní zařízení."
+    },
+    "detection_off": {
+      "title": "{device}: {kind} je na {channel} vypnuto",
+      "description": "Tato detekce je podporována, ale vypnutá. Pokud ji chcete používat, zapněte ji jejím vypínačem."
+    },
+    "recorder_target_filter": {
+      "title": "{device}: {kind} na {channel} jen pro {detail}",
+      "description": "Rekordér hlásí tuto detekci jen pro uvedené typy cílů. Jiný pohyb ji nespustí."
+    },
+    "stream_encrypted": {
+      "title": "{device}: video stream šifrován službou Hik-Connect",
+      "description": "Šifrování streamu pro Hik-Connect je zapnuté. Home Assistant tento stream nedokáže dekódovat; snímky a události fungují dál. Buď vypněte „Šifrování streamu“ v nastavení přístupu k platformě v zařízení, nebo připojte dotčené kamery přímo (přímé připojení kamery)."
+    },
+    "default_password": {
+      "title": "{device}: slabé nebo výchozí heslo",
+      "description": "Zařízení hlásí, že jeho heslo je slabé nebo stále výchozí. Změňte jej v zařízení."
+    },
+    "basic_over_http": {
+      "title": "{device}: heslo odesíláno nechráněně",
+      "description": "Zařízení přijímá pouze ověřování Basic přes HTTP, takže heslo putuje jako prostý text. Zapněte v zařízení ověřování Digest nebo HTTPS."
+    },
+    "clock_skew": {
+      "title": "{device}: hodiny se liší o {detail} s",
+      "description": "Hodiny zařízení se znatelně liší od Home Assistant. Časy událostí se opravují, ale záznamy nesou nesprávný čas. Nastavte v zařízení NTP."
+    }
+  },
+  "exceptions": {
+    "bad_credentials": {
+      "message": "Zařízení odmítlo přihlašovací údaje."
+    },
+    "locked_out": {
+      "message": "Zařízení zablokovalo přihlášení. Nastavení je pozastaveno, aby se blokování neprodloužilo."
+    },
+    "not_isapi": {
+      "message": "Zařízení neodpovídá jako zařízení Hikvision ISAPI."
+    },
+    "unreachable": {
+      "message": "{host} není dostupný."
+    },
+    "other_device": {
+      "message": "Na {host} nyní odpovídá jiné zařízení. Použijte „Překonfigurovat“ nebo jej přidejte jako nové zařízení."
+    },
+    "write_failed": {
+      "message": "Zařízení změnu nepřijalo ({reason})."
+    },
+    "unknown_device": {
+      "message": "Vybrané zařízení nepatří k Hikvision Bridge."
+    },
+    "channel_needed": {
+      "message": "Vyberte kameru nebo zařízení kanálu."
+    },
+    "confirm_needed": {
+      "message": "Tato akce mění zařízení. Pro spuštění zapněte „Potvrdit změnu“."
+    },
+    "bad_path": {
+      "message": "Povoleny jsou pouze cesty pod /ISAPI/."
+    },
+    "webhook_off": {
+      "message": "Nejprve zapněte webhook v možnostech."
+    },
+    "no_url": {
+      "message": "Home Assistant nemá nastavenou místní URL."
+    },
+    "cloud_auth": {
+      "message": "Hik-Connect odmítl přihlášení."
+    },
+    "cloud_failed": {
+      "message": "Požadavek na Hik-Connect selhal ({reason})."
+    },
+    "cloud_gone": {
+      "message": "Zařízení již není na účtu Hik-Connect."
+    },
+    "setting_inactive": {
+      "message": "Toto nastavení není v aktuálním režimu kamery aktivní."
+    },
+    "read_failed": {
+      "message": "Zařízení na požadavek neodpovědělo ({reason})."
+    },
+    "bad_period": {
+      "message": "Konec musí být po začátku a nejvýše o den později."
+    },
+    "no_recordings": {
+      "message": "Pro toto období nebyly nalezeny žádné záznamy."
+    },
+    "too_many_recordings": {
+      "message": "Období obsahuje {count} záznamů; najednou lze uložit nejvýše {limit}."
+    },
+    "media_not_allowed": {
+      "message": "Home Assistant nesmí zapisovat do své složky médií."
+    },
+    "recording_encrypted": {
+      "message": "Zařízení šifruje své záznamy (šifrování streamu), takže je nelze přehrát ani převést. Vypněte šifrování streamu nebo použijte paměťovou kartu kamery."
+    },
+    "conversion_failed": {
+      "message": "Záznam se nepodařilo převést."
+    },
+    "no_ffmpeg": {
+      "message": "ffmpeg není v Home Assistant k dispozici."
+    }
+  },
+  "selector": {
+    "connection": {
+      "options": {
+        "auto": "Automaticky",
+        "https": "HTTPS",
+        "http": "HTTP"
+      }
+    },
+    "event_path": {
+      "options": {
+        "stream": "Stream událostí (doporučeno)",
+        "webhook": "Webhook",
+        "both": "Obojí"
+      }
+    },
+    "rtsp_transport": {
+      "options": {
+        "tcp": "TCP",
+        "udp": "UDP"
+      }
+    },
+    "event_source": {
+      "options": {
+        "recorder": "Rekordér",
+        "camera": "Kamera"
+      }
+    },
+    "playback": {
+      "options": {
+        "mp4": "MP4 jak bylo nahráno (doporučeno)",
+        "h264": "Převést na H.264 (funguje všude, vysoká zátěž CPU)",
+        "stream": "Streamovat ze zařízení (RTSP na HLS)"
+      }
+    },
+    "recording_source": {
+      "options": {
+        "auto": "Automaticky",
+        "recorder": "Rekordér",
+        "card": "Paměťová karta"
+      }
+    },
+    "recording_format": {
+      "options": {
+        "mp4": "MP4 jak bylo nahráno",
+        "h264": "MP4 převedené na H.264",
+        "ts": "MPEG-TS jak bylo nahráno",
+        "original": "Původní soubor (MPEG-PS)"
+      }
+    },
+    "recording_kind": {
+      "options": {
+        "all": "Vše",
+        "continuous": "Nepřetržitý",
+        "motion": "Pohyb",
+        "alarm": "Alarmový vstup",
+        "event": "Chytrá událost",
+        "manual": "Ručně",
+        "other": "Ostatní"
+      }
+    }
+  },
+  "services": {
+    "add_center_links": {
+      "name": "Zapnout hlášení událostí",
+      "description": "Zapne propojení „Upozornit dohledové centrum“ u detekcí, kterým chybí. Spouští se jako náhled, pokud není vypnuto „Pouze náhled“.",
+      "fields": {
+        "device_id": {
+          "name": "Zařízení",
+          "description": "Kamera, kanál nebo rekordér."
+        },
+        "dry_run": {
+          "name": "Pouze náhled",
+          "description": "Pouze vypsat, co by se změnilo."
+        },
+        "kinds": {
+          "name": "Detekce",
+          "description": "Omezit na tyto druhy; prázdné znamená všechny."
+        }
+      }
+    },
+    "isapi_request": {
+      "name": "Požadavek ISAPI",
+      "description": "Odešle jeden požadavek ISAPI a vrátí odpověď bez tajných údajů. Měnící metody vyžadují potvrzení.",
+      "fields": {
+        "device_id": {
+          "name": "Zařízení",
+          "description": "Kamera, kanál nebo rekordér."
+        },
+        "method": {
+          "name": "Metoda",
+          "description": "Metoda HTTP."
+        },
+        "path": {
+          "name": "Cesta",
+          "description": "Cesta začínající /ISAPI/."
+        },
+        "body": {
+          "name": "Tělo",
+          "description": "Tělo XML nebo JSON pro měnící metody."
+        },
+        "confirm_write": {
+          "name": "Potvrdit změnu",
+          "description": "Vyžadováno pro vše, co mění zařízení."
+        }
+      }
+    },
+    "ptz_move": {
+      "name": "Pohyb PTZ",
+      "description": "Krátce pohne kamerou PTZ.",
+      "fields": {
+        "device_id": {
+          "name": "Zařízení",
+          "description": "Kamera, kanál nebo rekordér."
+        },
+        "pan": {
+          "name": "Otočení",
+          "description": "Rychlost, záporná je vlevo."
+        },
+        "tilt": {
+          "name": "Náklon",
+          "description": "Rychlost, záporná je dolů."
+        },
+        "zoom": {
+          "name": "Zoom",
+          "description": "Rychlost, záporná oddaluje."
+        },
+        "duration": {
+          "name": "Doba trvání",
+          "description": "Sekundy do zastavení."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "Předvolba PTZ",
+      "description": "Přesune kameru PTZ na uloženou předvolbu.",
+      "fields": {
+        "device_id": {
+          "name": "Zařízení",
+          "description": "Kamera, kanál nebo rekordér."
+        },
+        "preset": {
+          "name": "Předvolba",
+          "description": "Číslo předvolby."
+        }
+      }
+    },
+    "set_notification_host": {
+      "name": "Nastavit hostitele oznámení",
+      "description": "Nasměruje jeden slot hostitele oznámení v zařízení na tento webhook Home Assistant.",
+      "fields": {
+        "device_id": {
+          "name": "Zařízení",
+          "description": "Kamera, kanál nebo rekordér."
+        },
+        "slot": {
+          "name": "Slot",
+          "description": "Číslo hostitele oznámení v zařízení."
+        },
+        "confirm_write": {
+          "name": "Potvrdit změnu",
+          "description": "Vyžadováno pro vše, co mění zařízení."
+        }
+      }
+    },
+    "search_recordings": {
+      "name": "Hledat záznamy",
+      "description": "Vypíše nahrané soubory kamery nebo kanálu v daném období.",
+      "fields": {
+        "device_id": {
+          "name": "Zařízení",
+          "description": "Kamera nebo kanál."
+        },
+        "start": {
+          "name": "Začátek",
+          "description": "Začátek období."
+        },
+        "end": {
+          "name": "Konec",
+          "description": "Konec období, nejvýše den po začátku."
+        },
+        "source": {
+          "name": "Zdroj",
+          "description": "Rekordér nebo paměťová karta kamery; automatický režim zkouší nejdřív rekordér."
+        }
+      }
+    },
+    "download_recording": {
+      "name": "Uložit záznam",
+      "description": "Uloží záznamy z období do složky médií „hikvision_bridge“.",
+      "fields": {
+        "device_id": {
+          "name": "Zařízení",
+          "description": "Kamera nebo kanál."
+        },
+        "start": {
+          "name": "Začátek",
+          "description": "Začátek období."
+        },
+        "end": {
+          "name": "Konec",
+          "description": "Konec období, nejvýše den po začátku."
+        },
+        "source": {
+          "name": "Zdroj",
+          "description": "Rekordér nebo paměťová karta kamery; automatický režim zkouší nejdřív rekordér."
+        },
+        "format": {
+          "name": "Formát",
+          "description": "MP4 a MPEG-TS zachovají nahrané video; H.264 ho převádí, což na malých počítačích trvá dlouho."
+        },
+        "trim": {
+          "name": "Oříznout na období",
+          "description": "Ořízne soubory na období; původní soubor se nikdy neořezává."
+        }
+      }
+    }
+  }
+}
