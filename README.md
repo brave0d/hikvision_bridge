@@ -151,6 +151,11 @@ Quality defaults to **Auto**:
   *Compatible*, which converts to H.264 on the fly; on a Raspberry Pi this is slower than real time for
   4K recordings.
 
+<p align="center">
+  <img src="images/panel-mockup.jpg" alt="Mockup of the Hikvision panel: camera list, live picture, controls and day timeline" width="820"><br>
+  <sub><b>Mockup</b> (AI-generated illustration of the layout, not a screenshot; labels and picture are not real)</sub>
+</p>
+
 The same viewer is available as a dashboard card:
 
 ```yaml
